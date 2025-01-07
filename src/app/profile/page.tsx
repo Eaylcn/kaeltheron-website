@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
+import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, updateEmail } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, updateEmail } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 
@@ -85,16 +85,10 @@ export default function ProfilePage() {
 
       await reauthenticateWithCredential(currentUser, credential);
 
-      // Update email in Firebase Auth
-      await updateEmail(currentUser, newEmail.toLowerCase());
-      
-      // Send verification email
-      await sendEmailVerification(currentUser);
-
-      // Update context and Firestore
+      // Update email in Firebase Auth and context
       await updateUserEmail(newEmail.toLowerCase());
 
-      setEmailSuccess('E-posta adresiniz güncellendi ve doğrulama e-postası gönderildi. Lütfen yeni e-posta adresinizi doğrulayın.');
+      setEmailSuccess('E-posta adresiniz güncellendi.');
       handleCloseEmailModal();
 
     } catch (error) {
@@ -113,9 +107,6 @@ export default function ProfilePage() {
           case 'auth/wrong-password':
             setEmailError('Hatalı şifre');
             break;
-          case 'auth/operation-not-allowed':
-            setEmailError('E-posta değişikliği için önce yeni adresinizi doğrulamanız gerekiyor');
-            break;
           default:
             setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
@@ -124,20 +115,6 @@ export default function ProfilePage() {
       }
     } finally {
       setEmailLoading(false);
-    }
-  };
-
-  // Doğrulama e-postasını yeniden gönder
-  const handleResendVerification = async () => {
-    try {
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        await sendEmailVerification(currentUser);
-        setEmailSuccess('Doğrulama e-postası yeniden gönderildi. Lütfen e-posta kutunuzu kontrol edin.');
-      }
-    } catch (error) {
-      console.error('Verification email error:', error);
-      setEmailError('Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.');
     }
   };
 
@@ -310,129 +287,104 @@ export default function ProfilePage() {
 
   const renderSettingsTab = () => (
     <div className="space-y-8">
-      {/* Hesap Bilgileri */}
-      <div className="bg-[#162137] rounded-xl p-8">
+      <div className="bg-[#162137] rounded-xl p-6">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Hesap Bilgileri</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-            <input
-              type="text"
-              value={user?.username || ''}
-              disabled
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-            />
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-400">{user.username}</p>
+            </div>
           </div>
           <div>
             <label className="block text-slate-300 mb-2">E-posta</label>
-            <input
-              type="email"
-              value={user?.email || ''}
-              disabled
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-            />
-            <button 
-              onClick={() => {
-                handleCloseEmailModal();
-                setIsEmailModalOpen(true);
-              }}
-              className="text-amber-400 hover:text-amber-300 text-sm mt-2"
-            >
-              E-posta Adresini Değiştir
-            </button>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-400">{user.email}</p>
+              <button
+                onClick={() => setIsEmailModalOpen(true)}
+                className="text-xs text-amber-400 hover:text-amber-300"
+              >
+                Değiştir
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Şifre Değiştirme */}
-      <div className="bg-[#162137] rounded-xl p-8">
+      <div className="bg-[#162137] rounded-xl p-6">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Şifre Değiştir</h3>
         <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div>
+          <div className="relative">
             <label className="block text-slate-300 mb-2">Mevcut Şifre</label>
             <div className="relative">
               <input
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
               >
                 {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
-          <div>
+
+          <div className="relative">
             <label className="block text-slate-300 mb-2">Yeni Şifre</label>
             <div className="relative">
               <input
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
               >
                 {showNewPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
-          <div>
+
+          <div className="relative">
             <label className="block text-slate-300 mb-2">Yeni Şifre Tekrar</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
           </div>
+
           {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
           {passwordSuccess && <p className="text-green-500 text-sm">{passwordSuccess}</p>}
+
           <button
             type="submit"
             disabled={passwordLoading}
             className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
           >
-            {passwordLoading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
+            {passwordLoading ? 'İşleniyor...' : 'Şifreyi Değiştir'}
           </button>
         </form>
-      </div>
-
-      {/* Çıkış Yap */}
-      <div className="bg-[#162137] rounded-xl p-8">
-        <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Oturumu Sonlandır</h3>
-        <div className="space-y-4">
-          <p className="text-slate-300">Hesabınızdan çıkış yapmak istediğinizden emin misiniz?</p>
-          <button
-            onClick={() => {
-              localStorage.removeItem('token');
-              router.push('/');
-              window.location.reload();
-            }}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-risque py-3 rounded-lg transition-all flex items-center justify-center space-x-2"
-          >
-            <span>Çıkış Yap</span>
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -459,37 +411,9 @@ export default function ProfilePage() {
                   <h2 className="text-lg font-medium text-slate-200">{user.username}</h2>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-slate-400">{user.email}</p>
-                    {!user.emailVerified && (
-                      <div className="group relative">
-                        <FaExclamationCircle className="w-4 h-4 text-red-500" />
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 bg-red-500 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          E-posta adresinizi doğrulamanız gerekiyor
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
-
-              {/* Email verification status */}
-              {!user.emailVerified && (
-                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                  <p className="text-amber-400 text-sm mb-2">E-posta adresiniz doğrulanmamış</p>
-                  <button
-                    onClick={handleResendVerification}
-                    className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
-                  >
-                    Doğrulama e-postasını yeniden gönder
-                  </button>
-                </div>
-              )}
-
-              {/* Success message */}
-              {emailSuccess && (
-                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <p className="text-green-400 text-sm">{emailSuccess}</p>
-                </div>
-              )}
 
               {/* Tabs */}
               <div className="space-y-2">
