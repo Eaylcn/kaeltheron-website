@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 
 export async function POST(request: Request) {
   try {
@@ -14,15 +15,17 @@ export async function POST(request: Request) {
       username: user.displayName,
       email: user.email
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Login error:', error);
     
     // Firebase hata mesajlarını kontrol et
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-      return NextResponse.json(
-        { message: 'E-posta adresi veya şifre hatalı' },
-        { status: 401 }
-      );
+    if (error instanceof FirebaseError) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        return NextResponse.json(
+          { message: 'E-posta adresi veya şifre hatalı' },
+          { status: 401 }
+        );
+      }
     }
 
     return NextResponse.json(
