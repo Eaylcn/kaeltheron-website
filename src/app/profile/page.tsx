@@ -22,9 +22,15 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  
+  // Ayrı hata ve yükleme durumları
+  const [emailError, setEmailError] = useState('');
+  const [emailSuccess, setEmailSuccess] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Form states
   const [emailChangePassword, setEmailChangePassword] = useState('');
@@ -36,105 +42,110 @@ export default function ProfilePage() {
   // Email değiştirme fonksiyonu
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+    setEmailError('');
+    setEmailSuccess('');
+    setEmailLoading(true);
 
     try {
-      if (!user || !auth.currentUser) throw new Error('Kullanıcı oturumu bulunamadı');
+      if (!auth.currentUser) {
+        setEmailError('Lütfen tekrar giriş yapın');
+        return;
+      }
       
       // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(user.email!, emailChangePassword);
+      const credential = EmailAuthProvider.credential(auth.currentUser.email!, emailChangePassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
       
       // Email güncelle
       await updateEmail(auth.currentUser, newEmail);
       
       // Context'teki user bilgisini güncelle
-      setUser({ ...user, email: newEmail });
+      if (user) {
+        setUser({ ...user, email: newEmail });
+      }
       
-      setSuccess('E-posta adresiniz başarıyla güncellendi');
-      setIsEmailModalOpen(false);
-      setEmailChangePassword('');
+      setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
+      handleCloseEmailModal();
     } catch (error) {
       if (error instanceof FirebaseError) {
         switch (error.code) {
           case 'auth/requires-recent-login':
-            setError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
+            setEmailError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
             break;
           case 'auth/invalid-email':
-            setError('Geçersiz e-posta adresi');
+            setEmailError('Geçersiz e-posta adresi');
             break;
           case 'auth/email-already-in-use':
-            setError('Bu e-posta adresi zaten kullanımda');
+            setEmailError('Bu e-posta adresi zaten kullanımda');
             break;
           case 'auth/wrong-password':
-            setError('Hatalı şifre');
+            setEmailError('Hatalı şifre');
             break;
           default:
-            setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
+            setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
-      } else if (error instanceof Error) {
-        setError(error.message);
       } else {
-        setError('Beklenmeyen bir hata oluştu');
+        setEmailError('Beklenmeyen bir hata oluştu');
       }
     } finally {
-      setLoading(false);
+      setEmailLoading(false);
     }
   };
 
   // Şifre değiştirme fonksiyonu
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+    setPasswordLoading(true);
 
     if (newPassword !== confirmPassword) {
-      setError('Yeni şifreler eşleşmiyor');
-      setLoading(false);
+      setPasswordError('Yeni şifreler eşleşmiyor');
+      setPasswordLoading(false);
       return;
     }
 
     try {
-      if (!user || !auth.currentUser) throw new Error('Kullanıcı oturumu bulunamadı');
+      if (!auth.currentUser) {
+        setPasswordError('Lütfen tekrar giriş yapın');
+        return;
+      }
       
       // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      const credential = EmailAuthProvider.credential(auth.currentUser.email!, currentPassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
       
       // Şifreyi güncelle
       await updatePassword(auth.currentUser, newPassword);
       
-      setSuccess('Şifreniz başarıyla güncellendi');
+      setPasswordSuccess('Şifreniz başarıyla güncellendi');
       
       // Şifre değişince oturumu kapat
-      localStorage.removeItem('token');
-      router.push('/');
-      window.location.reload();
+      setTimeout(() => {
+        localStorage.removeItem('token');
+        router.push('/');
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       if (error instanceof FirebaseError) {
         switch (error.code) {
           case 'auth/requires-recent-login':
-            setError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
+            setPasswordError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
             break;
           case 'auth/weak-password':
-            setError('Şifre çok zayıf. En az 6 karakter kullanın');
+            setPasswordError('Şifre çok zayıf. En az 6 karakter kullanın');
             break;
           case 'auth/wrong-password':
-            setError('Mevcut şifreniz hatalı');
+            setPasswordError('Mevcut şifreniz hatalı');
             break;
           default:
-            setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
+            setPasswordError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
-      } else if (error instanceof Error) {
-        setError(error.message);
       } else {
-        setError('Beklenmeyen bir hata oluştu');
+        setPasswordError('Beklenmeyen bir hata oluştu');
       }
     } finally {
-      setLoading(false);
+      setPasswordLoading(false);
     }
   };
 
@@ -184,15 +195,15 @@ export default function ProfilePage() {
                 required
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-500 text-sm">{success}</p>}
+            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+            {emailSuccess && <p className="text-green-500 text-sm">{emailSuccess}</p>}
             <div className="flex space-x-4">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={emailLoading}
                 className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
               >
-                {loading ? 'Güncelleniyor...' : 'Güncelle'}
+                {emailLoading ? 'Güncelleniyor...' : 'Güncelle'}
               </button>
               <button
                 type="button"
@@ -342,14 +353,14 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {success && <p className="text-green-500 text-sm">{success}</p>}
+          {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+          {passwordSuccess && <p className="text-green-500 text-sm">{passwordSuccess}</p>}
           <button
             type="submit"
-            disabled={loading}
+            disabled={passwordLoading}
             className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
           >
-            {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
+            {passwordLoading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
           </button>
         </form>
       </div>
@@ -378,8 +389,8 @@ export default function ProfilePage() {
   const handleCloseEmailModal = () => {
     setEmailChangePassword('');
     setNewEmail('');
-    setError('');
-    setSuccess('');
+    setEmailError('');
+    setEmailSuccess('');
     setIsEmailModalOpen(false);
   };
 
