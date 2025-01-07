@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 
