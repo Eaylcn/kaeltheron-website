@@ -65,13 +65,14 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
           }
 
           // Now try to login with Firebase
-          await signInWithEmailAndPassword(auth, data.email, formData.password);
+          const userCredential = await signInWithEmailAndPassword(auth, data.email, formData.password);
           
           // Update user context
           setUser({
             username: data.username,
             email: data.email,
-            uid: data.uid
+            uid: data.uid,
+            emailVerified: userCredential.user.emailVerified
           });
 
           // Store token
