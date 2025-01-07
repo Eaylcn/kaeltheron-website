@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification } from 'firebase/auth';
+import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 
@@ -77,11 +77,6 @@ export default function ProfilePage() {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
 
-      if (!currentUser.emailVerified) {
-        setEmailError('E-posta adresinizi değiştirmeden önce mevcut e-posta adresinizi doğrulamanız gerekiyor');
-        return;
-      }
-
       // Kullanıcıyı yeniden doğrula
       const credential = EmailAuthProvider.credential(
         currentUser.email!,
@@ -90,23 +85,12 @@ export default function ProfilePage() {
 
       await reauthenticateWithCredential(currentUser, credential);
 
-      // Send verification email to new address and update email
-      await updateEmail(currentUser, newEmail.toLowerCase());
-      await sendEmailVerification(currentUser);
+      // First verify before update email
+      await verifyBeforeUpdateEmail(currentUser, newEmail.toLowerCase());
 
       setEmailSuccess('Doğrulama e-postası gönderildi. Lütfen yeni e-posta adresinizi doğrulayın.');
       handleCloseEmailModal();
 
-      // Automatically sign out after 2 seconds
-      setTimeout(async () => {
-        try {
-          await signOut(auth);
-          localStorage.removeItem('token');
-          window.location.href = '/';
-        } catch (error) {
-          console.error('Logout error:', error);
-        }
-      }, 2000);
     } catch (error) {
       console.error('Email değiştirme hatası:', error);
       if (error instanceof FirebaseError) {
@@ -459,10 +443,10 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#0B1120] py-20">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="w-full md:w-64">
-            <div className="bg-[#162137] rounded-xl p-6">
+        <div className="flex flex-col md:flex-row-reverse gap-8">
+          {/* Sidebar - now on the right */}
+          <div className="w-full md:w-64 md:flex-shrink-0">
+            <div className="bg-[#162137] rounded-xl p-6 sticky top-24">
               <div className="flex items-center gap-4 mb-6">
                 <FaUserCircle className="w-12 h-12 text-amber-400" />
                 <div>
@@ -481,20 +465,6 @@ export default function ProfilePage() {
                   >
                     Doğrulama e-postasını yeniden gönder
                   </button>
-                </div>
-              )}
-
-              {/* Success message */}
-              {emailSuccess && (
-                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <p className="text-green-400 text-sm">{emailSuccess}</p>
-                </div>
-              )}
-
-              {/* Error message */}
-              {emailError && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <p className="text-red-400 text-sm">{emailError}</p>
                 </div>
               )}
 
@@ -518,24 +488,26 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Main content */}
-          <div className="flex-1">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-hennyPenny text-amber-400 mb-2">
-                Hoşgeldin, {user.username}
-              </h1>
-              <p className="text-slate-400 font-risque">
-                Macera seni bekliyor!
-              </p>
-            </div>
+          {/* Main content - centered */}
+          <div className="flex-1 flex flex-col items-center">
+            <div className="w-full max-w-3xl">
+              <div className="text-center mb-12">
+                <h1 className="text-4xl font-hennyPenny text-amber-400 mb-2">
+                  Hoşgeldin, {user.username}
+                </h1>
+                <p className="text-slate-400 font-risque">
+                  Macera seni bekliyor!
+                </p>
+              </div>
 
-            {/* Tab Content */}
-            <div className="pb-20">
-              {activeTab === 'characters' && renderCharactersTab()}
-              {activeTab === 'adventures' && renderAdventuresTab()}
-              {activeTab === 'settings' && renderSettingsTab()}
+              {/* Tab Content */}
+              <div className="pb-20">
+                {activeTab === 'characters' && renderCharactersTab()}
+                {activeTab === 'adventures' && renderAdventuresTab()}
+                {activeTab === 'settings' && renderSettingsTab()}
+              </div>
+              {renderEmailChangeModal()}
             </div>
-            {renderEmailChangeModal()}
           </div>
         </div>
       </div>
