@@ -5,6 +5,7 @@ import './globals.css'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { AuthProvider } from '@/context/AuthContext'
+import { Toaster } from 'react-hot-toast'
 
 const risque = Risque({
   weight: '400',
@@ -31,6 +32,7 @@ export default function RootLayout({
             {children}
           </div>
           <Footer />
+          <Toaster position="bottom-right" />
         </AuthProvider>
       </body>
     </html>
