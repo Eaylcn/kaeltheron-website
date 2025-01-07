@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface User {
   username: string;
@@ -25,16 +26,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Kullanıcı oturum açmışsa
-        setUser({
-          username: firebaseUser.displayName || 'Kullanıcı',
-          email: firebaseUser.email || '',
-          uid: firebaseUser.uid
-        });
+        try {
+          // Firestore'dan kullanıcı bilgilerini al
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              username: userData.username,
+              email: firebaseUser.email || '',
+              uid: firebaseUser.uid
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          setUser(null);
+        }
       } else {
-        // Kullanıcı oturum açmamışsa
         setUser(null);
       }
       setLoading(false);

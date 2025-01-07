@@ -63,11 +63,10 @@ export default function ProfilePage() {
     setEmailError('');
     setEmailSuccess('');
     setEmailLoading(true);
-    console.log('Email değiştirme başlatıldı');
 
     try {
       const currentUser = auth.currentUser;
-      if (!currentUser) {
+      if (!currentUser || !user) {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
 
@@ -78,7 +77,6 @@ export default function ProfilePage() {
       );
 
       await reauthenticateWithCredential(currentUser, credential);
-      console.log('Kullanıcı yeniden doğrulandı');
 
       // Firestore'da email güncelle
       const userRef = doc(db, 'users', currentUser.uid);
@@ -88,15 +86,12 @@ export default function ProfilePage() {
 
       // Firebase Auth'da email güncelle
       await updateEmail(currentUser, newEmail);
-      console.log('Email güncellendi:', newEmail);
 
       // Context'teki user bilgisini güncelle
-      if (user) {
-        setUser({
-          ...user,
-          email: newEmail
-        });
-      }
+      setUser({
+        ...user,
+        email: newEmail
+      });
 
       setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
       handleCloseEmailModal();
@@ -133,7 +128,6 @@ export default function ProfilePage() {
     setPasswordError('');
     setPasswordSuccess('');
     setPasswordLoading(true);
-    console.log('Şifre değiştirme başlatıldı');
 
     if (newPassword !== confirmPassword) {
       setPasswordError('Yeni şifreler eşleşmiyor');
@@ -143,7 +137,7 @@ export default function ProfilePage() {
 
     try {
       const currentUser = auth.currentUser;
-      if (!currentUser) {
+      if (!currentUser || !user) {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
 
@@ -154,11 +148,9 @@ export default function ProfilePage() {
       );
 
       await reauthenticateWithCredential(currentUser, credential);
-      console.log('Kullanıcı yeniden doğrulandı');
 
       // Şifreyi güncelle
       await updatePassword(currentUser, newPassword);
-      console.log('Şifre güncellendi');
 
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
 
