@@ -6,12 +6,14 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import AuthModal from '../auth/AuthModal';
+import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -99,8 +101,11 @@ const Navbar = () => {
 
       <AuthModal 
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onLogin={handleLogin}
+        onCloseAction={async () => setIsAuthModalOpen(false)}
+        onLoginAction={async () => {
+          setIsAuthModalOpen(false);
+          router.refresh();
+        }}
       />
     </>
   );

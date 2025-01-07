@@ -1,16 +1,25 @@
 'use client';
 
+import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
 const WorldMap = dynamic(() => import('./WorldMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] rounded-xl bg-white/5 animate-pulse" />
-  ),
+    <div className="w-full h-[800px] flex items-center justify-center bg-[#162137] rounded-lg">
+      <div className="text-white text-xl font-risque">Harita Yükleniyor...</div>
+    </div>
+  )
 });
 
-const MapWrapper = () => {
-  return <WorldMap />;
-};
-
-export default MapWrapper; 
+export default function MapWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-[800px] flex items-center justify-center bg-[#162137] rounded-lg">
+        <div className="text-white text-xl font-risque">Harita Yükleniyor...</div>
+      </div>
+    }>
+      <WorldMap />
+    </Suspense>
+  );
+} 
