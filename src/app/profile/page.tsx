@@ -15,7 +15,7 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -39,6 +39,22 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
 
+  // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
+  // Loading durumunda veya kullanıcı yoksa
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex items-center justify-center">
+        <div className="text-white">Yükleniyor...</div>
+      </div>
+    );
+  }
+
   // Email değiştirme fonksiyonu
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +64,7 @@ export default function ProfilePage() {
 
     try {
       if (!auth.currentUser) {
-        setEmailError('Lütfen tekrar giriş yapın');
+        await router.push('/');
         return;
       }
       
@@ -60,9 +76,10 @@ export default function ProfilePage() {
       await updateEmail(auth.currentUser, newEmail);
       
       // Context'teki user bilgisini güncelle
-      if (user) {
-        setUser({ ...user, email: newEmail });
-      }
+      setUser({
+        ...user,
+        email: newEmail
+      });
       
       setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
       handleCloseEmailModal();
@@ -82,9 +99,11 @@ export default function ProfilePage() {
             setEmailError('Hatalı şifre');
             break;
           default:
+            console.error('Firebase error:', error);
             setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
       } else {
+        console.error('Unknown error:', error);
         setEmailError('Beklenmeyen bir hata oluştu');
       }
     } finally {
@@ -107,7 +126,7 @@ export default function ProfilePage() {
 
     try {
       if (!auth.currentUser) {
-        setPasswordError('Lütfen tekrar giriş yapın');
+        await router.push('/');
         return;
       }
       
@@ -121,10 +140,14 @@ export default function ProfilePage() {
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
       
       // Şifre değişince oturumu kapat
-      setTimeout(() => {
-        localStorage.removeItem('token');
-        router.push('/');
-        window.location.reload();
+      setTimeout(async () => {
+        try {
+          await auth.signOut();
+          localStorage.removeItem('token');
+          router.push('/');
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
       }, 2000);
     } catch (error) {
       if (error instanceof FirebaseError) {
@@ -139,24 +162,17 @@ export default function ProfilePage() {
             setPasswordError('Mevcut şifreniz hatalı');
             break;
           default:
+            console.error('Firebase error:', error);
             setPasswordError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
       } else {
+        console.error('Unknown error:', error);
         setPasswordError('Beklenmeyen bir hata oluştu');
       }
     } finally {
       setPasswordLoading(false);
     }
   };
-
-  // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
-  React.useEffect(() => {
-    if (!user) {
-      router.push('/');
-    }
-  }, [user, router]);
-
-  if (!user) return null;
 
   const renderEmailChangeModal = () => {
     if (!isEmailModalOpen) return null;
