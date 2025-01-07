@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
@@ -29,16 +29,23 @@ export async function POST(request: Request) {
       displayName: username.toLowerCase()
     });
 
+    // Send verification email
+    await sendEmailVerification(user, {
+      url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      handleCodeInApp: false,
+    });
+
     // Create user document in Firestore
     const userDoc = doc(usersRef, user.uid);
     await setDoc(userDoc, {
       username: username.toLowerCase(),
       email: email.toLowerCase(),
+      emailVerified: false,
       createdAt: new Date().toISOString()
     });
 
     return NextResponse.json({
-      message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.',
+      message: 'Kayıt başarılı! E-posta adresinize doğrulama bağlantısı gönderildi. Lütfen e-postanızı kontrol edin ve doğrulama yapın.',
       username: username.toLowerCase(),
       email: user.email,
       uid: user.uid

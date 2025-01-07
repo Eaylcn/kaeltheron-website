@@ -77,6 +77,11 @@ export default function ProfilePage() {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
 
+      if (!currentUser.emailVerified) {
+        setEmailError('E-posta adresinizi değiştirmeden önce mevcut e-posta adresinizi doğrulamanız gerekiyor');
+        return;
+      }
+
       // Kullanıcıyı yeniden doğrula
       const credential = EmailAuthProvider.credential(
         currentUser.email!,
@@ -129,6 +134,20 @@ export default function ProfilePage() {
       }
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  // Doğrulama e-postasını yeniden gönder
+  const handleResendVerification = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await sendEmailVerification(currentUser);
+        setEmailSuccess('Doğrulama e-postası yeniden gönderildi. Lütfen e-posta kutunuzu kontrol edin.');
+      }
+    } catch (error) {
+      console.error('Verification email error:', error);
+      setEmailError('Doğrulama e-postası gönderilemedi. Lütfen daha sonra tekrar deneyin.');
     }
   };
 
