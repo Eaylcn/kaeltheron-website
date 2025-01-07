@@ -36,7 +36,8 @@ const Navbar = () => {
       }`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            <Link href="/" className="relative w-48 h-12 group">
+            {/* Logo */}
+            <Link href="/" className="relative w-48 h-12 group shrink-0">
               <div className="absolute inset-0 bg-transparent transition-all duration-300 group-hover:drop-shadow-[0_0_12px_rgba(252,211,77,1)]">
                 <Image
                   src="/logo3.png"
@@ -47,9 +48,10 @@ const Navbar = () => {
                 />
               </div>
             </Link>
-            
-            <div className="hidden md:flex items-center justify-center flex-1 mx-4">
-              <div className="flex space-x-8">
+
+            {/* Navigation Links */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden md:block">
+              <div className="flex items-center space-x-8">
                 <Link href="/story" className={`text-lg font-risque transition-colors ${
                   pathname === '/story' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
                 }`}>
@@ -68,6 +70,7 @@ const Navbar = () => {
               </div>
             </div>
 
+            {/* User Icon */}
             <div className="flex items-center space-x-4">
               {isLoggedIn ? (
                 <Link 
