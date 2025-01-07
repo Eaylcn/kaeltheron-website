@@ -14,16 +14,16 @@ export default function Navbar() {
   return (
     <nav className="bg-secondary/10 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="grid grid-cols-3 h-16 items-center">
           {/* Logo - Sol taraf */}
-          <div className="flex-shrink-0">
+          <div>
             <Link href="/" className="text-2xl font-bold text-primary">
               Kael&apos;theron
             </Link>
           </div>
 
-          {/* Orta menü - Tam ortada */}
-          <div className="absolute left-1/2 transform -translate-x-1/2">
+          {/* Orta menü */}
+          <div className="flex justify-center">
             <div className="flex space-x-4">
               <Link
                 href="/story"
@@ -59,7 +59,7 @@ export default function Navbar() {
           </div>
 
           {/* Hesap - Sağ taraf */}
-          <div className="flex-shrink-0">
+          <div className="flex justify-end">
             <Link
               href="/account"
               className={`p-2 rounded-lg transition-colors ${
