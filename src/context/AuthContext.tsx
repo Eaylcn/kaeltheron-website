@@ -1,9 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface User {
   username: string;
@@ -14,7 +14,6 @@ interface User {
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  login: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -57,40 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const login = async (username: string, email: string, password: string) => {
-    try {
-      // First sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-
-      // Get fresh token
-      const token = await firebaseUser.getIdToken(true);
-      localStorage.setItem('token', token);
-
-      // Get or create user document in Firestore
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-      if (!userDoc.exists()) {
-        await setDoc(doc(db, 'users', firebaseUser.uid), {
-          username,
-          email: email.toLowerCase(),
-          createdAt: new Date().toISOString()
-        });
-      }
-
-      // Update context
-      setUser({
-        username,
-        email: firebaseUser.email || '',
-        uid: firebaseUser.uid
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      setUser(null);
-      localStorage.removeItem('token');
-      throw error;
-    }
-  };
-
   const logout = async () => {
     try {
       await signOut(auth);
@@ -104,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     setUser,
-    login,
     logout,
     loading
   };

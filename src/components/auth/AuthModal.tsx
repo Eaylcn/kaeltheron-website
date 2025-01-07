@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { FirebaseError } from 'firebase/app';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,7 +21,7 @@ interface FormData {
 }
 
 export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: AuthModalProps) {
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -61,12 +64,40 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             return;
           }
 
-          // Now try to login with the email
-          await login(data.username, data.email, formData.password);
+          // Now try to login with Firebase
+          await signInWithEmailAndPassword(auth, data.email, formData.password);
+          
+          // Update user context
+          setUser({
+            username: data.username,
+            email: data.email,
+            uid: data.uid
+          });
+
+          // Store token
+          localStorage.setItem('token', data.token);
+
+          // Close modal and redirect
           await onLoginAction();
         } catch (loginError) {
           console.error('Login context error:', loginError);
-          setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
+          if (loginError instanceof FirebaseError) {
+            switch (loginError.code) {
+              case 'auth/wrong-password':
+                setError('Hatalı şifre');
+                break;
+              case 'auth/user-not-found':
+                setError('Kullanıcı bulunamadı');
+                break;
+              case 'auth/invalid-credential':
+                setError('Geçersiz kullanıcı bilgileri');
+                break;
+              default:
+                setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
+            }
+          } else {
+            setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
+          }
         }
       } else {
         // Kayıt işlemi
