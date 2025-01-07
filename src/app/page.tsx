@@ -1,4 +1,5 @@
 import React from 'react'
+// Main homepage component for Kael'Theron website
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaDiceD20, FaPaintBrush, FaRobot, FaBrain, FaUsers, FaDragon, FaMagic, FaMap } from 'react-icons/fa'
