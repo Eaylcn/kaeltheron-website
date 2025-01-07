@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import AuthModal from '../auth/AuthModal';
-import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -23,11 +22,6 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setIsAuthModalOpen(false);
-  };
 
   return (
     <>
@@ -104,6 +98,7 @@ const Navbar = () => {
         onCloseAction={async () => setIsAuthModalOpen(false)}
         onLoginAction={async () => {
           setIsAuthModalOpen(false);
+          setIsLoggedIn(true);
           router.refresh();
         }}
       />

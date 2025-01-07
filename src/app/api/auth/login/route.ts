@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { FirebaseError } from 'firebase/app';
 
 export async function POST(request: Request) {
   try {
@@ -18,11 +19,17 @@ export async function POST(request: Request) {
       email: user.email,
       uid: user.uid
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Login error:', error);
+    if (error instanceof FirebaseError) {
+      return NextResponse.json(
+        { message: 'Giriş yapılamadı. E-posta veya şifre hatalı.' },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
-      { message: 'Giriş yapılamadı. E-posta veya şifre hatalı.' },
-      { status: 401 }
+      { message: 'Bir hata oluştu' },
+      { status: 500 }
     );
   }
 } 
