@@ -61,29 +61,39 @@ export default function ProfilePage() {
     setEmailError('');
     setEmailSuccess('');
     setEmailLoading(true);
+    console.log('Email değiştirme başlatıldı');
 
     try {
       if (!auth.currentUser) {
+        console.log('Kullanıcı oturumu bulunamadı:', auth.currentUser);
         await router.push('/');
         return;
       }
       
+      console.log('Mevcut kullanıcı:', auth.currentUser.email);
+      
       // Kullanıcıyı yeniden doğrula
       const credential = EmailAuthProvider.credential(auth.currentUser.email!, emailChangePassword);
+      console.log('Kimlik bilgileri oluşturuldu');
+      
       await reauthenticateWithCredential(auth.currentUser, credential);
+      console.log('Kullanıcı yeniden doğrulandı');
       
       // Email güncelle
       await updateEmail(auth.currentUser, newEmail);
+      console.log('Email güncellendi:', newEmail);
       
       // Context'teki user bilgisini güncelle
       setUser({
         ...user,
         email: newEmail
       });
+      console.log('Context güncellendi');
       
       setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
       handleCloseEmailModal();
     } catch (error) {
+      console.error('Email değiştirme hatası:', error);
       if (error instanceof FirebaseError) {
         switch (error.code) {
           case 'auth/requires-recent-login':
@@ -117,6 +127,7 @@ export default function ProfilePage() {
     setPasswordError('');
     setPasswordSuccess('');
     setPasswordLoading(true);
+    console.log('Şifre değiştirme başlatıldı');
 
     if (newPassword !== confirmPassword) {
       setPasswordError('Yeni şifreler eşleşmiyor');
@@ -126,22 +137,30 @@ export default function ProfilePage() {
 
     try {
       if (!auth.currentUser) {
+        console.log('Kullanıcı oturumu bulunamadı:', auth.currentUser);
         await router.push('/');
         return;
       }
       
+      console.log('Mevcut kullanıcı:', auth.currentUser.email);
+      
       // Kullanıcıyı yeniden doğrula
       const credential = EmailAuthProvider.credential(auth.currentUser.email!, currentPassword);
+      console.log('Kimlik bilgileri oluşturuldu');
+      
       await reauthenticateWithCredential(auth.currentUser, credential);
+      console.log('Kullanıcı yeniden doğrulandı');
       
       // Şifreyi güncelle
       await updatePassword(auth.currentUser, newPassword);
+      console.log('Şifre güncellendi');
       
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
       
       // Şifre değişince oturumu kapat
       setTimeout(async () => {
         try {
+          console.log('Oturum kapatılıyor...');
           await auth.signOut();
           localStorage.removeItem('token');
           router.push('/');
@@ -150,6 +169,7 @@ export default function ProfilePage() {
         }
       }, 2000);
     } catch (error) {
+      console.error('Şifre değiştirme hatası:', error);
       if (error instanceof FirebaseError) {
         switch (error.code) {
           case 'auth/requires-recent-login':
