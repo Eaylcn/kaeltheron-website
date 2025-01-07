@@ -21,7 +21,7 @@ interface FormData {
 }
 
 export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: AuthModalProps) {
-  const { login, setUser } = useAuth();
+  const { setUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
