@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
-import { useSearchParams } from 'next/navigation';
 
 interface FirebaseError {
   code?: string;
@@ -12,34 +11,13 @@ interface FirebaseError {
 }
 
 function SettingsContent() {
-  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail, reauthenticateUser, verifyAndUpdateEmail } = useAuth();
+  const { user, updateUserEmail, updateUserPassword, logout, reauthenticateUser } = useAuth();
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const searchParams = useSearchParams();
-
-  const handleEmailVerification = useCallback(async (oobCode: string) => {
-    try {
-      setLoading(true);
-      await verifyAndUpdateEmail(oobCode);
-      toast.success('Email başarıyla güncellendi ve doğrulandı');
-    } catch {
-      toast.error('Email doğrulama işlemi başarısız oldu');
-    } finally {
-      setLoading(false);
-    }
-  }, [verifyAndUpdateEmail]);
-
-  useEffect(() => {
-    // URL'den email doğrulama kodunu kontrol et
-    const oobCode = searchParams.get('oobCode');
-    if (oobCode && user?.pendingEmail) {
-      handleEmailVerification(oobCode);
-    }
-  }, [searchParams, user, handleEmailVerification]);
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +27,7 @@ function SettingsContent() {
       setLoading(true);
       await reauthenticateUser(emailPassword);
       await updateUserEmail(newEmail);
-      toast.success('Doğrulama emaili gönderildi. Lütfen yeni emailinizi doğrulayın.');
+      toast.success('Email başarıyla güncellendi');
       setNewEmail('');
       setEmailPassword('');
     } catch (error: unknown) {
@@ -114,33 +92,6 @@ function SettingsContent() {
         
         <div className="bg-secondary/10 rounded-lg p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4 text-primary">Email Güncelle</h2>
-          {user.pendingEmail && (
-            <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
-              <p>
-                <strong>{user.pendingEmail}</strong> adresine doğrulama emaili gönderildi.
-                Lütfen emailinizi kontrol edin ve doğrulama linkine tıklayın.
-              </p>
-            </div>
-          )}
-          {!user.emailVerified && !user.pendingEmail && (
-            <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
-              <p>Email adresiniz henüz doğrulanmamış. 
-                <button 
-                  onClick={async () => {
-                    try {
-                      await sendVerificationEmail();
-                      toast.success('Doğrulama emaili gönderildi');
-                    } catch {
-                      toast.error('Doğrulama emaili gönderilemedi');
-                    }
-                  }}
-                  className="ml-2 underline hover:text-yellow-900"
-                >
-                  Doğrulama maili gönder
-                </button>
-              </p>
-            </div>
-          )}
           <form onSubmit={handleEmailUpdate} className="space-y-4">
             <div>
               <label htmlFor="newEmail" className="block text-sm font-medium mb-1">
@@ -257,19 +208,6 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-8 text-primary">Ayarlar</h1>
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-32 bg-gray-200 rounded mb-4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </main>
-    }>
-      <SettingsContent />
-    </Suspense>
+    <SettingsContent />
   );
 } 
