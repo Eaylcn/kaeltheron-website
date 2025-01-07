@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { username } = await request.json();
 
     // Kullanıcı adına göre email'i bul
     const usersRef = collection(db, 'users');

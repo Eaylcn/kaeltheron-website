@@ -37,7 +37,26 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
       if (isLogin) {
         // Login işlemi
         try {
-          await login(formData.username.toLowerCase(), formData.email, formData.password);
+          // First get the email for the username
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: formData.username.toLowerCase(),
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            setError(data.message || 'Giriş yapılamadı');
+            return;
+          }
+
+          // Now try to login with the email
+          await login(data.username, data.email, formData.password);
           await onLoginAction();
         } catch (loginError) {
           console.error('Login context error:', loginError);
