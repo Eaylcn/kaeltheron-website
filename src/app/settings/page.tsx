@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -21,25 +21,25 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
 
+  const handleEmailVerification = useCallback(async (oobCode: string) => {
+    try {
+      setLoading(true);
+      await verifyAndUpdateEmail(oobCode);
+      toast.success('Email başarıyla güncellendi ve doğrulandı');
+    } catch {
+      toast.error('Email doğrulama işlemi başarısız oldu');
+    } finally {
+      setLoading(false);
+    }
+  }, [verifyAndUpdateEmail]);
+
   useEffect(() => {
     // URL'den email doğrulama kodunu kontrol et
     const oobCode = searchParams.get('oobCode');
     if (oobCode && user?.pendingEmail) {
       handleEmailVerification(oobCode);
     }
-  }, [searchParams, user]);
-
-  const handleEmailVerification = async (oobCode: string) => {
-    try {
-      setLoading(true);
-      await verifyAndUpdateEmail(oobCode);
-      toast.success('Email başarıyla güncellendi ve doğrulandı');
-    } catch (error) {
-      toast.error('Email doğrulama işlemi başarısız oldu');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchParams, user, handleEmailVerification]);
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +118,7 @@ export default function SettingsPage() {
             <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
               <p>
                 <strong>{user.pendingEmail}</strong> adresine doğrulama emaili gönderildi.
-                Lütfen email'inizi kontrol edin ve doğrulama linkine tıklayın.
+                Lütfen emailinizi kontrol edin ve doğrulama linkine tıklayın.
               </p>
             </div>
           )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendEmailVerification } from 'firebase/auth';
+import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendEmailVerification, applyActionCode } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
@@ -118,6 +118,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !auth.currentUser || !user.pendingEmail) return;
 
     try {
+      // Doğrulama kodunu uygula
+      await applyActionCode(auth, oobCode);
+
       // Email'i güncelle
       await updateEmail(auth.currentUser, user.pendingEmail);
       
