@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react'
 // Main homepage component for Kael'Theron website
 import Image from 'next/image'
