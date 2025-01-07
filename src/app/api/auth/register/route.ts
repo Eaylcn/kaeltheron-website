@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
+import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +30,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Kullanıcı adının benzersiz olup olmadığını kontrol et
+    const usernameQuery = query(
+      collection(db, 'users'),
+      where('username', '==', username.trim().toLowerCase())
+    );
+    
+    const usernameSnapshot = await getDocs(usernameQuery);
+    if (!usernameSnapshot.empty) {
+      return NextResponse.json(
+        { message: 'Bu kullanıcı adı zaten kullanılıyor' },
+        { status: 400 }
+      );
+    }
+
     // Firebase ile kullanıcı oluştur
     const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
     const user = userCredential.user;
@@ -36,6 +51,14 @@ export async function POST(request: Request) {
     // Kullanıcı adını güncelle
     await updateProfile(user, {
       displayName: username.trim()
+    });
+
+    // Firestore'a kullanıcı bilgilerini kaydet
+    await setDoc(doc(db, 'users', user.uid), {
+      username: username.trim().toLowerCase(),
+      email: email.trim().toLowerCase(),
+      displayName: username.trim(),
+      createdAt: new Date().toISOString()
     });
 
     return NextResponse.json({
