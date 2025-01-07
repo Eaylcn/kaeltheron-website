@@ -36,32 +36,12 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
     try {
       if (isLogin) {
         // Login işlemi
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: formData.username.toLowerCase(),
-            password: formData.password,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          try {
-            if (data.token) {
-              localStorage.setItem('token', data.token);
-            }
-            await login(data.username, data.email, data.uid);
-            await onLoginAction();
-          } catch (loginError) {
-            console.error('Login context error:', loginError);
-            setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
-          }
-        } else {
-          setError(data.message || 'Giriş yapılamadı');
+        try {
+          await login(formData.username.toLowerCase(), formData.email, formData.password);
+          await onLoginAction();
+        } catch (loginError) {
+          console.error('Login context error:', loginError);
+          setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
         }
       } else {
         // Kayıt işlemi
@@ -87,10 +67,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
 
         if (response.ok) {
           try {
-            if (data.token) {
-              localStorage.setItem('token', data.token);
-            }
-            await login(data.username, data.email, data.uid);
+            await login(data.username, data.email, formData.password);
             await onLoginAction();
           } catch (loginError) {
             console.error('Register context error:', loginError);
