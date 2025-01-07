@@ -64,15 +64,11 @@ export default function ProfilePage() {
     setEmailSuccess('');
     setEmailLoading(true);
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setEmailError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-      setEmailLoading(false);
-      return;
-    }
-
     try {
+      // Auth state'i yenile
+      await auth.authStateReady();
       const currentUser = auth.currentUser;
+      
       if (!currentUser || !user) {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
@@ -140,13 +136,6 @@ export default function ProfilePage() {
     setPasswordSuccess('');
     setPasswordLoading(true);
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setPasswordError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-      setPasswordLoading(false);
-      return;
-    }
-
     if (newPassword !== confirmPassword) {
       setPasswordError('Yeni şifreler eşleşmiyor');
       setPasswordLoading(false);
@@ -154,7 +143,10 @@ export default function ProfilePage() {
     }
 
     try {
+      // Auth state'i yenile
+      await auth.authStateReady();
       const currentUser = auth.currentUser;
+      
       if (!currentUser || !user) {
         throw new Error('Kullanıcı oturumu bulunamadı');
       }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -35,8 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Auth state'i yenile
+      await auth.authStateReady();
       const currentUser = auth.currentUser;
+      
       if (!currentUser) {
+        localStorage.removeItem('token');
         setUser(null);
         setLoading(false);
         return;
@@ -50,9 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: currentUser.email || '',
           uid: currentUser.uid
         });
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+      localStorage.removeItem('token');
       setUser(null);
     }
     setLoading(false);
@@ -74,13 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: firebaseUser.email || '',
               uid: firebaseUser.uid
             });
+          } else {
+            setUser(null);
+            localStorage.removeItem('token');
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
           setUser(null);
+          localStorage.removeItem('token');
         }
       } else {
         setUser(null);
+        localStorage.removeItem('token');
       }
       setLoading(false);
     });
@@ -88,8 +101,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const login = (username: string, email: string, uid: string) => {
-    setUser({ username, email, uid });
+  const login = async (username: string, email: string, uid: string) => {
+    try {
+      // Auth state'i yenile
+      await auth.authStateReady();
+      const currentUser = auth.currentUser;
+      
+      if (currentUser) {
+        setUser({ username, email, uid });
+      } else {
+        throw new Error('Kullanıcı oturumu bulunamadı');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setUser(null);
+      localStorage.removeItem('token');
+    }
   };
 
   const logout = async () => {
