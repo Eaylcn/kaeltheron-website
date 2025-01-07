@@ -7,8 +7,6 @@ import { useRouter } from 'next/navigation';
 import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -17,7 +15,7 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, setUser, loading } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
