@@ -1,39 +1,30 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
-import bcrypt from 'bcryptjs';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const { email, password } = await request.json();
 
-    // Kullanıcıyı veritabanında ara
-    const { rows } = await sql`
-      SELECT * FROM users WHERE username = ${username}
-    `;
-
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { message: 'Kullanıcı adı veya şifre hatalı' },
-        { status: 401 }
-      );
-    }
-
-    const user = rows[0];
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-      return NextResponse.json(
-        { message: 'Kullanıcı adı veya şifre hatalı' },
-        { status: 401 }
-      );
-    }
+    // Firebase ile giriş yap
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
     return NextResponse.json({
-      username: user.username,
+      username: user.displayName,
       email: user.email
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    
+    // Firebase hata mesajlarını kontrol et
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      return NextResponse.json(
+        { message: 'E-posta adresi veya şifre hatalı' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Giriş yapılırken bir hata oluştu' },
       { status: 500 }

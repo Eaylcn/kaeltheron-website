@@ -1,49 +1,42 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
-import bcrypt from 'bcryptjs';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 export async function POST(request: Request) {
   try {
     const { username, email, password } = await request.json();
 
-    // Kullanıcı adı kontrolü
-    const existingUser = await sql`
-      SELECT * FROM users WHERE username = ${username}
-    `;
+    // Firebase ile kullanıcı oluştur
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    if (existingUser.rows.length > 0) {
-      return NextResponse.json(
-        { message: 'Bu kullanıcı adı zaten kullanılıyor' },
-        { status: 400 }
-      );
-    }
+    // Kullanıcı adını güncelle
+    await updateProfile(user, {
+      displayName: username
+    });
 
-    // E-posta kontrolü
-    const existingEmail = await sql`
-      SELECT * FROM users WHERE email = ${email}
-    `;
-
-    if (existingEmail.rows.length > 0) {
+    return NextResponse.json({
+      username,
+      email: user.email
+    });
+  } catch (error: any) {
+    console.error('Register error:', error);
+    
+    // Firebase hata mesajlarını kontrol et
+    if (error.code === 'auth/email-already-in-use') {
       return NextResponse.json(
         { message: 'Bu e-posta adresi zaten kullanılıyor' },
         { status: 400 }
       );
     }
+    
+    if (error.code === 'auth/weak-password') {
+      return NextResponse.json(
+        { message: 'Şifre en az 6 karakter olmalıdır' },
+        { status: 400 }
+      );
+    }
 
-    // Şifreyi hashle
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Kullanıcıyı veritabanına ekle
-    const { rows } = await sql`
-      INSERT INTO users (username, email, password)
-      VALUES (${username}, ${email}, ${hashedPassword})
-      RETURNING username, email
-    `;
-
-    return NextResponse.json(rows[0]);
-  } catch (error) {
-    console.error('Register error:', error);
     return NextResponse.json(
       { message: 'Kayıt olurken bir hata oluştu' },
       { status: 500 }
