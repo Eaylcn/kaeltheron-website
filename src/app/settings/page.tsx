@@ -5,6 +5,11 @@ import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 
+interface FirebaseError {
+  code?: string;
+  message: string;
+}
+
 export default function SettingsPage() {
   const { user, updateUserEmail, updateUserPassword, logout } = useAuth();
   const [newEmail, setNewEmail] = useState('');
@@ -15,15 +20,16 @@ export default function SettingsPage() {
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail) return;
+    if (!newEmail || !user) return;
 
     try {
       setLoading(true);
       await updateUserEmail(newEmail);
       toast.success('Email başarıyla güncellendi');
       setNewEmail('');
-    } catch (error: any) {
-      if (error.code === 'auth/requires-recent-login') {
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseError;
+      if (firebaseError.code === 'auth/requires-recent-login') {
         toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
       } else {
         toast.error('Email güncellenirken bir hata oluştu');
@@ -35,7 +41,7 @@ export default function SettingsPage() {
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) return;
+    if (!currentPassword || !newPassword || !confirmPassword || !user) return;
     
     if (newPassword !== confirmPassword) {
       toast.error('Yeni şifreler eşleşmiyor');
@@ -49,10 +55,11 @@ export default function SettingsPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
-      if (error.code === 'auth/wrong-password') {
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseError;
+      if (firebaseError.code === 'auth/wrong-password') {
         toast.error('Mevcut şifre yanlış');
-      } else if (error.code === 'auth/requires-recent-login') {
+      } else if (firebaseError.code === 'auth/requires-recent-login') {
         toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
       } else {
         toast.error('Şifre güncellenirken bir hata oluştu');
@@ -61,6 +68,17 @@ export default function SettingsPage() {
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8 text-primary">Ayarlar</h1>
+          <p className="text-lg">Lütfen önce giriş yapın.</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">
