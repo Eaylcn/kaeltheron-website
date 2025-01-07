@@ -64,6 +64,13 @@ export default function ProfilePage() {
     setEmailSuccess('');
     setEmailLoading(true);
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setEmailError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      setEmailLoading(false);
+      return;
+    }
+
     try {
       const currentUser = auth.currentUser;
       if (!currentUser || !user) {
@@ -86,6 +93,10 @@ export default function ProfilePage() {
 
       // Firebase Auth'da email güncelle
       await updateEmail(currentUser, newEmail);
+
+      // Yeni token al
+      const newToken = await currentUser.getIdToken(true);
+      localStorage.setItem('token', newToken);
 
       // Context'teki user bilgisini güncelle
       setUser({
@@ -129,6 +140,13 @@ export default function ProfilePage() {
     setPasswordSuccess('');
     setPasswordLoading(true);
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setPasswordError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      setPasswordLoading(false);
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setPasswordError('Yeni şifreler eşleşmiyor');
       setPasswordLoading(false);
@@ -151,6 +169,10 @@ export default function ProfilePage() {
 
       // Şifreyi güncelle
       await updatePassword(currentUser, newPassword);
+
+      // Yeni token al
+      const newToken = await currentUser.getIdToken(true);
+      localStorage.setItem('token', newToken);
 
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
 

@@ -25,11 +25,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Token'dan kullanıcı bilgilerini al
+  const getUserFromToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUser({
+          username: userData.username,
+          email: currentUser.email || '',
+          uid: currentUser.uid
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUser(null);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
+    // Sayfa yüklendiğinde token kontrolü yap
+    getUserFromToken();
+
+    // Firebase Auth state değişikliklerini dinle
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Firestore'dan kullanıcı bilgilerini al
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
@@ -49,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
