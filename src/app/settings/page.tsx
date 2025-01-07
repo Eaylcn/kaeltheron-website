@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
+import { useSearchParams } from 'next/navigation';
 
 interface FirebaseError {
   code?: string;
@@ -11,13 +12,34 @@ interface FirebaseError {
 }
 
 export default function SettingsPage() {
-  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail, reauthenticateUser } = useAuth();
+  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail, reauthenticateUser, verifyAndUpdateEmail } = useAuth();
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // URL'den email doğrulama kodunu kontrol et
+    const oobCode = searchParams.get('oobCode');
+    if (oobCode && user?.pendingEmail) {
+      handleEmailVerification(oobCode);
+    }
+  }, [searchParams, user]);
+
+  const handleEmailVerification = async (oobCode: string) => {
+    try {
+      setLoading(true);
+      await verifyAndUpdateEmail(oobCode);
+      toast.success('Email başarıyla güncellendi ve doğrulandı');
+    } catch (error) {
+      toast.error('Email doğrulama işlemi başarısız oldu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +49,7 @@ export default function SettingsPage() {
       setLoading(true);
       await reauthenticateUser(emailPassword);
       await updateUserEmail(newEmail);
-      toast.success('Email güncellendi ve doğrulama emaili gönderildi');
+      toast.success('Doğrulama emaili gönderildi. Lütfen yeni emailinizi doğrulayın.');
       setNewEmail('');
       setEmailPassword('');
     } catch (error: unknown) {
@@ -92,7 +114,15 @@ export default function SettingsPage() {
         
         <div className="bg-secondary/10 rounded-lg p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4 text-primary">Email Güncelle</h2>
-          {!user.emailVerified && (
+          {user.pendingEmail && (
+            <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
+              <p>
+                <strong>{user.pendingEmail}</strong> adresine doğrulama emaili gönderildi.
+                Lütfen email'inizi kontrol edin ve doğrulama linkine tıklayın.
+              </p>
+            </div>
+          )}
+          {!user.emailVerified && !user.pendingEmail && (
             <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
               <p>Email adresiniz henüz doğrulanmamış. 
                 <button 

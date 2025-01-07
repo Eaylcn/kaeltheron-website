@@ -10,6 +10,7 @@ interface User {
   email: string;
   uid: string;
   emailVerified: boolean;
+  pendingEmail?: string;
 }
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthContextType {
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   reauthenticateUser: (password: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
+  verifyAndUpdateEmail: (oobCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               username: userData.username,
               email: firebaseUser.email || '',
               uid: firebaseUser.uid,
-              emailVerified: firebaseUser.emailVerified
+              emailVerified: firebaseUser.emailVerified,
+              pendingEmail: userData.pendingEmail
             });
 
             // Update Firestore if email verification status changed
@@ -85,28 +88,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !auth.currentUser) return;
     
     try {
-      // Email güncelle
-      await updateEmail(auth.currentUser, email.toLowerCase());
-      
+      // Firestore'da bekleyen email'i kaydet
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        pendingEmail: email.toLowerCase()
+      });
+
       // Yeni email için doğrulama maili gönder
-      await sendEmailVerification(auth.currentUser);
+      const actionCodeSettings = {
+        url: `${window.location.origin}/settings?email=${email}`,
+        handleCodeInApp: true
+      };
+
+      await sendEmailVerification(auth.currentUser, actionCodeSettings);
+
+      // Local state'i güncelle
+      setUser(prev => prev ? {
+        ...prev,
+        pendingEmail: email.toLowerCase()
+      } : null);
+
+    } catch (error) {
+      console.error('Error updating email:', error);
+      throw error;
+    }
+  };
+
+  const verifyAndUpdateEmail = async (oobCode: string) => {
+    if (!user || !auth.currentUser || !user.pendingEmail) return;
+
+    try {
+      // Email'i güncelle
+      await updateEmail(auth.currentUser, user.pendingEmail);
       
       // Firestore'u güncelle
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
-        email: email.toLowerCase(),
-        emailVerified: false
+        email: user.pendingEmail,
+        pendingEmail: null,
+        emailVerified: true
       });
 
-      setUser(prev => prev ? {
-        ...prev,
-        email: email.toLowerCase(),
-        emailVerified: false
-      } : null);
+      // Local state'i güncelle
+      setUser(prev => {
+        if (!prev || !user.pendingEmail) return null;
+        return {
+          ...prev,
+          email: user.pendingEmail,
+          pendingEmail: undefined,
+          emailVerified: true
+        };
+      });
 
-      return;
+      // Yeni email için doğrulama durumunu güncelle
+      await sendEmailVerification(auth.currentUser);
+
     } catch (error) {
-      console.error('Error updating email:', error);
+      console.error('Error verifying and updating email:', error);
       throw error;
     }
   };
@@ -141,7 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateUserEmail,
     updateUserPassword,
     reauthenticateUser,
-    sendVerificationEmail
+    sendVerificationEmail,
+    verifyAndUpdateEmail
   };
 
   return (
