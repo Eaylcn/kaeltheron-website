@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
 
     // Validasyon kontrolleri
-    if (!email || typeof email !== 'string' || email.trim() === '') {
+    if (!username || typeof username !== 'string' || username.trim() === '') {
       return NextResponse.json(
-        { message: 'E-posta adresi gereklidir' },
+        { message: 'Kullanıcı adı gereklidir' },
         { status: 400 }
       );
     }
@@ -22,43 +23,54 @@ export async function POST(request: Request) {
       );
     }
 
-    // Firebase ile giriş yap
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+    // Kullanıcı adına göre Firestore'dan email'i bul
+    const usersRef = collection(db, 'users');
+    const q = query(
+      usersRef,
+      where('username', '==', username.trim().toLowerCase())
+    );
+    
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      return NextResponse.json(
+        { message: 'Kullanıcı adı veya şifre hatalı' },
+        { status: 400 }
+      );
+    }
+
+    // İlk eşleşen kullanıcının email'ini al
+    const userDoc = querySnapshot.docs[0];
+    const email = userDoc.data().email;
+
+    // Email ve şifre ile giriş yap
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
     return NextResponse.json({
-      username: user.displayName,
+      username: username.trim(),
       email: user.email
     });
   } catch (error: unknown) {
     console.error('Login error:', error);
     
-    // Firebase hata mesajlarını kontrol et
     if (error instanceof FirebaseError) {
-      if (error.code === 'auth/missing-email') {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
         return NextResponse.json(
-          { message: 'E-posta adresi gereklidir' },
+          { message: 'Kullanıcı adı veya şifre hatalı' },
           { status: 400 }
         );
       }
 
-      if (error.code === 'auth/invalid-email') {
+      if (error.code === 'auth/too-many-requests') {
         return NextResponse.json(
-          { message: 'Geçersiz e-posta adresi' },
-          { status: 400 }
-        );
-      }
-
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        return NextResponse.json(
-          { message: 'E-posta adresi veya şifre hatalı' },
-          { status: 401 }
+          { message: 'Çok fazla başarısız giriş denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' },
+          { status: 429 }
         );
       }
     }
 
     return NextResponse.json(
-      { message: 'Giriş yapılırken bir hata oluştu' },
+      { message: 'Giriş yaparken bir hata oluştu' },
       { status: 500 }
     );
   }
