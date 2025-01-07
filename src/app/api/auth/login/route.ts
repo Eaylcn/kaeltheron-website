@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -28,12 +28,26 @@ export async function POST(request: Request) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Token oluştur
-    const token = await user.getIdToken();
+    // Wait for auth state to be ready
+    await auth.authStateReady();
 
+    // Verify user exists in Firestore
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocData = await getDoc(userDocRef);
+    
+    if (!userDocData.exists()) {
+      throw new Error('User document not found in Firestore');
+    }
+
+    // Get fresh token
+    const token = await user.getIdToken(true);
+
+    // Return user data from Firestore
+    const userData = userDocData.data();
+    
     return NextResponse.json({
       token,
-      username: username,
+      username: userData.username,
       email: user.email,
       uid: user.uid
     });

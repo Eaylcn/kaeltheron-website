@@ -42,7 +42,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            username: formData.username,
+            username: formData.username.toLowerCase(),
             password: formData.password,
           }),
         });
@@ -50,11 +50,16 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
         const data = await response.json();
 
         if (response.ok) {
-          if (data.token) {
-            localStorage.setItem('token', data.token);
+          try {
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+            }
+            await login(data.username, data.email, data.uid);
+            await onLoginAction();
+          } catch (loginError) {
+            console.error('Login context error:', loginError);
+            setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
           }
-          login(data.username, data.email, data.uid);
-          await onLoginAction();
         } else {
           setError(data.message || 'Giriş yapılamadı');
         }
@@ -62,6 +67,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
         // Kayıt işlemi
         if (formData.password !== formData.confirmPassword) {
           setError('Şifreler eşleşmiyor');
+          setLoading(false);
           return;
         }
 
@@ -71,28 +77,32 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            isLogin: false
+            username: formData.username.toLowerCase(),
+            email: formData.email.toLowerCase(),
+            password: formData.password
           }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          if (data.token) {
-            localStorage.setItem('token', data.token);
+          try {
+            if (data.token) {
+              localStorage.setItem('token', data.token);
+            }
+            await login(data.username, data.email, data.uid);
+            await onLoginAction();
+          } catch (loginError) {
+            console.error('Register context error:', loginError);
+            setError('Kayıt yapıldı ancak giriş yapılamadı. Lütfen tekrar giriş yapmayı deneyin.');
           }
-          login(data.username, data.email, data.uid);
-          await onLoginAction();
         } else {
           setError(data.message || 'Kayıt yapılamadı');
         }
       }
     } catch (err) {
       console.error('Auth error:', err);
-      setError('Bir hata oluştu');
+      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }

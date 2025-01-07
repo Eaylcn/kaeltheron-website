@@ -80,7 +80,7 @@ export default function HomePage() {
 
       {/* Features Grid */}
       <section className="relative py-20 mt-32">
-        <div className="absolute inset-0 bg-[url('/texture.png')] opacity-5" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#162137]/10 to-transparent opacity-50" />
         <div className="relative max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-hennyPenny text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 mb-4 leading-relaxed py-2">

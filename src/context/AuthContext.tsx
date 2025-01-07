@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface User {
   username: string;
@@ -103,26 +103,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, email: string, uid: string) => {
     try {
-      // Add a small delay to allow Firebase to update its internal state
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Auth state'i yenile
+      // Wait for Firebase to initialize
       await auth.authStateReady();
+      
+      // Add a longer delay to ensure Firebase has time to process the auth state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const currentUser = auth.currentUser;
       
-      if (currentUser) {
-        const token = await currentUser.getIdToken();
-        localStorage.setItem('token', token);
-        setUser({ username, email, uid });
-      } else {
+      if (!currentUser) {
         console.error('User session not found after login');
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
+
+      // Get fresh token and user data
+      const token = await currentUser.getIdToken(true);
+      localStorage.setItem('token', token);
+
+      // Get user data from Firestore
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (!userDoc.exists()) {
+        // Create user document if it doesn't exist
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          username,
+          email: email.toLowerCase(),
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      // Update context
+      setUser({ username, email, uid });
     } catch (error) {
       console.error('Login error:', error);
       setUser(null);
       localStorage.removeItem('token');
-      throw error; // Re-throw the error to handle it in the UI
+      throw error;
     }
   };
 
