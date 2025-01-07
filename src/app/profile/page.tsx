@@ -27,6 +27,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
 
   // Form states
+  const [emailChangePassword, setEmailChangePassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,7 +44,7 @@ export default function ProfilePage() {
       if (!user || !auth.currentUser) throw new Error('Kullanıcı oturumu bulunamadı');
       
       // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      const credential = EmailAuthProvider.credential(user.email!, emailChangePassword);
       await reauthenticateWithCredential(auth.currentUser, credential);
       
       // Email güncelle
@@ -54,6 +55,7 @@ export default function ProfilePage() {
       
       setSuccess('E-posta adresiniz başarıyla güncellendi');
       setIsEmailModalOpen(false);
+      setEmailChangePassword('');
     } catch (error) {
       if (error instanceof FirebaseError) {
         switch (error.code) {
@@ -176,8 +178,8 @@ export default function ProfilePage() {
               <label className="block text-slate-300 mb-2">Şifreniz</label>
               <input
                 type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
+                value={emailChangePassword}
+                onChange={(e) => setEmailChangePassword(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                 required
               />
@@ -374,6 +376,15 @@ export default function ProfilePage() {
       </div>
     </div>
   );
+
+  // Modal kapatıldığında tüm form alanlarını temizle
+  const handleCloseEmailModal = () => {
+    setEmailChangePassword('');
+    setNewEmail('');
+    setError('');
+    setSuccess('');
+    setIsEmailModalOpen(false);
+  };
 
   return (
     <main className="min-h-screen bg-[#0B1120] pt-32">
