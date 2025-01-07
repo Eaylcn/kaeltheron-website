@@ -43,18 +43,24 @@ export default function ProfilePage() {
 
   // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
   React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/');
+    if (!loading) {
+      if (!user) {
+        router.replace('/');
+      }
     }
   }, [user, loading, router]);
 
   // Loading durumunda veya kullanıcı yoksa
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#0B1120] flex items-center justify-center">
         <div className="text-white">Yükleniyor...</div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Router will handle the redirect
   }
 
   // Email değiştirme fonksiyonu

@@ -37,14 +37,20 @@ export default function HomePage() {
                   her an benzersiz bir deneyim yaşayın.
                 </p>
                 <div className="flex flex-col md:flex-row items-center gap-6">
-                  <Link 
-                    href="/register" 
+                  <button 
+                    onClick={() => {
+                      // Add your AuthModal open logic here
+                      const authModal = document.getElementById('auth-modal');
+                      if (authModal) {
+                        authModal.click();
+                      }
+                    }}
                     className="group relative inline-flex items-center justify-center px-8 py-4 font-risque text-xl overflow-hidden rounded-xl transition-all duration-300"
                   >
                     <div className="absolute inset-0 w-full h-full transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-100"></div>
                     <div className="absolute inset-0 w-full h-full transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 opacity-0 group-hover:opacity-100"></div>
                     <span className="relative text-white font-medium tracking-wider">Maceraya Başla</span>
-                  </Link>
+                  </button>
                   <Link 
                     href="/about" 
                     className="group relative inline-flex items-center justify-center px-8 py-4 font-risque text-lg overflow-hidden rounded-xl border-2 border-amber-500/30 hover:border-amber-500/60 transition-all duration-300"
