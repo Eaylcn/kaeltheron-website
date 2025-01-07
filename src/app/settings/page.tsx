@@ -11,8 +11,9 @@ interface FirebaseError {
 }
 
 export default function SettingsPage() {
-  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail } = useAuth();
+  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail, reauthenticateUser } = useAuth();
   const [newEmail, setNewEmail] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,26 +21,21 @@ export default function SettingsPage() {
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail || !user) return;
+    if (!newEmail || !user || !emailPassword) return;
 
     try {
       setLoading(true);
+      await reauthenticateUser(emailPassword);
       await updateUserEmail(newEmail);
-      toast.success('Doğrulama emaili gönderildi. Lütfen yeni emailinizi doğrulayın.');
+      toast.success('Email güncellendi ve doğrulama emaili gönderildi');
       setNewEmail('');
+      setEmailPassword('');
     } catch (error: unknown) {
       const firebaseError = error as FirebaseError;
-      if (firebaseError.code === 'auth/requires-recent-login') {
+      if (firebaseError.code === 'auth/wrong-password') {
+        toast.error('Girdiğiniz şifre yanlış');
+      } else if (firebaseError.code === 'auth/requires-recent-login') {
         toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
-      } else if ((error as Error).message === 'current_email_not_verified') {
-        toast.error('Lütfen önce mevcut email adresinizi doğrulayın');
-        // Mevcut email için doğrulama maili gönder
-        try {
-          await sendVerificationEmail();
-          toast.success('Doğrulama emaili gönderildi');
-        } catch {
-          toast.error('Doğrulama emaili gönderilemedi');
-        }
       } else {
         toast.error('Email güncellenirken bir hata oluştu');
       }
@@ -127,6 +123,20 @@ export default function SettingsPage() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="yeni@email.com"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="emailPassword" className="block text-sm font-medium mb-1">
+                Mevcut Şifreniz
+              </label>
+              <input
+                type="password"
+                id="emailPassword"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="İşlemi onaylamak için şifrenizi girin"
                 required
               />
             </div>

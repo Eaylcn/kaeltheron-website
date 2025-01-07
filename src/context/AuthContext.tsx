@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendEmailVerification } from 'firebase/auth';
+import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
@@ -85,11 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !auth.currentUser) return;
     
     try {
-      // Önce mevcut email'i doğrula
-      if (!auth.currentUser.emailVerified) {
-        throw new Error('current_email_not_verified');
-      }
-
       // Email güncelle
       await updateEmail(auth.currentUser, email.toLowerCase());
       
@@ -109,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailVerified: false
       } : null);
 
+      return;
     } catch (error) {
       console.error('Error updating email:', error);
       throw error;
