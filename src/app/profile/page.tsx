@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -87,27 +87,23 @@ export default function ProfilePage() {
 
       await reauthenticateWithCredential(currentUser, credential);
 
-      // Firestore'da email güncelle
-      const userRef = doc(db, 'users', currentUser.uid);
-      await updateDoc(userRef, {
-        email: newEmail.toLowerCase()
-      });
+      // Send verification email to new address and update email
+      await updateEmail(currentUser, newEmail.toLowerCase());
+      await sendEmailVerification(currentUser);
 
-      // Firebase Auth'da email güncelle
-      await updateEmail(currentUser, newEmail);
-
-      // Yeni token al
-      const newToken = await currentUser.getIdToken(true);
-      localStorage.setItem('token', newToken);
-
-      // Context'teki user bilgisini güncelle
-      setUser({
-        ...user,
-        email: newEmail
-      });
-
-      setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
+      setEmailSuccess('Doğrulama e-postası gönderildi. Lütfen yeni e-posta adresinizi doğrulayın.');
       handleCloseEmailModal();
+
+      // Automatically sign out after 2 seconds
+      setTimeout(async () => {
+        try {
+          await signOut(auth);
+          localStorage.removeItem('token');
+          window.location.href = '/';
+        } catch (error) {
+          console.error('Logout error:', error);
+        }
+      }, 2000);
     } catch (error) {
       console.error('Email değiştirme hatası:', error);
       if (error instanceof FirebaseError) {
@@ -123,6 +119,9 @@ export default function ProfilePage() {
             break;
           case 'auth/wrong-password':
             setEmailError('Hatalı şifre');
+            break;
+          case 'auth/operation-not-allowed':
+            setEmailError('E-posta değişikliği için önce yeni adresinizi doğrulamanız gerekiyor');
             break;
           default:
             setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
@@ -168,22 +167,18 @@ export default function ProfilePage() {
       // Şifreyi güncelle
       await updatePassword(currentUser, newPassword);
 
-      // Yeni token al
-      const newToken = await currentUser.getIdToken(true);
-      localStorage.setItem('token', newToken);
-
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
 
       // Şifre değişince oturumu kapat
       setTimeout(async () => {
         try {
-          await auth.signOut();
+          await signOut(auth);
           localStorage.removeItem('token');
-          router.push('/');
+          window.location.href = '/';
         } catch (error) {
           console.error('Logout error:', error);
         }
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error('Şifre değiştirme hatası:', error);
       if (error instanceof FirebaseError) {
