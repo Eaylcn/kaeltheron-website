@@ -20,6 +20,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
   const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     username: '',
@@ -31,6 +32,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
 
     try {
@@ -45,6 +47,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             },
             body: JSON.stringify({
               username: formData.username.toLowerCase(),
+              password: formData.password
             }),
           });
 
@@ -56,7 +59,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
           }
 
           // Now try to login with the email
-          await login(data.username, data.email, formData.password);
+          await login(data.username, data.email, data.uid);
           await onLoginAction();
         } catch (loginError) {
           console.error('Login context error:', loginError);
@@ -85,13 +88,19 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
         const data = await response.json();
 
         if (response.ok) {
-          try {
-            await login(data.username, data.email, formData.password);
-            await onLoginAction();
-          } catch (loginError) {
-            console.error('Register context error:', loginError);
-            setError('Kayıt yapıldı ancak giriş yapılamadı. Lütfen tekrar giriş yapmayı deneyin.');
-          }
+          setSuccess(data.message);
+          // Reset form
+          setFormData({
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+          });
+          // Switch to login view after 2 seconds
+          setTimeout(() => {
+            setIsLogin(true);
+            setSuccess(null);
+          }, 2000);
         } else {
           setError(data.message || 'Kayıt yapılamadı');
         }
@@ -203,6 +212,10 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             <p className="text-red-500 text-sm">{error}</p>
           )}
           
+          {success && (
+            <p className="text-green-500 text-sm">{success}</p>
+          )}
+          
           <button
             type="submit"
             disabled={loading}
@@ -214,7 +227,17 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
         
         <button
           type="button"
-          onClick={() => setIsLogin(!isLogin)}
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError(null);
+            setSuccess(null);
+            setFormData({
+              username: '',
+              email: '',
+              password: '',
+              confirmPassword: ''
+            });
+          }}
           className="text-amber-400 hover:text-amber-300 text-sm mt-4"
         >
           {isLogin ? 'Hesabın yok mu? Kayıt ol' : 'Zaten hesabın var mı? Giriş yap'}

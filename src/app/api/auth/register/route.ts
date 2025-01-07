@@ -1,27 +1,45 @@
 import { NextResponse } from 'next/server';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
+import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
     const { username, email, password } = await request.json();
 
-    // Kullanıcı oluştur
+    // Check if username already exists
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('username', '==', username.toLowerCase()));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      return NextResponse.json(
+        { message: 'Bu kullanıcı adı zaten kullanımda' },
+        { status: 400 }
+      );
+    }
+
+    // Create user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Kullanıcı adını güncelle
+    // Update profile and create user document
     await updateProfile(user, {
-      displayName: username
+      displayName: username.toLowerCase()
     });
 
-    // Token oluştur
-    const token = await user.getIdToken();
+    // Create user document in Firestore
+    const userDoc = doc(usersRef, user.uid);
+    await setDoc(userDoc, {
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      createdAt: new Date().toISOString()
+    });
 
     return NextResponse.json({
-      token,
-      username: user.displayName || username,
+      message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.',
+      username: username.toLowerCase(),
       email: user.email,
       uid: user.uid
     });
