@@ -211,6 +211,27 @@ export default function ProfilePage() {
           </button>
         </form>
       </div>
+
+      {/* Çıkış Yap */}
+      <div className="bg-[#162137] rounded-xl p-8">
+        <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Oturumu Sonlandır</h3>
+        <div className="space-y-4">
+          <p className="text-slate-300">Hesabınızdan çıkış yapmak istediğinizden emin misiniz?</p>
+          <button
+            onClick={() => {
+              // Clear the auth state
+              localStorage.removeItem('token');
+              // Redirect to home page
+              router.push('/');
+              // Reset auth context
+              window.location.reload();
+            }}
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-risque py-3 rounded-lg transition-all flex items-center justify-center space-x-2"
+          >
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 

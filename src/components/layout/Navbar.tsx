@@ -48,22 +48,24 @@ const Navbar = () => {
               </div>
             </Link>
             
-            <div className="hidden md:flex space-x-8">
-              <Link href="/story" className={`text-lg font-risque transition-colors ${
-                pathname === '/story' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
-              }`}>
-                Hikaye
-              </Link>
-              <Link href="/characters" className={`text-lg font-risque transition-colors ${
-                pathname === '/characters' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
-              }`}>
-                Karakterler
-              </Link>
-              <Link href="/map" className={`text-lg font-risque transition-colors ${
-                pathname === '/map' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
-              }`}>
-                Harita
-              </Link>
+            <div className="hidden md:flex items-center justify-center flex-1 mx-4">
+              <div className="flex space-x-8">
+                <Link href="/story" className={`text-lg font-risque transition-colors ${
+                  pathname === '/story' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
+                }`}>
+                  Hikaye
+                </Link>
+                <Link href="/characters" className={`text-lg font-risque transition-colors ${
+                  pathname === '/characters' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
+                }`}>
+                  Karakterler
+                </Link>
+                <Link href="/map" className={`text-lg font-risque transition-colors ${
+                  pathname === '/map' ? 'text-amber-300' : 'text-slate-200 hover:text-amber-300'
+                }`}>
+                  Harita
+                </Link>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
