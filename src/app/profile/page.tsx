@@ -5,6 +5,7 @@ import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSl
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
 
 const tabs = [
@@ -53,8 +54,29 @@ export default function ProfilePage() {
       
       setSuccess('E-posta adresiniz başarıyla güncellendi');
       setIsEmailModalOpen(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/requires-recent-login':
+            setError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
+            break;
+          case 'auth/invalid-email':
+            setError('Geçersiz e-posta adresi');
+            break;
+          case 'auth/email-already-in-use':
+            setError('Bu e-posta adresi zaten kullanımda');
+            break;
+          case 'auth/wrong-password':
+            setError('Hatalı şifre');
+            break;
+          default:
+            setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
+        }
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Beklenmeyen bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,8 +111,26 @@ export default function ProfilePage() {
       localStorage.removeItem('token');
       router.push('/');
       window.location.reload();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/requires-recent-login':
+            setError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
+            break;
+          case 'auth/weak-password':
+            setError('Şifre çok zayıf. En az 6 karakter kullanın');
+            break;
+          case 'auth/wrong-password':
+            setError('Mevcut şifreniz hatalı');
+            break;
+          default:
+            setError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
+        }
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Beklenmeyen bir hata oluştu');
+      }
     } finally {
       setLoading(false);
     }
