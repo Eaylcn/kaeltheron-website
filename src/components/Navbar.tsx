@@ -1,44 +1,60 @@
-import React from 'react'
-import Link from 'next/link'
+'use client';
 
-const Navbar = () => {
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FaCog } from 'react-icons/fa';
+
+export default function Navbar() {
+  const pathname = usePathname();
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#0B1120] to-transparent">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
-          <Link href="/" className="text-2xl font-hennyPenny text-amber-400">
-            Kael&apos;Theron
+    <nav className="bg-secondary/10 backdrop-blur-md fixed w-full z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link href="/" className="text-xl font-bold text-primary">
+            Kael&apos;theron
           </Link>
-          
-          <div className="hidden md:flex space-x-8">
-            <Link href="/story" className="text-lg font-risque text-slate-200 hover:text-amber-300 transition-colors">
+
+          {/* Navigation Links - Centered */}
+          <div className="flex-1 flex justify-center space-x-8">
+            <Link
+              href="/story"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === '/story' ? 'text-primary' : 'text-gray-400'
+              }`}
+            >
               Hikaye
             </Link>
-            <Link href="/characters" className="text-lg font-risque text-slate-200 hover:text-amber-300 transition-colors">
+            <Link
+              href="/characters"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === '/characters' ? 'text-primary' : 'text-gray-400'
+              }`}
+            >
               Karakterler
             </Link>
-            <Link href="/map" className="text-lg font-risque text-slate-200 hover:text-amber-300 transition-colors">
+            <Link
+              href="/map"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                pathname === '/map' ? 'text-primary' : 'text-gray-400'
+              }`}
+            >
               Harita
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <Link 
-              href="/register" 
-              className="hidden md:inline-block px-6 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque hover:from-amber-600 hover:to-yellow-600 transition-all"
-            >
-              Kayıt Ol
-            </Link>
-            <button className="md:hidden text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
+          {/* Settings Button */}
+          <Link
+            href="/settings"
+            className={`p-2 rounded-lg transition-colors hover:bg-secondary/20 ${
+              pathname === '/settings' ? 'text-primary' : 'text-gray-400'
+            }`}
+          >
+            <FaCog className="w-5 h-5" />
+          </Link>
         </div>
       </div>
     </nav>
-  )
-}
-
-export default Navbar 
+  );
+} 
