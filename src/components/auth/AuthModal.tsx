@@ -42,9 +42,8 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email: formData.email,
+            username: formData.username,
             password: formData.password,
-            isLogin: true
           }),
         });
 
@@ -117,56 +116,81 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
         </h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div>
-              <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required={!isLogin}
-              />
-            </div>
-          )}
-          
-          <div>
-            <label className="block text-slate-300 mb-2">E-posta</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-slate-300 mb-2">Şifre</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              required
-            />
-          </div>
-          
-          {!isLogin && (
-            <div>
-              <label className="block text-slate-300 mb-2">Şifre Tekrar</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required={!isLogin}
-              />
-            </div>
+          {isLogin ? (
+            <>
+              <div>
+                <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-2">Şifre</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required={!isLogin}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-slate-300 mb-2">E-posta</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-slate-300 mb-2">Şifre</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-slate-300 mb-2">Şifre Tekrar</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  required={!isLogin}
+                />
+              </div>
+            </>
           )}
           
           {error && (

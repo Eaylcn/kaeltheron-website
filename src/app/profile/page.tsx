@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -64,32 +66,38 @@ export default function ProfilePage() {
     console.log('Email değiştirme başlatıldı');
 
     try {
-      if (!auth.currentUser) {
-        console.log('Kullanıcı oturumu bulunamadı:', auth.currentUser);
-        await router.push('/');
-        return;
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('Kullanıcı oturumu bulunamadı');
       }
-      
-      console.log('Mevcut kullanıcı:', auth.currentUser.email);
-      
+
       // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(auth.currentUser.email!, emailChangePassword);
-      console.log('Kimlik bilgileri oluşturuldu');
-      
-      await reauthenticateWithCredential(auth.currentUser, credential);
+      const credential = EmailAuthProvider.credential(
+        currentUser.email!,
+        emailChangePassword
+      );
+
+      await reauthenticateWithCredential(currentUser, credential);
       console.log('Kullanıcı yeniden doğrulandı');
-      
-      // Email güncelle
-      await updateEmail(auth.currentUser, newEmail);
-      console.log('Email güncellendi:', newEmail);
-      
-      // Context'teki user bilgisini güncelle
-      setUser({
-        ...user,
-        email: newEmail
+
+      // Firestore'da email güncelle
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, {
+        email: newEmail.toLowerCase()
       });
-      console.log('Context güncellendi');
-      
+
+      // Firebase Auth'da email güncelle
+      await updateEmail(currentUser, newEmail);
+      console.log('Email güncellendi:', newEmail);
+
+      // Context'teki user bilgisini güncelle
+      if (user) {
+        setUser({
+          ...user,
+          email: newEmail
+        });
+      }
+
       setEmailSuccess('E-posta adresiniz başarıyla güncellendi');
       handleCloseEmailModal();
     } catch (error) {
@@ -109,11 +117,9 @@ export default function ProfilePage() {
             setEmailError('Hatalı şifre');
             break;
           default:
-            console.error('Firebase error:', error);
             setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
       } else {
-        console.error('Unknown error:', error);
         setEmailError('Beklenmeyen bir hata oluştu');
       }
     } finally {
@@ -136,31 +142,29 @@ export default function ProfilePage() {
     }
 
     try {
-      if (!auth.currentUser) {
-        console.log('Kullanıcı oturumu bulunamadı:', auth.currentUser);
-        await router.push('/');
-        return;
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('Kullanıcı oturumu bulunamadı');
       }
-      
-      console.log('Mevcut kullanıcı:', auth.currentUser.email);
-      
+
       // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(auth.currentUser.email!, currentPassword);
-      console.log('Kimlik bilgileri oluşturuldu');
-      
-      await reauthenticateWithCredential(auth.currentUser, credential);
+      const credential = EmailAuthProvider.credential(
+        currentUser.email!,
+        currentPassword
+      );
+
+      await reauthenticateWithCredential(currentUser, credential);
       console.log('Kullanıcı yeniden doğrulandı');
-      
+
       // Şifreyi güncelle
-      await updatePassword(auth.currentUser, newPassword);
+      await updatePassword(currentUser, newPassword);
       console.log('Şifre güncellendi');
-      
+
       setPasswordSuccess('Şifreniz başarıyla güncellendi');
-      
+
       // Şifre değişince oturumu kapat
       setTimeout(async () => {
         try {
-          console.log('Oturum kapatılıyor...');
           await auth.signOut();
           localStorage.removeItem('token');
           router.push('/');
@@ -182,11 +186,9 @@ export default function ProfilePage() {
             setPasswordError('Mevcut şifreniz hatalı');
             break;
           default:
-            console.error('Firebase error:', error);
             setPasswordError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
         }
       } else {
-        console.error('Unknown error:', error);
         setPasswordError('Beklenmeyen bir hata oluştu');
       }
     } finally {
