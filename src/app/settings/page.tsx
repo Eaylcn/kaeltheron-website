@@ -11,7 +11,7 @@ interface FirebaseError {
 }
 
 export default function SettingsPage() {
-  const { user, updateUserEmail, updateUserPassword, logout } = useAuth();
+  const { user, updateUserEmail, updateUserPassword, logout, sendVerificationEmail } = useAuth();
   const [newEmail, setNewEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -25,12 +25,21 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       await updateUserEmail(newEmail);
-      toast.success('Email başarıyla güncellendi');
+      toast.success('Doğrulama emaili gönderildi. Lütfen yeni emailinizi doğrulayın.');
       setNewEmail('');
     } catch (error: unknown) {
       const firebaseError = error as FirebaseError;
       if (firebaseError.code === 'auth/requires-recent-login') {
         toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
+      } else if ((error as Error).message === 'current_email_not_verified') {
+        toast.error('Lütfen önce mevcut email adresinizi doğrulayın');
+        // Mevcut email için doğrulama maili gönder
+        try {
+          await sendVerificationEmail();
+          toast.success('Doğrulama emaili gönderildi');
+        } catch (verifyError) {
+          toast.error('Doğrulama emaili gönderilemedi');
+        }
       } else {
         toast.error('Email güncellenirken bir hata oluştu');
       }
@@ -87,6 +96,25 @@ export default function SettingsPage() {
         
         <div className="bg-secondary/10 rounded-lg p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4 text-primary">Email Güncelle</h2>
+          {!user.emailVerified && (
+            <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg">
+              <p>Email adresiniz henüz doğrulanmamış. 
+                <button 
+                  onClick={async () => {
+                    try {
+                      await sendVerificationEmail();
+                      toast.success('Doğrulama emaili gönderildi');
+                    } catch (error) {
+                      toast.error('Doğrulama emaili gönderilemedi');
+                    }
+                  }}
+                  className="ml-2 underline hover:text-yellow-900"
+                >
+                  Doğrulama maili gönder
+                </button>
+              </p>
+            </div>
+          )}
           <form onSubmit={handleEmailUpdate} className="space-y-4">
             <div>
               <label htmlFor="newEmail" className="block text-sm font-medium mb-1">

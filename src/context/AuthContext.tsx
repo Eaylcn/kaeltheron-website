@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { onAuthStateChanged, signOut, updateEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
@@ -20,6 +20,7 @@ interface AuthContextType {
   updateUserEmail: (email: string) => Promise<void>;
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   reauthenticateUser: (password: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,12 +76,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await reauthenticateWithCredential(auth.currentUser, credential);
   };
 
+  const sendVerificationEmail = async () => {
+    if (!auth.currentUser) throw new Error('No user found');
+    await sendEmailVerification(auth.currentUser);
+  };
+
   const updateUserEmail = async (email: string) => {
     if (!user || !auth.currentUser) return;
     
     try {
+      // Önce mevcut email'i doğrula
+      if (!auth.currentUser.emailVerified) {
+        throw new Error('current_email_not_verified');
+      }
+
+      // Email güncelle
       await updateEmail(auth.currentUser, email.toLowerCase());
       
+      // Yeni email için doğrulama maili gönder
+      await sendEmailVerification(auth.currentUser);
+      
+      // Firestore'u güncelle
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         email: email.toLowerCase(),
@@ -92,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: email.toLowerCase(),
         emailVerified: false
       } : null);
+
     } catch (error) {
       console.error('Error updating email:', error);
       throw error;
@@ -127,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     updateUserEmail,
     updateUserPassword,
-    reauthenticateUser
+    reauthenticateUser,
+    sendVerificationEmail
   };
 
   return (
