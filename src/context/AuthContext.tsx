@@ -3,12 +3,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 interface User {
   username: string;
   email: string;
   uid: string;
+  emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   loading: boolean;
+  updateUserEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,8 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({
               username: userData.username,
               email: firebaseUser.email || '',
-              uid: firebaseUser.uid
+              uid: firebaseUser.uid,
+              emailVerified: firebaseUser.emailVerified
             });
+
+            // Update Firestore if email verification status changed
+            if (userData.emailVerified !== firebaseUser.emailVerified) {
+              await updateDoc(doc(db, 'users', firebaseUser.uid), {
+                emailVerified: firebaseUser.emailVerified
+              });
+            }
           } else {
             setUser(null);
             localStorage.removeItem('token');
@@ -56,6 +66,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const updateUserEmail = async (email: string) => {
+    if (!user) return;
+    
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, {
+      email: email.toLowerCase(),
+      emailVerified: false
+    });
+
+    setUser(prev => prev ? {
+      ...prev,
+      email: email.toLowerCase(),
+      emailVerified: false
+    } : null);
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -70,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     setUser,
     logout,
-    loading
+    loading,
+    updateUserEmail
   };
 
   return (

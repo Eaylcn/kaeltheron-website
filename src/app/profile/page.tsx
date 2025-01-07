@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, updateEmail } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -15,7 +16,7 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, updateUserEmail } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -85,10 +86,16 @@ export default function ProfilePage() {
 
       await reauthenticateWithCredential(currentUser, credential);
 
-      // First verify before update email
-      await verifyBeforeUpdateEmail(currentUser, newEmail.toLowerCase());
+      // Update email in Firebase Auth
+      await updateEmail(currentUser, newEmail.toLowerCase());
+      
+      // Send verification email
+      await sendEmailVerification(currentUser);
 
-      setEmailSuccess('Doğrulama e-postası gönderildi. Lütfen yeni e-posta adresinizi doğrulayın.');
+      // Update context and Firestore
+      await updateUserEmail(newEmail.toLowerCase());
+
+      setEmailSuccess('E-posta adresiniz güncellendi ve doğrulama e-postası gönderildi. Lütfen yeni e-posta adresinizi doğrulayın.');
       handleCloseEmailModal();
 
     } catch (error) {
@@ -451,12 +458,22 @@ export default function ProfilePage() {
                 <FaUserCircle className="w-12 h-12 text-amber-400" />
                 <div>
                   <h2 className="text-lg font-medium text-slate-200">{user.username}</h2>
-                  <p className="text-sm text-slate-400">{user.email}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-slate-400">{user.email}</p>
+                    {!user.emailVerified && (
+                      <div className="group relative">
+                        <FaExclamationCircle className="w-4 h-4 text-red-500" />
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 bg-red-500 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          E-posta adresinizi doğrulamanız gerekiyor
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Email verification status */}
-              {auth.currentUser && !auth.currentUser.emailVerified && (
+              {!user.emailVerified && (
                 <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-amber-400 text-sm mb-2">E-posta adresiniz doğrulanmamış</p>
                   <button
@@ -465,6 +482,13 @@ export default function ProfilePage() {
                   >
                     Doğrulama e-postasını yeniden gönder
                   </button>
+                </div>
+              )}
+
+              {/* Success message */}
+              {emailSuccess && (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-green-400 text-sm">{emailSuccess}</p>
                 </div>
               )}
 
