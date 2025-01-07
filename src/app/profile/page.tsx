@@ -457,46 +457,88 @@ export default function ProfilePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0B1120] pt-32">
+    <div className="min-h-screen bg-[#0B1120] py-20">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-hennyPenny text-amber-400 mb-2">
-            Hoşgeldin, {user.username}
-          </h1>
-          <p className="text-slate-400 font-risque">
-            Macera seni bekliyor!
-          </p>
-        </div>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="w-full md:w-64">
+            <div className="bg-[#162137] rounded-xl p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <FaUserCircle className="w-12 h-12 text-amber-400" />
+                <div>
+                  <h2 className="text-lg font-medium text-slate-200">{user.username}</h2>
+                  <p className="text-sm text-slate-400">{user.email}</p>
+                </div>
+              </div>
 
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="flex justify-center space-x-4">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white'
-                    : 'bg-[#162137] text-slate-300 hover:text-amber-300'
-                }`}
-              >
-                <span className="text-xl">{tab.icon}</span>
-                <span className="font-risque">{tab.label}</span>
-              </button>
-            ))}
+              {/* Email verification status */}
+              {auth.currentUser && !auth.currentUser.emailVerified && (
+                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <p className="text-amber-400 text-sm mb-2">E-posta adresiniz doğrulanmamış</p>
+                  <button
+                    onClick={handleResendVerification}
+                    className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
+                  >
+                    Doğrulama e-postasını yeniden gönder
+                  </button>
+                </div>
+              )}
+
+              {/* Success message */}
+              {emailSuccess && (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-green-400 text-sm">{emailSuccess}</p>
+                </div>
+              )}
+
+              {/* Error message */}
+              {emailError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm">{emailError}</p>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="space-y-2">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-amber-500/10 text-amber-400'
+                        : 'text-slate-400 hover:bg-slate-700/30 hover:text-slate-300'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main content */}
+          <div className="flex-1">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-hennyPenny text-amber-400 mb-2">
+                Hoşgeldin, {user.username}
+              </h1>
+              <p className="text-slate-400 font-risque">
+                Macera seni bekliyor!
+              </p>
+            </div>
+
+            {/* Tab Content */}
+            <div className="pb-20">
+              {activeTab === 'characters' && renderCharactersTab()}
+              {activeTab === 'adventures' && renderAdventuresTab()}
+              {activeTab === 'settings' && renderSettingsTab()}
+            </div>
+            {renderEmailChangeModal()}
           </div>
         </div>
-
-        {/* Tab Content */}
-        <div className="pb-20">
-          {activeTab === 'characters' && renderCharactersTab()}
-          {activeTab === 'adventures' && renderAdventuresTab()}
-          {activeTab === 'settings' && renderSettingsTab()}
-        </div>
-        {renderEmailChangeModal()}
       </div>
-    </main>
+    </div>
   );
 } 
