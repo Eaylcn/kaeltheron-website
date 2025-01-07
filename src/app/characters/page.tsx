@@ -20,8 +20,8 @@ export default function CharactersPage() {
           <h1 className="text-6xl font-hennyPenny text-white mb-4">
             Kael&apos;Theron&apos;un Kahramanları
           </h1>
-          <p className="text-xl font-risque text-gray-200">
-            Dünyayı şekillendiren efsaneler ve onların hikayeleri
+          <p className="text-lg text-slate-300">
+            Kael&apos;theron&apos;un efsanevi karakterleriyle tanışın
           </p>
         </div>
       </section>

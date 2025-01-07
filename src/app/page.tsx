@@ -1,7 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FaDiceD20, FaPaintBrush, FaRobot, FaBookOpen, FaGamepad, FaBrain, FaUsers, FaDragon, FaMagic, FaMap } from 'react-icons/fa'
+import { FaDiceD20, FaPaintBrush, FaRobot, FaBookOpen, FaGamepad, FaBrain, FaUsers, FaDragon, FaMagic, FaMap, FaDiscord, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa'
 
 export default function HomePage() {
   return (

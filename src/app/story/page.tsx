@@ -22,8 +22,11 @@ export default function StoryPage() {
           <h1 className="text-6xl font-hennyPenny text-white mb-4">
             Kael&apos;Theron&apos;un Hikayesi
           </h1>
-          <p className="text-xl font-risque text-gray-200">
-            Efsanelerin, kaderlerin ve destanların dünyası
+          <p className="text-lg text-slate-300 mb-8">
+            Kael&apos;theron&apos;un destansı hikayesini keşfedin.
+          </p>
+          <p className="text-base text-slate-400">
+            &ldquo;Kadim güçlerin gölgesinde&rdquo; başlayan yolculuk...
           </p>
         </div>
       </section>
