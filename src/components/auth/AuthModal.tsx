@@ -71,8 +71,7 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
           setUser({
             username: data.username,
             email: data.email,
-            uid: data.uid,
-            emailVerified: userCredential.user.emailVerified
+            uid: data.uid
           });
 
           // Store token

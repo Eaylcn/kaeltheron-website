@@ -9,8 +9,6 @@ interface User {
   username: string;
   email: string;
   uid: string;
-  emailVerified: boolean;
-  pendingEmail?: string;
 }
 
 interface AuthContextType {
@@ -21,8 +19,6 @@ interface AuthContextType {
   updateUserEmail: (email: string) => Promise<void>;
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   reauthenticateUser: (password: string) => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
-  verifyAndUpdateEmail: (oobCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,17 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({
               username: userData.username,
               email: firebaseUser.email || '',
-              uid: firebaseUser.uid,
-              emailVerified: firebaseUser.emailVerified,
-              pendingEmail: userData.pendingEmail
+              uid: firebaseUser.uid
             });
-
-            // Update Firestore if email verification status changed
-            if (userData.emailVerified !== firebaseUser.emailVerified) {
-              await updateDoc(doc(db, 'users', firebaseUser.uid), {
-                emailVerified: firebaseUser.emailVerified
-              });
-            }
           } else {
             setUser(null);
             localStorage.removeItem('token');
@@ -79,75 +66,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await reauthenticateWithCredential(auth.currentUser, credential);
   };
 
-  const sendVerificationEmail = async () => {
-    if (!auth.currentUser) throw new Error('No user found');
-    await sendEmailVerification(auth.currentUser);
-  };
-
   const updateUserEmail = async (email: string) => {
     if (!user || !auth.currentUser) return;
     
     try {
-      // Firestore'da bekleyen email'i kaydet
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        pendingEmail: email.toLowerCase()
-      });
-
-      // Yeni email için doğrulama maili gönder
-      const actionCodeSettings = {
-        url: `${window.location.origin}/settings?email=${email}`,
-        handleCodeInApp: true
-      };
-
-      await sendEmailVerification(auth.currentUser, actionCodeSettings);
-
-      // Local state'i güncelle
-      setUser(prev => prev ? {
-        ...prev,
-        pendingEmail: email.toLowerCase()
-      } : null);
-
-    } catch (error) {
-      console.error('Error updating email:', error);
-      throw error;
-    }
-  };
-
-  const verifyAndUpdateEmail = async (oobCode: string) => {
-    if (!user || !auth.currentUser || !user.pendingEmail) return;
-
-    try {
-      // Doğrulama kodunu uygula
-      await applyActionCode(auth, oobCode);
-
-      // Email'i güncelle
-      await updateEmail(auth.currentUser, user.pendingEmail);
+      await updateEmail(auth.currentUser, email.toLowerCase());
       
       // Firestore'u güncelle
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
-        email: user.pendingEmail,
-        pendingEmail: null,
-        emailVerified: true
+        email: email.toLowerCase()
       });
 
       // Local state'i güncelle
-      setUser(prev => {
-        if (!prev || !user.pendingEmail) return null;
-        return {
-          ...prev,
-          email: user.pendingEmail,
-          pendingEmail: undefined,
-          emailVerified: true
-        };
-      });
-
-      // Yeni email için doğrulama durumunu güncelle
-      await sendEmailVerification(auth.currentUser);
+      setUser(prev => prev ? {
+        ...prev,
+        email: email.toLowerCase()
+      } : null);
 
     } catch (error) {
-      console.error('Error verifying and updating email:', error);
+      console.error('Error updating email:', error);
       throw error;
     }
   };
@@ -181,9 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     updateUserEmail,
     updateUserPassword,
-    reauthenticateUser,
-    sendVerificationEmail,
-    verifyAndUpdateEmail
+    reauthenticateUser
   };
 
   return (
