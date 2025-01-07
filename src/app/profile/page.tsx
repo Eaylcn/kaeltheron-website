@@ -196,7 +196,7 @@ export default function ProfilePage() {
               </button>
               <button
                 type="button"
-                onClick={() => setIsEmailModalOpen(false)}
+                onClick={handleCloseEmailModal}
                 className="flex-1 bg-slate-700 text-white font-risque py-2 rounded-lg hover:bg-slate-600 transition-all"
               >
                 İptal
@@ -270,10 +270,7 @@ export default function ProfilePage() {
             />
             <button 
               onClick={() => {
-                setError('');
-                setSuccess('');
-                setCurrentPassword('');
-                setNewEmail('');
+                handleCloseEmailModal();
                 setIsEmailModalOpen(true);
               }}
               className="text-amber-400 hover:text-amber-300 text-sm mt-2"
