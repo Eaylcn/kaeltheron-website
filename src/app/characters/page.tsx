@@ -11,7 +11,7 @@ export default function CharactersPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 via-[#162137]/80 to-[#1C2B4B]/90 z-10" />
           <Image
             src="/characters-bg.png"
-            alt="Kael'Theron'un Kahramanları"
+            alt="Kael&apos;Theron&apos;un Kahramanları"
             fill
             className="object-cover"
           />
@@ -49,7 +49,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-yellow-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        İnsanların lideri ve Velisara'nın Kralı
+                        İnsanların lideri ve Velisara&apos;nın Kralı
                       </p>
                     </div>
                     <div>
@@ -94,7 +94,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-yellow-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Cücelerin kralı ve Anvilheim'ın yöneticisi
+                        Cücelerin kralı ve Anvilheim&apos;ın yöneticisi
                       </p>
                     </div>
                     <div>
@@ -139,7 +139,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-yellow-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Elflerin lideri ve Eryndor Konseyi'nin başkanı
+                        Elflerin lideri ve Eryndor Konseyi&apos;nin başkanı
                       </p>
                     </div>
                     <div>
@@ -280,7 +280,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-red-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Eryndor Sürgünü ve Karabüyü Tarikatı'nın kurucusu
+                        Eryndor Sürgünü ve Karabüyü Tarikatı&apos;nın kurucusu
                       </p>
                     </div>
                     <div>
@@ -325,7 +325,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-red-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Kael'Theron'un ilk çağlarından kalma, metalik ejderhaların efsanevi kralı
+                        Kael&apos;Theron&apos;un ilk çağlarından kalma, metalik ejderhaların efsanevi kralı
                       </p>
                     </div>
                     <div>
@@ -337,7 +337,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-red-200 mb-2">Hedef</h4>
                       <p className="font-risque text-gray-300">
-                        Düzenin ve dengenin koruyucusu olarak Nartharax'ın yükselişini engellemek
+                        Düzenin ve dengenin koruyucusu olarak Nartharax&apos;ın yükselişini engellemek
                       </p>
                     </div>
                     <div>
@@ -382,7 +382,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-blue-200 mb-2">Merkez</h4>
                       <p className="font-risque text-gray-300">
-                        Auroras Buz Çölü'nün derinliklerindeki gizli tapınak
+                        Auroras Buz Çölü&apos;nün derinliklerindeki gizli tapınak
                       </p>
                     </div>
                     <div>
@@ -560,7 +560,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-purple-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Büyü Muhafızı ve Konsey'in baş büyücüsü
+                        Büyü Muhafızı ve Konsey&apos;in baş büyücüsü
                       </p>
                     </div>
                     <div>
@@ -611,7 +611,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Eryndor Ormanları'nda yaşayan vahşi kurt
+                        Eryndor Ormanları&apos;nda yaşayan vahşi kurt
                       </p>
                     </div>
                     <div>
@@ -649,7 +649,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Auroras Buz Çölü'nde yaşayan tehlikeli örümcek
+                        Auroras Buz Çölü&apos;nde yaşayan tehlikeli örümcek
                       </p>
                     </div>
                     <div>
@@ -687,7 +687,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Güney Bataklıkları'nda yaşayan dev sülük
+                        Güney Bataklıkları&apos;nda yaşayan dev sülük
                       </p>
                     </div>
                     <div>
@@ -725,7 +725,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Kuzey Diken Tepeleri'nin kumlu bölgelerinde yaşayan zehirli akrep
+                        Kuzey Diken Tepeleri&apos;nin kumlu bölgelerinde yaşayan zehirli akrep
                       </p>
                     </div>
                     <div>
@@ -763,7 +763,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Anvilheim Zirvesi'nin mağaralarında yaşayan büyük yarasa
+                        Anvilheim Zirvesi&apos;nin mağaralarında yaşayan büyük yarasa
                       </p>
                     </div>
                     <div>
@@ -801,7 +801,7 @@ export default function CharactersPage() {
                     <div>
                       <h4 className="font-hennyPenny text-green-200 mb-2">Tanım</h4>
                       <p className="font-risque text-gray-300">
-                        Eryndor Ormanları'nda yaşayan kurnaz tilki
+                        Eryndor Ormanları&apos;nda yaşayan kurnaz tilki
                       </p>
                     </div>
                     <div>
