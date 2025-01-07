@@ -37,7 +37,7 @@ export default function SettingsPage() {
         try {
           await sendVerificationEmail();
           toast.success('Doğrulama emaili gönderildi');
-        } catch (verifyError) {
+        } catch {
           toast.error('Doğrulama emaili gönderilemedi');
         }
       } else {
@@ -104,7 +104,7 @@ export default function SettingsPage() {
                     try {
                       await sendVerificationEmail();
                       toast.success('Doğrulama emaili gönderildi');
-                    } catch (error) {
+                    } catch {
                       toast.error('Doğrulama emaili gönderilemedi');
                     }
                   }}
