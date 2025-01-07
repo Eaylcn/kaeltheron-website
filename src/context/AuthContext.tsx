@@ -103,19 +103,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, email: string, uid: string) => {
     try {
+      // Add a small delay to allow Firebase to update its internal state
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Auth state'i yenile
       await auth.authStateReady();
       const currentUser = auth.currentUser;
       
       if (currentUser) {
+        const token = await currentUser.getIdToken();
+        localStorage.setItem('token', token);
         setUser({ username, email, uid });
       } else {
+        console.error('User session not found after login');
         throw new Error('Kullanıcı oturumu bulunamadı');
       }
     } catch (error) {
       console.error('Login error:', error);
       setUser(null);
       localStorage.removeItem('token');
+      throw error; // Re-throw the error to handle it in the UI
     }
   };
 
