@@ -11,20 +11,17 @@ export default function StoryPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 via-[#162137]/80 to-[#1C2B4B]/90 z-10" />
           <Image
             src="/story-bg.png"
-            alt="Kael&apos;Theron Hikayesi"
+            alt="Kael'Theron Hikayesi"
             fill
             className="object-cover"
           />
         </div>
-        <div className="relative z-20 text-center">
-          <h1 className="text-6xl font-hennyPenny text-white mb-4">
+        <div className="relative z-20 text-center max-w-4xl mx-auto px-4">
+          <h1 className="text-4xl md:text-6xl font-hennyPenny text-white mb-4 drop-shadow-[0_0_12px_rgba(252,211,77,0.3)]">
             Kael&apos;Theron&apos;un Hikayesi
           </h1>
-          <p className="text-lg text-slate-300 mb-8">
+          <p className="text-lg md:text-xl text-slate-300 font-risque">
             Kael&apos;theron&apos;un destansı hikayesini keşfedin.
-          </p>
-          <p className="text-base text-slate-400">
-            &ldquo;Kadim güçlerin gölgesinde&rdquo; başlayan yolculuk...
           </p>
         </div>
       </section>

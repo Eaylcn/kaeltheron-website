@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -12,13 +14,87 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Form states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+
+  // Email değiştirme fonksiyonu
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      if (!user || !auth.currentUser) throw new Error('Kullanıcı oturumu bulunamadı');
+      
+      // Kullanıcıyı yeniden doğrula
+      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Email güncelle
+      await updateEmail(auth.currentUser, newEmail);
+      
+      // Context'teki user bilgisini güncelle
+      setUser({ ...user, email: newEmail });
+      
+      setSuccess('E-posta adresiniz başarıyla güncellendi');
+      setIsEmailModalOpen(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Şifre değiştirme fonksiyonu
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (newPassword !== confirmPassword) {
+      setError('Yeni şifreler eşleşmiyor');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (!user || !auth.currentUser) throw new Error('Kullanıcı oturumu bulunamadı');
+      
+      // Kullanıcıyı yeniden doğrula
+      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Şifreyi güncelle
+      await updatePassword(auth.currentUser, newPassword);
+      
+      setSuccess('Şifreniz başarıyla güncellendi');
+      
+      // Şifre değişince oturumu kapat
+      localStorage.removeItem('token');
+      router.push('/');
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
   React.useEffect(() => {
@@ -36,12 +112,12 @@ export default function ProfilePage() {
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
         <div className="bg-[#162137] rounded-xl w-full max-w-md p-6 relative">
           <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">E-posta Adresini Değiştir</h3>
-          <form className="space-y-4">
+          <form onSubmit={handleEmailChange} className="space-y-4">
             <div>
               <label className="block text-slate-300 mb-2">Mevcut E-posta</label>
               <input
                 type="email"
-                value={user.email}
+                value={user?.email || ''}
                 disabled
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
               />
@@ -50,22 +126,31 @@ export default function ProfilePage() {
               <label className="block text-slate-300 mb-2">Yeni E-posta</label>
               <input
                 type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                required
               />
             </div>
             <div>
               <label className="block text-slate-300 mb-2">Şifreniz</label>
               <input
                 type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                required
               />
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {success && <p className="text-green-500 text-sm">{success}</p>}
             <div className="flex space-x-4">
               <button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all"
+                disabled={loading}
+                className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
               >
-                Güncelle
+                {loading ? 'Güncelleniyor...' : 'Güncelle'}
               </button>
               <button
                 type="button"
@@ -142,7 +227,13 @@ export default function ProfilePage() {
               className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
             />
             <button 
-              onClick={() => setIsEmailModalOpen(true)}
+              onClick={() => {
+                setError('');
+                setSuccess('');
+                setCurrentPassword('');
+                setNewEmail('');
+                setIsEmailModalOpen(true);
+              }}
               className="text-amber-400 hover:text-amber-300 text-sm mt-2"
             >
               E-posta Adresini Değiştir
@@ -154,13 +245,16 @@ export default function ProfilePage() {
       {/* Şifre Değiştirme */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Şifre Değiştir</h3>
-        <form className="space-y-4">
+        <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
             <label className="block text-slate-300 mb-2">Mevcut Şifre</label>
             <div className="relative">
               <input
                 type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                required
               />
               <button
                 type="button"
@@ -176,7 +270,10 @@ export default function ProfilePage() {
             <div className="relative">
               <input
                 type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                required
               />
               <button
                 type="button"
@@ -192,7 +289,10 @@ export default function ProfilePage() {
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                required
               />
               <button
                 type="button"
@@ -203,11 +303,14 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-500 text-sm">{success}</p>}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
           >
-            Şifreyi Güncelle
+            {loading ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
           </button>
         </form>
       </div>
@@ -219,11 +322,8 @@ export default function ProfilePage() {
           <p className="text-slate-300">Hesabınızdan çıkış yapmak istediğinizden emin misiniz?</p>
           <button
             onClick={() => {
-              // Clear the auth state
               localStorage.removeItem('token');
-              // Redirect to home page
               router.push('/');
-              // Reset auth context
               window.location.reload();
             }}
             className="w-full bg-red-500 hover:bg-red-600 text-white font-risque py-3 rounded-lg transition-all flex items-center justify-center space-x-2"
