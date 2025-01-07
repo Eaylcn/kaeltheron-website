@@ -6,8 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut, sendEmailVerification, updateEmail } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { auth, db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
