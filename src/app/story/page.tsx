@@ -1,7 +1,5 @@
 import React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import { FaMapMarkedAlt, FaCrown, FaHistory, FaSkull } from 'react-icons/fa'
 import StoryNavigation from '@/components/navigation/StoryNavigation'
 
 export default function StoryPage() {
