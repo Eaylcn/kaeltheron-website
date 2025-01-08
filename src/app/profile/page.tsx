@@ -4,9 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -46,7 +43,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -58,19 +55,7 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     try {
       setIsLoading(true);
-      // Logout API'sini çağır
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Çıkış yapılırken bir hata oluştu');
-      }
-
-      // AuthContext'teki logout fonksiyonunu çağır
-      logout();
-      
-      // Ana sayfaya yönlendir
+      await logout();
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
