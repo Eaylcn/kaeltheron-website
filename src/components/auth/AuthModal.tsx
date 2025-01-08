@@ -32,11 +32,28 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // API'ye istek at
+      const response = await fetch('/api/auth/' + (isLoginView ? 'login' : 'register'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Bir hata oluştu');
+      }
+
+      if (!isLoginView) {
+        // Kayıt başarılı, kullanıcıya e-posta doğrulama mesajını göster
+        alert(data.message || 'Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.');
+      }
       
-      // Login the user
-      login(formData.username, formData.email || 'user@example.com');
+      // Login the user with complete user data
+      login(data);
       
       // Set token
       localStorage.setItem('token', 'dummy-token');
@@ -46,6 +63,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
       onClose();
     } catch (error) {
       console.error('Auth error:', error);
+      alert(error instanceof Error ? error.message : 'Bir hata oluştu');
     } finally {
       setIsLoading(false);
     }

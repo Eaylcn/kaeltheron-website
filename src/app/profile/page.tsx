@@ -85,24 +85,32 @@ export default function ProfilePage() {
       {/* Hesap Bilgileri */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Hesap Bilgileri</h3>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-            <input
-              type="text"
-              value={user?.username || ''}
-              disabled
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-            />
+            <h4 className="text-slate-400 text-sm mb-1">Kullanıcı Adı</h4>
+            <p className="text-slate-200 font-medium">{user?.username}</p>
           </div>
           <div>
-            <label className="block text-slate-300 mb-2">E-posta</label>
-            <input
-              type="email"
-              value={user?.email || ''}
-              disabled
-              className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-            />
+            <h4 className="text-slate-400 text-sm mb-1">E-posta</h4>
+            <p className="text-slate-200 font-medium">{user?.email}</p>
+            {user?.emailVerified && (
+              <span className="inline-flex items-center mt-1 text-xs text-emerald-400">
+                <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Doğrulanmış E-posta
+              </span>
+            )}
+          </div>
+          <div>
+            <h4 className="text-slate-400 text-sm mb-1">Katılma Tarihi</h4>
+            <p className="text-slate-200 font-medium">
+              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : ''}
+            </p>
           </div>
         </div>
       </div>

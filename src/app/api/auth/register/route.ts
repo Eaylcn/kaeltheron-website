@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 
@@ -53,17 +53,27 @@ export async function POST(request: Request) {
       displayName: username.trim()
     });
 
+    // E-posta doğrulama linki gönder
+    await sendEmailVerification(user, {
+      url: process.env.NEXT_PUBLIC_APP_URL + '/login?verified=true',
+      handleCodeInApp: false,
+    });
+
     // Firestore'a kullanıcı bilgilerini kaydet
     await setDoc(doc(db, 'users', user.uid), {
       username: username.trim().toLowerCase(),
       email: email.trim().toLowerCase(),
       displayName: username.trim(),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      emailVerified: false
     });
 
     return NextResponse.json({
       username: username.trim(),
-      email: user.email
+      email: user.email,
+      emailVerified: false,
+      createdAt: new Date().toISOString(),
+      message: 'Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.'
     });
   } catch (error: unknown) {
     console.error('Register error:', error);
