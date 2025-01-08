@@ -43,8 +43,36 @@ export async function POST(request: Request) {
       );
     }
 
+    // Email'in benzersiz olup olmadığını kontrol et
+    const emailSnapshot = await adminDb
+      .collection('users')
+      .where('email', '==', email.trim().toLowerCase())
+      .get();
+
+    if (!emailSnapshot.empty) {
+      return NextResponse.json(
+        { message: 'Bu e-posta adresi zaten kullanılıyor' },
+        { status: 400 }
+      );
+    }
+
     // Firebase ile kullanıcı oluştur
-    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    let userCredential;
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    } catch (error) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/email-already-in-use') {
+          return NextResponse.json(
+            { message: 'Bu e-posta adresi zaten kullanılıyor' },
+            { status: 400 }
+          );
+        }
+        throw error;
+      }
+      throw error;
+    }
+
     const user = userCredential.user;
 
     // Kullanıcı adını güncelle
@@ -66,10 +94,7 @@ export async function POST(request: Request) {
 
     // E-posta doğrulama linki gönder
     try {
-      await sendEmailVerification(user, {
-        url: (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/login?verified=true',
-        handleCodeInApp: false,
-      });
+      await sendEmailVerification(user);
     } catch (emailError) {
       console.error('Email verification error:', emailError);
       // E-posta gönderimi başarısız olsa bile kullanıcı kaydını tamamla
@@ -82,7 +107,6 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     console.error('Register error:', error);
     
-    // Firebase hata mesajlarını kontrol et
     if (error instanceof FirebaseError) {
       if (error.code === 'auth/missing-email') {
         return NextResponse.json(
@@ -97,13 +121,6 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
-
-      if (error.code === 'auth/email-already-in-use') {
-        return NextResponse.json(
-          { message: 'Bu e-posta adresi zaten kullanılıyor' },
-          { status: 400 }
-        );
-      }
       
       if (error.code === 'auth/weak-password') {
         return NextResponse.json(
@@ -113,8 +130,8 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { message: `Firebase hatası: ${error.message}` },
-        { status: 500 }
+        { message: `Kayıt hatası: ${error.message}` },
+        { status: 400 }
       );
     }
 

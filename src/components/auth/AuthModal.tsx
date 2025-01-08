@@ -99,7 +99,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-background border-none">
+      <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 bg-white border border-slate-200 dark:border-slate-800 shadow-lg backdrop-blur-lg">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
@@ -107,9 +107,19 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted">
-            <TabsTrigger value="login" className="data-[state=active]:bg-background">Giriş Yap</TabsTrigger>
-            <TabsTrigger value="register" className="data-[state=active]:bg-background">Kayıt Ol</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800">
+            <TabsTrigger 
+              value="login" 
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-500"
+            >
+              Giriş Yap
+            </TabsTrigger>
+            <TabsTrigger 
+              value="register" 
+              className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-amber-500"
+            >
+              Kayıt Ol
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface User {
   uid: string;
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -86,9 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setLoading(true);
     try {
-      await auth.signOut();
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
       setUser(null);
-      window.location.href = '/';
+      router.push('/');
     } finally {
       setLoading(false);
     }
@@ -110,8 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(error.message);
       }
 
-      // Kayıt başarılı, login sayfasına yönlendir
-      window.location.href = '/login?registered=true';
+      const data = await response.json();
+      return data;
     } finally {
       setLoading(false);
     }
