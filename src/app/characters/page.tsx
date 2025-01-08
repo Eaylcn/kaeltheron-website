@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import CharacterFilters from '@/components/ui/CharacterFilters'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Character {
   id: string;
@@ -38,7 +39,14 @@ interface Faction {
 
 const CharacterCard = ({ character }: { character: Character }) => {
   return (
-    <div className="flip-card">
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      className="flip-card"
+    >
       <div className="flip-card-inner">
         {/* Front Side */}
         <div className="flip-card-front">
@@ -69,7 +77,7 @@ const CharacterCard = ({ character }: { character: Character }) => {
         
         {/* Back Side */}
         <div className="flip-card-back">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 h-full flex flex-col justify-center">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 h-full">
             <div className="space-y-6">
               <div>
                 <h4 className="font-hennyPenny text-yellow-200 mb-3">Statlar</h4>
@@ -81,7 +89,7 @@ const CharacterCard = ({ character }: { character: Character }) => {
                 <h4 className="font-hennyPenny text-yellow-200 mb-3">Yetenekler</h4>
                 <ul className="font-risque text-gray-300 list-disc list-inside">
                   {character.abilities.map((ability, index) => (
-                    <li key={index}>{ability}</li>
+                    <li key={index} className="mb-1">{ability}</li>
                   ))}
                 </ul>
               </div>
@@ -93,13 +101,20 @@ const CharacterCard = ({ character }: { character: Character }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 const FactionCard = ({ faction }: { faction: Faction }) => {
   return (
-    <div className="flip-card">
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      className="flip-card"
+    >
       <div className="flip-card-inner">
         {/* Front Side */}
         <div className="flip-card-front">
@@ -154,7 +169,7 @@ const FactionCard = ({ faction }: { faction: Faction }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -258,24 +273,34 @@ export default function CharactersPage() {
           {/* Characters Section */}
           {(!selectedType || selectedType === 'character') && filteredCharacters.length > 0 && (
             <section>
-              <h2 className="text-4xl font-hennyPenny text-white mb-12">Karakterler</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {filteredCharacters.map((character) => (
-                  <CharacterCard key={character.id} character={character} />
-                ))}
-              </div>
+              <h2 className="text-4xl font-hennyPenny text-white mb-4">
+                Karakterler
+                <span className="text-2xl text-amber-400 ml-3">({filteredCharacters.length})</span>
+              </h2>
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <AnimatePresence mode="popLayout">
+                  {filteredCharacters.map((character) => (
+                    <CharacterCard key={character.id} character={character} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             </section>
           )}
 
             {/* Factions Section */}
           {(!selectedType || selectedType === 'faction') && filteredFactions.length > 0 && (
             <section>
-              <h2 className="text-4xl font-hennyPenny text-white mb-12">Fraksiyonlar</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {filteredFactions.map((faction) => (
-                  <FactionCard key={faction.id} faction={faction} />
-                ))}
-              </div>
+              <h2 className="text-4xl font-hennyPenny text-white mb-4">
+                Fraksiyonlar
+                <span className="text-2xl text-amber-400 ml-3">({filteredFactions.length})</span>
+              </h2>
+              <motion.div layout className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <AnimatePresence mode="popLayout">
+                  {filteredFactions.map((faction) => (
+                    <FactionCard key={faction.id} faction={faction} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             </section>
           )}
 
