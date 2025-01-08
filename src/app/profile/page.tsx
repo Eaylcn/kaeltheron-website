@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -15,10 +15,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
   React.useEffect(() => {
@@ -29,56 +26,21 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
-  const renderEmailChangeModal = () => {
-    if (!isEmailModalOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-[#162137] rounded-xl w-full max-w-md p-6 relative">
-          <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">E-posta Adresini Değiştir</h3>
-          <form className="space-y-4">
-            <div>
-              <label className="block text-slate-300 mb-2">Mevcut E-posta</label>
-              <input
-                type="email"
-                value={user.email}
-                disabled
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-2">Yeni E-posta</label>
-              <input
-                type="email"
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-2">Şifreniz</label>
-              <input
-                type="password"
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              />
-            </div>
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all"
-              >
-                Güncelle
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEmailModalOpen(false)}
-                className="flex-1 bg-slate-700 text-white font-risque py-2 rounded-lg hover:bg-slate-600 transition-all"
-              >
-                İptal
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      // Clear the auth state
+      localStorage.removeItem('token');
+      // Redirect to home page after a small delay to show loading
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      router.push('/');
+      // Reset auth context
+      window.location.reload();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderCharactersTab = () => (
@@ -141,75 +103,8 @@ export default function ProfilePage() {
               disabled
               className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
             />
-            <button 
-              onClick={() => setIsEmailModalOpen(true)}
-              className="text-amber-400 hover:text-amber-300 text-sm mt-2"
-            >
-              E-posta Adresini Değiştir
-            </button>
           </div>
         </div>
-      </div>
-
-      {/* Şifre Değiştirme */}
-      <div className="bg-[#162137] rounded-xl p-8">
-        <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Şifre Değiştir</h3>
-        <form className="space-y-4">
-          <div>
-            <label className="block text-slate-300 mb-2">Mevcut Şifre</label>
-            <div className="relative">
-              <input
-                type={showCurrentPassword ? "text" : "password"}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-              >
-                {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-slate-300 mb-2">Yeni Şifre</label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-              >
-                {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-slate-300 mb-2">Yeni Şifre Tekrar</label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-              >
-                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all"
-          >
-            Şifreyi Güncelle
-          </button>
-        </form>
       </div>
 
       {/* Çıkış Yap */}
@@ -218,17 +113,21 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <p className="text-slate-300">Hesabınızdan çıkış yapmak istediğinizden emin misiniz?</p>
           <button
-            onClick={() => {
-              // Clear the auth state
-              localStorage.removeItem('token');
-              // Redirect to home page
-              router.push('/');
-              // Reset auth context
-              window.location.reload();
-            }}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-risque py-3 rounded-lg transition-all flex items-center justify-center space-x-2"
+            onClick={handleLogout}
+            disabled={isLoading}
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-risque py-3 rounded-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>Çıkış Yap</span>
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Çıkış Yapılıyor...</span>
+              </div>
+            ) : (
+              <>
+                <FaSignOutAlt className="text-xl" />
+                <span>Çıkış Yap</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -274,7 +173,6 @@ export default function ProfilePage() {
           {activeTab === 'adventures' && renderAdventuresTab()}
           {activeTab === 'settings' && renderSettingsTab()}
         </div>
-        {renderEmailChangeModal()}
       </div>
     </main>
   );
