@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { setCookie, deleteCookie } from 'cookies-next';
 
 interface User {
   uid: string;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -49,12 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           const userData = await response.json();
           setUser(userData);
+          // Set session cookie
+          setCookie('session', firebaseUser.uid, {
+            maxAge: 30 * 24 * 60 * 60, // 30 days
+            path: '/',
+          });
         } catch (error) {
           console.error('Auth state error:', error);
           setUser(null);
+          deleteCookie('session');
         }
       } else {
         setUser(null);
+        deleteCookie('session');
       }
       setLoading(false);
     });
@@ -92,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
       });
       setUser(null);
+      deleteCookie('session');
       router.push('/');
     } finally {
       setLoading(false);
