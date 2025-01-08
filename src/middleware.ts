@@ -4,11 +4,11 @@ import type { NextRequest } from 'next/server';
 // Public routes and assets that should always be accessible
 const publicRoutes = [
   '/', 
-  '/about', 
   '/story', 
   '/map',
   '/characters',
-  '/api',
+  '/api/auth/login',
+  '/api/auth/register',
   '/_next',
   '/images',
   '/assets',
@@ -26,7 +26,7 @@ const protectedRoutes = [
 const publicFileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.mp4', '.webp', '.ico'];
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('session');
+  const session = request.cookies.get('session');
   const { pathname } = request.nextUrl;
 
   // Allow access to public files by extension
@@ -50,20 +50,20 @@ export function middleware(request: NextRequest) {
   }
 
   // Protected routes require authentication
-  if (isProtectedRoute && !token) {
-    // Store the original URL to redirect back after login
-    const url = new URL('/', request.url);
-    url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
-  }
-
-  // Allow access to all other routes if authenticated
-  if (token) {
+  if (isProtectedRoute) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
     return NextResponse.next();
   }
 
-  // Redirect to home page if not authenticated
-  return NextResponse.redirect(new URL('/', request.url));
+  // API routes should be handled by the API handlers
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // Allow access to all other routes
+  return NextResponse.next();
 }
 
 export const config = {
@@ -73,8 +73,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }; 

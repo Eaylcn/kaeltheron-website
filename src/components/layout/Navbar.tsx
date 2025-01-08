@@ -30,7 +30,7 @@ const Navbar = () => {
 
   const handleProfileClick = () => {
     if (user) {
-      router.push('/profile');
+      router.replace('/profile');
     } else {
       setIsAuthModalOpen(true);
     }
