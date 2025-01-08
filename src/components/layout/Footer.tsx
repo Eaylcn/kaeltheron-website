@@ -6,8 +6,9 @@ import { FaDiscord, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-t from-[#0B1120] via-[#0B1120]/80 to-transparent py-12 mt-20">
-      <div className="max-w-7xl mx-auto px-4">
+    <footer className="relative mt-20">
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/80 to-transparent pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 py-12 relative">
         <div className="flex flex-col items-center space-y-8">
           <div className="relative w-32 h-12">
             <Image

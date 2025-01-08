@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import AuthModal from '../auth/AuthModal';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +13,7 @@ const Navbar = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +26,14 @@ const Navbar = () => {
 
   const handleLogin = () => {
     setIsAuthModalOpen(false);
+  };
+
+  const handleProfileClick = () => {
+    if (user) {
+      router.push('/profile');
+    } else {
+      setIsAuthModalOpen(true);
+    }
   };
 
   return (
@@ -75,21 +84,12 @@ const Navbar = () => {
             {/* User Icon */}
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-4">
-                {user ? (
-                  <Link 
-                    href="/profile"
-                    className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-100/10 to-white/10 text-slate-100 hover:text-amber-300 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all"
-                  >
-                    <FaUser className="text-xl" />
-                  </Link>
-                ) : (
-                  <button 
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-100/10 to-white/10 text-slate-100 hover:text-amber-300 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all"
-                  >
-                    <FaUser className="text-xl" />
-                  </button>
-                )}
+                <button 
+                  onClick={handleProfileClick}
+                  className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-100/10 to-white/10 text-slate-100 hover:text-amber-300 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all"
+                >
+                  <FaUser className="text-xl" />
+                </button>
                 <button className="md:hidden text-white">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

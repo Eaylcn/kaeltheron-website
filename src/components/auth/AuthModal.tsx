@@ -99,10 +99,10 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogOverlay className="bg-black/40 backdrop-blur-sm" />
-      <DialogContent className="sm:max-w-[425px] bg-[#0B1120] border border-[#2A3C5D] shadow-xl relative z-50">
+      <DialogOverlay className="bg-black/40 backdrop-blur-sm fixed inset-0" />
+      <DialogContent className="sm:max-w-[425px] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-[#0B1120] border border-[#2A3C5D] shadow-xl">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500 relative z-10">
+          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
           </DialogTitle>
         </DialogHeader>
