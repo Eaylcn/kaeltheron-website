@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { setCookie, deleteCookie } from 'cookies-next';
+import { setCookie, deleteCookie, getCookie } from 'cookies-next';
 
 interface User {
   uid: string;
@@ -31,50 +31,94 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          // Kullanıcı bilgilerini API'den al
-          const response = await fetch('/api/auth/me', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ uid: firebaseUser.uid }),
-          });
+  // Session kontrolü ve kullanıcı bilgilerini alma
+  const checkSession = async () => {
+    const sessionCookie = getCookie('session');
+    
+    if (sessionCookie) {
+      try {
+        const response = await fetch('/api/auth/me', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ uid: sessionCookie }),
+        });
 
-          if (!response.ok) {
-            throw new Error('Kullanıcı bilgileri alınamadı');
-          }
-
+        if (response.ok) {
           const userData = await response.json();
           setUser(userData);
-          
-          // Set session cookie with secure options
-          setCookie('session', firebaseUser.uid, {
-            maxAge: 30 * 24 * 60 * 60, // 30 days
-            path: '/',
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-          });
-        } catch (error) {
-          console.error('Auth state error:', error);
-          setUser(null);
-          deleteCookie('session');
-          router.replace('/');
+          return true;
         }
-      } else {
-        setUser(null);
-        deleteCookie('session');
-        if (window.location.pathname === '/profile') {
-          router.replace('/');
-        }
+      } catch (error) {
+        console.error('Session check error:', error);
       }
-      setLoading(false);
-    });
+    }
+    return false;
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    let unsubscribe: () => void;
+
+    const initAuth = async () => {
+      // Önce session'ı kontrol et
+      const hasValidSession = await checkSession();
+      
+      // Firebase auth state'ini dinle
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            const response = await fetch('/api/auth/me', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ uid: firebaseUser.uid }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Kullanıcı bilgileri alınamadı');
+            }
+
+            const userData = await response.json();
+            setUser(userData);
+            
+            // Session cookie'sini güncelle
+            setCookie('session', firebaseUser.uid, {
+              maxAge: 30 * 24 * 60 * 60, // 30 days
+              path: '/',
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'strict'
+            });
+          } catch (error) {
+            console.error('Auth state error:', error);
+            if (!hasValidSession) {
+              setUser(null);
+              deleteCookie('session');
+              if (window.location.pathname === '/profile') {
+                router.replace('/');
+              }
+            }
+          }
+        } else {
+          if (!hasValidSession) {
+            setUser(null);
+            deleteCookie('session');
+            if (window.location.pathname === '/profile') {
+              router.replace('/');
+            }
+          }
+        }
+        setLoading(false);
+      });
+    };
+
+    initAuth();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [router]);
 
   const login = async (username: string, password: string) => {

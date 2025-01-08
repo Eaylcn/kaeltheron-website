@@ -28,14 +28,14 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="text-center md:text-left space-y-8">
                 <h1 className="text-7xl font-hennyPenny text-white mb-6 leading-tight">
-                  Kael&apos;Theron&apos;da<br />
-                  <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 text-transparent bg-clip-text">
-                    Yapay Zeka ile
+                  Kael'Theron'da<br />
+                  <span className="text-white">
+                    <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 text-transparent bg-clip-text">Yapay Zeka</span> ile
                   </span><br />
                   Maceraya Atıl
                 </h1>
                 <p className="text-xl font-risque text-slate-200 leading-relaxed">
-                  Yapay zeka DM&apos;liğinde, sınırsız hayal gücü ve gerçek zamanlı görsel üretimi ile
+                  Yapay zeka DM'liğinde, sınırsız hayal gücü ve gerçek zamanlı görsel üretimi ile
                   her an benzersiz bir deneyim yaşayın.
                 </p>
                 <div className="flex flex-col md:flex-row items-center gap-6">
@@ -96,19 +96,19 @@ export default function HomePage() {
               {
                 icon: <FaRobot size={48} className="text-amber-400" />,
                 title: "Yapay Zeka DM",
-                description: "Yapay zeka DM&apos;imiz, oyun stilinizi öğrenir ve tercihlerinize göre hikayeyi şekillendirir. Her seçiminiz dünyayı etkiler, her kararınız yeni maceralar doğurur. Klasik FRP&apos;nin özgürlüğünü yapay zeka teknolojisiyle birleştiren benzersiz bir deneyim.",
+                description: "Yapay zeka DM'imiz, oyun stilinizi öğrenir ve tercihlerinize göre hikayeyi şekillendirir. Her seçiminiz dünyayı etkiler, her kararınız yeni maceralar doğurur. Klasik FRP'nin özgürlüğünü yapay zeka teknolojisiyle birleştiren benzersiz bir deneyim.",
                 gradient: "from-purple-500 to-indigo-500"
               },
               {
                 icon: <FaPaintBrush size={48} className="text-amber-400" />,
                 title: "AI Görsel Üretimi",
-                description: "Karakterinizin portresinden, bulunduğunuz ortamın detaylı görsellerine kadar her şey yapay zeka tarafından anında oluşturulur. NPC&apos;ler, yaratıklar ve özel mekanlar için benzersiz görseller üretilir. Hayal gücünüz artık görsellerle hayat buluyor.",
+                description: "Karakterinizin portresinden, bulunduğunuz ortamın detaylı görsellerine kadar her şey yapay zeka tarafından anında oluşturulur. NPC'ler, yaratıklar ve özel mekanlar için benzersiz görseller üretilir. Hayal gücünüz artık görsellerle hayat buluyor.",
                 gradient: "from-amber-500 to-yellow-500"
               },
               {
                 icon: <FaDragon size={48} className="text-amber-400" />,
                 title: "Dinamik Dünya",
-                description: "Kael&apos;Theron, seçimlerinizle şekillenen canlı bir dünya. Aldığınız her karar politik dengeleri değiştirir, her eylem tarihi yeniden yazar. Şehirler gelişir, ittifaklar kurulur, düşmanlar yükselir - hepsi sizin eylemlerinize bağlı olarak.",
+                description: "Kael'Theron, seçimlerinizle şekillenen canlı bir dünya. Aldığınız her karar politik dengeleri değiştirir, her eylem tarihi yeniden yazar. Şehirler gelişir, ittifaklar kurulur, düşmanlar yükselir - hepsi sizin eylemlerinize bağlı olarak.",
                 gradient: "from-emerald-500 to-teal-500"
               },
               {
@@ -120,7 +120,7 @@ export default function HomePage() {
               {
                 icon: <FaUsers size={48} className="text-amber-400" />,
                 title: "Çok Oyunculu",
-                description: "Arkadaşlarınızla birlikte destansı maceralara atılın. Yapay zeka DM&apos;imiz grup dinamiklerini analiz eder, her oyuncunun tercihlerini göz önünde bulundurur. Ortak kararlarınız dünyayı şekillendirir, birlikte efsaneler yazarsınız.",
+                description: "Arkadaşlarınızla birlikte destansı maceralara atılın. Yapay zeka DM'imiz grup dinamiklerini analiz eder, her oyuncunun tercihlerini göz önünde bulundurur. Ortak kararlarınız dünyayı şekillendirir, birlikte efsaneler yazarsınız.",
                 gradient: "from-blue-500 to-cyan-500"
               },
               {
@@ -188,7 +188,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-hennyPenny text-yellow-200 mb-2">Özgür Oynanış</h3>
-                    <p className="font-risque text-slate-300">Klasik FRP&apos;nin özgürlüğü, modern teknolojinin gücüyle birleşiyor</p>
+                    <p className="font-risque text-slate-300">Klasik FRP'nin özgürlüğü, modern teknolojinin gücüyle birleşiyor</p>
                   </div>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function HomePage() {
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
                 <Image
                   src="/gameplay-preview.jpg"
-                  alt="Kael&apos;Theron Gameplay"
+                  alt="Kael'Theron Gameplay"
                   fill
                   className="object-cover"
                 />
