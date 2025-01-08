@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
-const WorldMap = dynamic(() => import('./WorldMap'), {
+const WorldMap = dynamic(() => import('@/components/map/WorldMap'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[800px] flex items-center justify-center bg-[#162137] rounded-lg">

@@ -1,110 +1,65 @@
 'use client';
 
 import React, { useState } from 'react';
+import { FaUser, FaEnvelope, FaLock, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { FirebaseError } from 'firebase/app';
 
 interface AuthModalProps {
   isOpen: boolean;
-  onCloseAction: () => Promise<void>;
-  onLoginAction: () => Promise<void>;
+  onClose: () => void;
+  onLogin: () => void;
 }
 
-interface FormData {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: AuthModalProps) {
-  const { setUser } = useAuth();
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
-    setLoading(true);
 
     try {
       if (isLogin) {
-        // Login işlemi
-        try {
-          // First get the email for the username
-          const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              username: formData.username.toLowerCase(),
-              password: formData.password
-            }),
-          });
+        // Giriş işlemi
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
+        });
 
-          const data = await response.json();
+        const data = await response.json();
 
-          if (!response.ok) {
-            setError(data.message || 'Giriş yapılamadı');
-            return;
-          }
-
-          // Now try to login with Firebase
-          await signInWithEmailAndPassword(auth, data.email, formData.password);
-          
-          // Update user context
-          setUser({
-            username: data.username,
-            email: data.email,
-            uid: data.uid
-          });
-
-          // Store token
-          localStorage.setItem('token', data.token);
-
-          // Close modal and redirect
-          await onLoginAction();
-        } catch (loginError) {
-          console.error('Login context error:', loginError);
-          if (loginError instanceof FirebaseError) {
-            switch (loginError.code) {
-              case 'auth/wrong-password':
-                setError('Hatalı şifre');
-                break;
-              case 'auth/user-not-found':
-                setError('Kullanıcı bulunamadı');
-                break;
-              case 'auth/invalid-credential':
-                setError('Geçersiz kullanıcı bilgileri');
-                break;
-              default:
-                setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
-            }
-          } else {
-            setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
-          }
+        if (!response.ok) {
+          throw new Error(data.message || 'Giriş yapılamadı');
         }
+
+        login(data.username, data.email);
+        onLogin();
       } else {
         // Kayıt işlemi
         if (formData.password !== formData.confirmPassword) {
-          setError('Şifreler eşleşmiyor');
-          setLoading(false);
-          return;
+          throw new Error('Şifreler eşleşmiyor');
         }
 
         const response = await fetch('/api/auth/register', {
@@ -113,46 +68,24 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            username: formData.username.toLowerCase(),
-            email: formData.email.toLowerCase(),
-            password: formData.password
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
           }),
         });
 
         const data = await response.json();
 
-        if (response.ok) {
-          setSuccess(data.message);
-          // Reset form
-          setFormData({
-            username: '',
-            email: '',
-            password: '',
-            confirmPassword: ''
-          });
-          // Switch to login view after 2 seconds
-          setTimeout(() => {
-            setIsLogin(true);
-            setSuccess(null);
-          }, 2000);
-        } else {
-          setError(data.message || 'Kayıt yapılamadı');
+        if (!response.ok) {
+          throw new Error(data.message || 'Kayıt olunamadı');
         }
+
+        login(data.username, data.email);
+        onLogin();
       }
     } catch (err) {
-      console.error('Auth error:', err);
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'Bir hata oluştu');
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
   };
 
   if (!isOpen) return null;
@@ -160,159 +93,148 @@ export default function AuthModal({ isOpen, onCloseAction, onLoginAction }: Auth
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="bg-[#162137] rounded-xl w-full max-w-md p-6 relative">
-        <h2 className="text-2xl font-hennyPenny text-amber-400 mb-6">
-          {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
-        </h2>
-        
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          <FaTimes className="text-xl" />
+        </button>
+
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-hennyPenny text-amber-400 mb-2">
+            {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+          </h2>
+          <p className="text-slate-400 font-risque">
+            {isLogin ? 'Maceraya devam etmek için giriş yap' : 'Yeni bir maceraya başla'}
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isLogin ? (
-            <>
-              <div>
-                <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                  required
-                />
-              </div>
+          <div className="space-y-4">
+            <div className="relative">
+              <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Kullanıcı Adı"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50"
+                required
+              />
+            </div>
+
+            {!isLogin && (
               <div className="relative">
-                <label className="block text-slate-300 mb-2">Şifre</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                  required={!isLogin}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-slate-300 mb-2">E-posta</label>
+                <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                  placeholder="E-posta"
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50"
                   required
                 />
               </div>
-              
+            )}
+
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Şifre"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 pl-10 pr-12 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {!isLogin && (
               <div className="relative">
-                <label className="block text-slate-300 mb-2">Şifre</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
+                <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Şifre Tekrar"
+                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 pl-10 pr-12 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                >
+                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
-              
-              <div className="relative">
-                <label className="block text-slate-300 mb-2">Şifre Tekrar</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                    required={!isLogin}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                  >
-                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-            </>
+            )}
+          </div>
+
+          {isLogin && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-700 bg-[#0B1120] text-amber-500 focus:ring-amber-500/50"
+              />
+              <label htmlFor="rememberMe" className="ml-2 text-slate-300 text-sm">
+                Beni Hatırla
+              </label>
+            </div>
           )}
-          
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
-          
-          {success && (
-            <p className="text-green-500 text-sm">{success}</p>
-          )}
-          
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all"
           >
-            {loading ? 'İşleniyor...' : (isLogin ? 'Giriş Yap' : 'Kayıt Ol')}
+            {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
           </button>
         </form>
-        
-        <button
-          type="button"
-          onClick={() => {
-            setIsLogin(!isLogin);
-            setError(null);
-            setSuccess(null);
-            setFormData({
-              username: '',
-              email: '',
-              password: '',
-              confirmPassword: ''
-            });
-          }}
-          className="text-amber-400 hover:text-amber-300 text-sm mt-4"
-        >
-          {isLogin ? 'Hesabın yok mu? Kayıt ol' : 'Zaten hesabın var mı? Giriş yap'}
-        </button>
-        
-        <button
-          onClick={() => onCloseAction()}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-300"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+
+        {/* Switch Mode */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError(null);
+              setFormData({
+                username: '',
+                email: '',
+                password: '',
+                confirmPassword: ''
+              });
+            }}
+            className="text-amber-400 hover:text-amber-300 transition-colors text-sm"
+          >
+            {isLogin ? 'Hesabın yok mu? Kayıt ol' : 'Zaten hesabın var mı? Giriş yap'}
+          </button>
+        </div>
       </div>
     </div>
   );
-} 
+};
+
+export default AuthModal; 
