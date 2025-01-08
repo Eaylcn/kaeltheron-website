@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
+import { collection, setDoc, doc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
@@ -30,14 +31,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Kullanıcı adının benzersiz olup olmadığını kontrol et
-    const usersRef = collection(db, 'users');
-    const usernameQuery = query(
-      usersRef,
-      where('username', '==', username.trim().toLowerCase())
-    );
-    
-    const usernameSnapshot = await getDocs(usernameQuery);
+    // Admin SDK ile kullanıcı adının benzersiz olup olmadığını kontrol et
+    const usernameSnapshot = await adminDb
+      .collection('users')
+      .where('username', '==', username.trim().toLowerCase())
+      .get();
+
     if (!usernameSnapshot.empty) {
       return NextResponse.json(
         { message: 'Bu kullanıcı adı zaten kullanılıyor' },
@@ -54,7 +53,7 @@ export async function POST(request: Request) {
       displayName: username.trim()
     });
 
-    // Firestore'a kullanıcı bilgilerini kaydet
+    // Firestore'a kullanıcı bilgilerini kaydet (Admin SDK ile)
     const userData = {
       uid: user.uid,
       username: username.trim().toLowerCase(),
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
       emailVerified: false
     };
 
-    await setDoc(doc(db, 'users', user.uid), userData);
+    await adminDb.collection('users').doc(user.uid).set(userData);
 
     // E-posta doğrulama linki gönder
     try {
