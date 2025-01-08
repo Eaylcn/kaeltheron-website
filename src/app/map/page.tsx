@@ -6,7 +6,7 @@ export default function MapPage() {
   return (
     <main className="min-h-screen bg-[#0B1120]">
       {/* Hero Section */}
-      <section className="relative h-[20vh] flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
+      <section className="relative h-[25vh] pt-12 flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
         <div className="absolute inset-0 bg-[url('/map-bg.png')] bg-cover bg-center opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120] via-[#162137]/80 to-[#1C2B4B]/80" />
         <div className="relative z-20 text-center">

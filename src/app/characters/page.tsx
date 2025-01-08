@@ -6,7 +6,7 @@ export default function CharactersPage() {
   return (
     <main className="min-h-screen bg-[#0B1120]">
       {/* Hero Section */}
-      <section className="relative h-[20vh] flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
+      <section className="relative h-[25vh] pt-12 flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 via-[#162137]/80 to-[#1C2B4B]/90 z-10" />
           <Image
@@ -20,7 +20,7 @@ export default function CharactersPage() {
           <h1 className="text-6xl font-hennyPenny text-white mb-4">
             Kael&apos;Theron&apos;un Kahramanları
           </h1>
-          <p className="text-lg text-slate-300">
+          <p className="text-xl font-risque text-gray-200">
             Kael&apos;theron&apos;un efsanevi karakterleriyle tanışın
           </p>
         </div>

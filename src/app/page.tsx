@@ -1,12 +1,44 @@
 'use client';
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 // Main homepage component for Kael'Theron website
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaDiceD20, FaPaintBrush, FaRobot, FaBrain, FaUsers, FaDragon, FaMagic, FaMap } from 'react-icons/fa'
 
 export default function HomePage() {
+  const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const testimonialRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-feature-show');
+          } else {
+            entry.target.classList.remove('animate-feature-show');
+            void (entry.target as HTMLElement).offsetHeight;
+          }
+        });
+      },
+      { 
+        threshold: 0.2,
+        rootMargin: "-100px"
+      }
+    );
+
+    featureRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    testimonialRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0B1120] overflow-hidden">
       {/* Hero Section */}
@@ -18,46 +50,49 @@ export default function HomePage() {
             loop
             muted
             playsInline
+            preload="auto"
             className="w-full h-full object-cover"
+            poster="/hero-poster.jpg"
           >
             <source src="/hero-bg.mp4" type="video/mp4" />
           </video>
         </div>
-        <div className="relative z-20 w-full">
+        <div className="relative z-20 w-full animate-fade-in">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="text-center md:text-left space-y-8">
-                <h1 className="text-7xl font-hennyPenny text-white mb-6 leading-tight">
+              <div className="text-center md:text-left space-y-8 animate-slide-up">
+                <h1 className="text-7xl font-hennyPenny text-white mb-6 leading-tight opacity-0 animate-title">
                   {"Kael'Theron'da"}<br />
                   <span className="text-white">
                     <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 text-transparent bg-clip-text">Yapay Zeka</span> ile
                   </span><br />
                   Maceraya Atıl
                 </h1>
-                <p className="text-xl font-risque text-slate-200 leading-relaxed">
+                <p className="text-xl font-risque text-slate-200 leading-relaxed opacity-0 animate-description">
                   {"Yapay zeka DM'liğinde, sınırsız hayal gücü ve gerçek zamanlı görsel üretimi ile"}
                   her an benzersiz bir deneyim yaşayın.
                 </p>
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <button 
                     onClick={() => {
-                      // Add your AuthModal open logic here
                       const authModal = document.getElementById('auth-modal');
                       if (authModal) {
                         authModal.click();
                       }
                     }}
-                    className="group relative inline-flex items-center justify-center px-8 py-4 font-risque text-xl overflow-hidden rounded-xl transition-all duration-300"
+                    className="hover-glow group relative inline-flex items-center justify-center px-8 py-4 font-risque text-xl overflow-hidden rounded-xl transition-all duration-300 hover:scale-105"
                   >
                     <div className="absolute inset-0 w-full h-full transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-100"></div>
                     <div className="absolute inset-0 w-full h-full transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-600 opacity-0 group-hover:opacity-100"></div>
-                    <span className="relative text-white font-medium tracking-wider">Maceraya Başla</span>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 rounded-xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                    <span className="relative text-white font-medium tracking-wider group-hover:tracking-widest transition-all duration-300">Maceraya Başla</span>
                   </button>
                   <Link 
                     href="/about" 
-                    className="group relative inline-flex items-center justify-center px-8 py-4 font-risque text-lg overflow-hidden rounded-xl border-2 border-amber-500/30 hover:border-amber-500/60 transition-all duration-300"
+                    className="hover-glow group relative inline-flex items-center justify-center px-8 py-4 font-risque text-lg overflow-hidden rounded-xl border-2 border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:scale-105"
                   >
-                    <span className="text-amber-300 group-hover:text-amber-200">Daha Fazla Bilgi</span>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/0 via-amber-500/30 to-amber-500/0 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                    <span className="relative text-amber-300 group-hover:text-amber-200 transition-all duration-300 group-hover:tracking-wider">Daha Fazla Bilgi</span>
                   </Link>
                 </div>
               </div>
@@ -132,7 +167,10 @@ export default function HomePage() {
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="group relative p-5 rounded-2xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-amber-500/10"
+                ref={(el) => {
+                  if (el) featureRefs.current[index] = el;
+                }}
+                className="feature-card group relative p-5 rounded-2xl transition-all duration-500 opacity-0"
               >
                 <div className="absolute inset-0 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10 transition-all duration-500 group-hover:border-amber-500/30 group-hover:bg-white/10" />
                 <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-20 rounded-2xl transition-all duration-500" style={{ backgroundImage: `linear-gradient(to right, ${feature.gradient})` }} />
@@ -205,6 +243,92 @@ export default function HomePage() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="relative py-32">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120] via-[#162137]/20 to-[#0B1120] opacity-50" />
+        <div className="relative max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-hennyPenny text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 mb-4">
+              Oyuncularımızın Deneyimleri
+            </h2>
+            <p className="text-xl font-risque text-slate-300 max-w-3xl mx-auto">
+              Kael&apos;Theron&apos;da maceraya atılan oyuncuların hikayeleri
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Eren Yıldız",
+                role: "Elf Büyücü",
+                quote: "Yapay zeka DM'in dinamik hikaye anlatımı ve anlık görsel üretimi sayesinde her oyun benzersiz bir deneyime dönüşüyor.",
+                image: "/testimonials/player1.jpg"
+              },
+              {
+                name: "Zeynep Akar",
+                role: "İnsan Savaşçı",
+                quote: "Karakterimin her kararının dünyayı etkilediğini görmek ve bunun sonuçlarıyla yüzleşmek inanılmaz bir deneyim.",
+                image: "/testimonials/player2.jpg"
+              },
+              {
+                name: "Kaan Demir",
+                role: "Cüce Paladin",
+                quote: "Arkadaşlarımla birlikte keşfettiğimiz bu dünyada her macera beklenmedik sürprizlerle dolu.",
+                image: "/testimonials/player3.jpg"
+              }
+            ].map((testimonial, index) => (
+              <div 
+                key={index}
+                ref={(el) => {
+                  if (el) testimonialRefs.current[index] = el;
+                }}
+                className="bg-white/5 backdrop-blur-sm rounded-xl p-8 hover:bg-white/10 transition-all duration-300 opacity-0 translate-y-8"
+              >
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="relative w-20 h-20 group">
+                    {/* Outer glow and border */}
+                    <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full opacity-75 group-hover:opacity-100 blur-sm transition-all duration-300" />
+                    
+                    {/* Inner container */}
+                    <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-amber-400">
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/40 to-yellow-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      
+                      {/* Image */}
+                      <Image
+                        src={testimonial.image}
+                        alt={testimonial.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                  </div>
+                  <blockquote className="font-risque text-slate-200 italic mb-6">
+                    "{testimonial.quote}"
+                  </blockquote>
+                  <div>
+                    <cite className="font-hennyPenny text-amber-300 text-lg not-italic">
+                      {testimonial.name}
+                    </cite>
+                    <p className="font-risque text-slate-400 text-sm mt-1">
+                      {testimonial.role}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* View All Button */}
+          <div className="text-center mt-12">
+            <button className="hover-glow group relative inline-flex items-center justify-center px-8 py-4 font-risque text-lg overflow-hidden rounded-xl border-2 border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 hover:scale-105">
+              <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/0 via-amber-500/30 to-amber-500/0 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              <span className="relative text-amber-300 group-hover:text-amber-200 transition-all duration-300 group-hover:tracking-wider">Tüm Hikayeleri Gör</span>
+            </button>
           </div>
         </div>
       </section>
