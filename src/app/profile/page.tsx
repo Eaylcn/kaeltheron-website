@@ -18,8 +18,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!user && !loading) {
-      router.push('/login');
+    if (!loading && !user) {
+      router.push('/');
     }
   }, [user, loading, router]);
 
@@ -159,7 +159,7 @@ export default function ProfilePage() {
             {isLoading ? (
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Çıkış Yapılıyor...</span>
+                <span>ÇÇıkış Yapılıyor...</span>
               </div>
             ) : (
               <>

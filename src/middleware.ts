@@ -15,9 +15,17 @@ const publicRoutes = [
   '/favicon.ico'
 ];
 
+// File extensions that should always be accessible
+const publicFileExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.mp4', '.webp', '.ico'];
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('session');
   const { pathname } = request.nextUrl;
+
+  // Allow access to public files by extension
+  if (publicFileExtensions.some(ext => pathname.toLowerCase().endsWith(ext))) {
+    return NextResponse.next();
+  }
 
   // Check if the path starts with any public route
   const isPublicRoute = publicRoutes.some(route => 
