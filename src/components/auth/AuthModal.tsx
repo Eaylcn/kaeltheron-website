@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -99,24 +99,25 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-[#162137] border border-[#2A3C5D] shadow-xl backdrop-blur-lg">
+      <DialogOverlay className="bg-black/40 backdrop-blur-sm" />
+      <DialogContent className="sm:max-w-[425px] bg-[#0B1120] border border-[#2A3C5D] shadow-xl relative z-50">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
+          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500 relative z-10">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-[#1C2B4B]">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
+          <TabsList className="grid w-full grid-cols-2 bg-[#162137]">
             <TabsTrigger 
               value="login" 
-              className="data-[state=active]:bg-[#162137] data-[state=active]:text-amber-500 text-slate-300"
+              className="data-[state=active]:bg-[#0B1120] data-[state=active]:text-amber-500 text-slate-300"
             >
               Giriş Yap
             </TabsTrigger>
             <TabsTrigger 
               value="register" 
-              className="data-[state=active]:bg-[#162137] data-[state=active]:text-amber-500 text-slate-300"
+              className="data-[state=active]:bg-[#0B1120] data-[state=active]:text-amber-500 text-slate-300"
             >
               Kayıt Ol
             </TabsTrigger>
@@ -125,19 +126,19 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
           <TabsContent value="login">
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-username" className="text-slate-300">Kullanıcı Adı</Label>
+                <Label htmlFor="login-username" className="text-slate-300 font-medium">Kullanıcı Adı</Label>
                 <Input
                   id="login-username"
                   type="text"
                   value={loginData.username}
                   onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
                   required
-                  className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="login-password" className="text-slate-300">Şifre</Label>
+                <Label htmlFor="login-password" className="text-slate-300 font-medium">Şifre</Label>
                 <div className="relative">
                   <Input
                     id="login-password"
@@ -145,7 +146,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                     required
-                    className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                   />
                   <Button
                     type="button"
@@ -165,7 +166,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white" disabled={loading}>
+              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -181,31 +182,31 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
           <TabsContent value="register">
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="register-username" className="text-slate-300">Kullanıcı Adı</Label>
+                <Label htmlFor="register-username" className="text-slate-300 font-medium">Kullanıcı Adı</Label>
                 <Input
                   id="register-username"
                   type="text"
                   value={registerData.username}
                   onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
                   required
-                  className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="register-email" className="text-slate-300">E-posta</Label>
+                <Label htmlFor="register-email" className="text-slate-300 font-medium">E-posta</Label>
                 <Input
                   id="register-email"
                   type="email"
                   value={registerData.email}
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                   required
-                  className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="register-password" className="text-slate-300">Şifre</Label>
+                <Label htmlFor="register-password" className="text-slate-300 font-medium">Şifre</Label>
                 <div className="relative">
                   <Input
                     id="register-password"
@@ -213,7 +214,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={registerData.password}
                     onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                     required
-                    className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                   />
                   <Button
                     type="button"
@@ -228,7 +229,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="register-confirm-password" className="text-slate-300">Şifre Tekrar</Label>
+                <Label htmlFor="register-confirm-password" className="text-slate-300 font-medium">Şifre Tekrar</Label>
                 <div className="relative">
                   <Input
                     id="register-confirm-password"
@@ -236,7 +237,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={registerData.confirmPassword}
                     onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                     required
-                    className="bg-[#1C2B4B] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
                   />
                   <Button
                     type="button"
@@ -256,7 +257,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white" disabled={loading}>
+              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
