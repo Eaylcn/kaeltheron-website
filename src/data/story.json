@@ -1,0 +1,95 @@
+{
+  "timeline": [
+    {
+      "id": "creation",
+      "era": "Yaratılış Çağı",
+      "year": "???? - ????",
+      "title": "Dünya'nın Yaratılışı",
+      "description": "Kaos ve Düzen güçlerinin çatışmasından doğan Kael'theron, ilk ejderhaların ve kadim varlıkların dünyası olarak şekillendi.",
+      "detailedDescription": "Başlangıçta, evrenin kendisi kadar eski olan Kaos ve Düzen güçleri arasındaki sonsuz mücadele, yeni bir dünyanın doğuşuna sebep oldu. Bu çatışmanın merkezinde, iki gücün dengesi Kael'theron'u şekillendirdi. İlk metalik ejderhalar, dünyayı form verirken, elementler ve doğa güçleri de kendi rollerini oynadı. Dağlar yükseldi, okyanuslar derinleşti ve atmosfer, büyünün ta kendisiyle doldu. Bu dönemde, dünya henüz genç ve şekillenebilir durumdaydı, ve kadim varlıklar kendi izlerini bırakmaya başladılar.",
+      "image": "/story/creation.jpg",
+      "events": [
+        {
+          "id": "dragons-era",
+          "title": "Ejderhaların Yükselişi",
+          "description": "İlk metalik ejderhalar dünyayı şekillendirmeye başladı.",
+          "detailedDescription": "Metalik ejderhaların lideri Azuris önderliğinde, bu kadim varlıklar dünyayı şekillendirmeye başladılar. Altın, gümüş ve bronz ejderhalar, her biri kendi elementlerini kullanarak dağları, vadileri ve nehirleri oluşturdular. Bu dönemde ejderhalar sadece fiziksel dünyayı değil, büyünün akışını da düzenlediler.",
+          "relatedCharacters": ["azuris"]
+        },
+        {
+          "id": "first-magic",
+          "title": "Büyünün Keşfi",
+          "description": "Dünya'nın özünden gelen büyü akışı keşfedildi.",
+          "detailedDescription": "Dünya'nın kendisi canlı bir organizma gibiydi ve büyü, onun kan damarları gibi her yerinde akıyordu. Bu akış, zamanla kristalleşerek ilk büyü kristallerini oluşturdu. Bu kristaller, daha sonra tüm büyü sistemlerinin ve medeniyetlerin temelini oluşturacaktı. Büyünün keşfi, dünyayı sonsuza dek değiştirecek bir dönüm noktasıydı.",
+          "relatedCharacters": []
+        }
+      ]
+    },
+    {
+      "id": "first-age",
+      "era": "Birinci Çağ",
+      "year": "1 - 1000",
+      "title": "Medeniyetlerin Doğuşu",
+      "description": "İlk medeniyetler kuruldu, ırklar arası ilişkiler şekillenmeye başladı.",
+      "image": "/story/first-age.jpg",
+      "events": [
+        {
+          "id": "velisara-founding",
+          "title": "Velisara'nın Kuruluşu",
+          "description": "İnsanlar ilk büyük krallıklarını kurdular.",
+          "relatedCharacters": ["cassian-velaris"]
+        },
+        {
+          "id": "eryndor-council",
+          "title": "Eryndor Konseyi'nin Kuruluşu",
+          "description": "Elfler, büyü kullanımını düzenlemek için konseyi kurdular.",
+          "relatedCharacters": ["lorianthal-sylvaris"]
+        }
+      ]
+    },
+    {
+      "id": "dark-age",
+      "era": "Karanlık Çağ",
+      "year": "1001 - 1500",
+      "title": "Karabüyü'nün Yükselişi",
+      "description": "Karanlık büyünün yükselişi ve büyük savaşların başlangıcı.",
+      "image": "/story/dark-age.jpg",
+      "events": [
+        {
+          "id": "dark-magic-discovery",
+          "title": "Karabüyü'nün Keşfi",
+          "description": "Arathion'un yasak büyüleri keşfetmesi ve sürgün edilmesi.",
+          "relatedCharacters": ["arathion-duskthorn"]
+        },
+        {
+          "id": "cult-founding",
+          "title": "Karabüyü Tarikatı'nın Kuruluşu",
+          "description": "Sürgün edilen büyücülerin gizli bir tarikat kurması.",
+          "relatedCharacters": ["arathion-duskthorn"]
+        }
+      ]
+    },
+    {
+      "id": "current-age",
+      "era": "Günümüz",
+      "year": "1501 - ????",
+      "title": "Güç Dengeleri",
+      "description": "Krallıklar, tarikatlar ve konseyler arasındaki güç mücadelesi.",
+      "image": "/story/current-age.jpg",
+      "events": [
+        {
+          "id": "magic-wars",
+          "title": "Büyü Savaşları",
+          "description": "Konsey ve Tarikat arasındaki çatışmaların tırmanması.",
+          "relatedCharacters": ["lorianthal-sylvaris", "arathion-duskthorn"]
+        },
+        {
+          "id": "alliance-forming",
+          "title": "İttifakların Kurulması",
+          "description": "Yaklaşan tehlikelere karşı yeni ittifakların kurulması.",
+          "relatedCharacters": ["cassian-velaris", "durnik-anvilstone"]
+        }
+      ]
+    }
+  ]
+} 

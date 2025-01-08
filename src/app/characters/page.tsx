@@ -54,7 +54,7 @@ const CharacterCard = ({ character }: { character: Character }) => {
             <h3 className="text-2xl font-hennyPenny text-yellow-300 mb-4 drop-shadow-[0_0_3px_rgba(234,179,8,0.3)]">
               {character.name}
             </h3>
-            <div className="relative w-full h-64 mb-4">
+            <div className="relative w-full h-64 mb-8">
               <Image
                 src={`/characters${character.image}`}
                 alt={character.name}
@@ -62,13 +62,13 @@ const CharacterCard = ({ character }: { character: Character }) => {
                 className="object-cover rounded-lg"
               />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h4 className="font-hennyPenny text-yellow-200 mb-2">Tanım</h4>
+                <h4 className="font-hennyPenny text-yellow-200 mb-3">Tanım</h4>
                 <p className="font-risque text-gray-300">{character.description}</p>
               </div>
               <div>
-                <h4 className="font-hennyPenny text-yellow-200 mb-2">Görünüm</h4>
+                <h4 className="font-hennyPenny text-yellow-200 mb-3">Görünüm</h4>
                 <p className="font-risque text-gray-300">{character.appearance}</p>
               </div>
             </div>
@@ -77,25 +77,25 @@ const CharacterCard = ({ character }: { character: Character }) => {
         
         {/* Back Side */}
         <div className="flip-card-back">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 h-full">
-            <div className="space-y-6">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 h-full flex items-center justify-center">
+            <div className="space-y-8 w-full">
               <div>
-                <h4 className="font-hennyPenny text-yellow-200 mb-3">Statlar</h4>
-                <p className="font-risque text-gray-300 whitespace-pre-line">
+                <h4 className="font-hennyPenny text-yellow-200 mb-4 text-center">Statlar</h4>
+                <p className="font-risque text-gray-300 whitespace-pre-line text-center">
                   {character.stats}
                 </p>
               </div>
               <div>
-                <h4 className="font-hennyPenny text-yellow-200 mb-3">Yetenekler</h4>
-                <ul className="font-risque text-gray-300 list-disc list-inside">
+                <h4 className="font-hennyPenny text-yellow-200 mb-4 text-center">Yetenekler</h4>
+                <ul className="font-risque text-gray-300 list-none text-center">
                   {character.abilities.map((ability, index) => (
-                    <li key={index} className="mb-1">{ability}</li>
+                    <li key={index} className="mb-2">{ability}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="font-hennyPenny text-yellow-200 mb-3">Hedef</h4>
-                <p className="font-risque text-gray-300">{character.goal}</p>
+                <h4 className="font-hennyPenny text-yellow-200 mb-4 text-center">Hedef</h4>
+                <p className="font-risque text-gray-300 text-center">{character.goal}</p>
               </div>
             </div>
           </div>
@@ -184,6 +184,14 @@ export default function CharactersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // URL'den search parametresini al
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+      setSelectedType('character'); // Karakter tipini otomatik seç
+    }
+
     async function fetchData() {
       try {
         const response = await fetch('/api/characters');
@@ -202,7 +210,7 @@ export default function CharactersPage() {
 
   const filteredCharacters = characters.filter(character => {
     const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        character.description.toLowerCase().includes(searchTerm.toLowerCase());
+                        character.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = !selectedType || selectedType === 'character';
     const matchesCategory = !selectedCategory || character.category === selectedCategory;
     const matchesRace = !selectedRace || character.race === selectedRace;
@@ -230,24 +238,38 @@ export default function CharactersPage() {
   return (
     <main className="min-h-screen bg-[#0B1120]">
       {/* Hero Section */}
-      <section className="relative h-[25vh] pt-12 flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
+      <section className="relative h-[40vh] flex items-center justify-center bg-gradient-to-b from-[#0B1120] via-[#162137] to-[#1C2B4B]">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 via-[#162137]/80 to-[#1C2B4B]/90 z-10" />
           <Image
             src="/characters-bg.png"
             alt={`Kael'Theron'un Kahramanları`}
             fill
-            className="object-cover"
+            className="object-cover object-center"
+            priority
           />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
         </div>
-        <div className="relative z-20 text-center">
-          <h1 className="text-6xl font-hennyPenny text-white mb-4">
-            {`Kael'Theron'un Kahramanları`}
-          </h1>
-          <p className="text-xl font-risque text-gray-200">
-            {`Kael'theron'un efsanevi karakterleriyle tanışın`}
-          </p>
+        <div className="relative z-20 text-center max-w-4xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-7xl font-hennyPenny text-white mb-6 drop-shadow-[0_0_8px_rgba(234,179,8,0.3)]">
+              {`Kael'Theron'un Kahramanları`}
+            </h1>
+            <p className="text-2xl font-risque text-gray-200 mb-8">
+              {`Kael'theron'un efsanevi karakterleriyle tanışın`}
+            </p>
+            <div className="flex items-center justify-center gap-2 text-amber-400/80 font-risque">
+              <span className="w-12 h-[1px] bg-amber-400/40" />
+              <span>Kahramanlar ve Fraksiyonlar</span>
+              <span className="w-12 h-[1px] bg-amber-400/40" />
+            </div>
+          </motion.div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0B1120] to-transparent" />
       </section>
 
         {/* Main Content */}
@@ -266,7 +288,7 @@ export default function CharactersPage() {
             selectedFaction={selectedFaction}
             setSelectedFaction={setSelectedFaction}
           />
-        </div>
+                </div>
 
         {/* Content Grid */}
         <div className="space-y-20">
