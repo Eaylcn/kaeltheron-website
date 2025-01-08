@@ -1,18 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-hot-toast';
 
-interface FirebaseError {
-  code?: string;
-  message: string;
-}
-
 function SettingsContent() {
   const { user, logout } = useAuth();
-  const [loading, setLoading] = useState(false);
 
   if (!user) {
     return (

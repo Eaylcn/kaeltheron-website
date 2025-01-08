@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
