@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -39,8 +39,9 @@ export async function POST(request: Request) {
     }
 
     // İlk eşleşen kullanıcının email'ini al
-    const userDoc = querySnapshot.docs[0];
-    const email = userDoc.data().email;
+    const firestoreDoc = querySnapshot.docs[0];
+    const firestoreData = firestoreDoc.data();
+    const email = firestoreData.email;
 
     // Email ve şifre ile giriş yap
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -48,7 +49,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       username: username.trim(),
-      email: user.email
+      email: user.email,
+      emailVerified: user.emailVerified,
+      createdAt: firestoreData.createdAt || new Date().toISOString()
     });
   } catch (error: unknown) {
     console.error('Login error:', error);
