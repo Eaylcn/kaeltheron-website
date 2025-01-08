@@ -11,68 +11,8 @@ interface FirebaseError {
 }
 
 function SettingsContent() {
-  const { user, updateUserEmail, updateUserPassword, logout, reauthenticateUser } = useAuth();
-  const [newEmail, setNewEmail] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
-
-  const handleEmailUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmail || !user || !emailPassword) return;
-
-    try {
-      setLoading(true);
-      await reauthenticateUser(emailPassword);
-      await updateUserEmail(newEmail);
-      toast.success('Email başarıyla güncellendi');
-      setNewEmail('');
-      setEmailPassword('');
-    } catch (error: unknown) {
-      const firebaseError = error as FirebaseError;
-      if (firebaseError.code === 'auth/wrong-password') {
-        toast.error('Girdiğiniz şifre yanlış');
-      } else if (firebaseError.code === 'auth/requires-recent-login') {
-        toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
-      } else {
-        toast.error('Email güncellenirken bir hata oluştu');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword || !user) return;
-    
-    if (newPassword !== confirmPassword) {
-      toast.error('Yeni şifreler eşleşmiyor');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await updateUserPassword(currentPassword, newPassword);
-      toast.success('Şifre başarıyla güncellendi');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: unknown) {
-      const firebaseError = error as FirebaseError;
-      if (firebaseError.code === 'auth/wrong-password') {
-        toast.error('Mevcut şifre yanlış');
-      } else if (firebaseError.code === 'auth/requires-recent-login') {
-        toast.error('Bu işlem için yeniden giriş yapmanız gerekiyor');
-      } else {
-        toast.error('Şifre güncellenirken bir hata oluştu');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (!user) {
     return (
@@ -91,96 +31,17 @@ function SettingsContent() {
         <h1 className="text-4xl font-bold mb-8 text-primary">Ayarlar</h1>
         
         <div className="bg-secondary/10 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">Email Güncelle</h2>
-          <form onSubmit={handleEmailUpdate} className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4 text-primary">Hesap Bilgileri</h2>
+          <div className="space-y-4">
             <div>
-              <label htmlFor="newEmail" className="block text-sm font-medium mb-1">
-                Yeni Email
-              </label>
-              <input
-                type="email"
-                id="newEmail"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="yeni@email.com"
-                required
-              />
+              <label className="block text-sm font-medium mb-1">Kullanıcı Adı</label>
+              <p className="text-lg">{user.username}</p>
             </div>
             <div>
-              <label htmlFor="emailPassword" className="block text-sm font-medium mb-1">
-                Mevcut Şifreniz
-              </label>
-              <input
-                type="password"
-                id="emailPassword"
-                value={emailPassword}
-                onChange={(e) => setEmailPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="İşlemi onaylamak için şifrenizi girin"
-                required
-              />
+              <label className="block text-sm font-medium mb-1">E-posta</label>
+              <p className="text-lg">{user.email}</p>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50"
-            >
-              Email Güncelle
-            </button>
-          </form>
-        </div>
-
-        <div className="bg-secondary/10 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">Şifre Güncelle</h2>
-          <form onSubmit={handlePasswordUpdate} className="space-y-4">
-            <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium mb-1">
-                Mevcut Şifre
-              </label>
-              <input
-                type="password"
-                id="currentPassword"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium mb-1">
-                Yeni Şifre
-              </label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                Yeni Şifre (Tekrar)
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors disabled:opacity-50"
-            >
-              Şifre Güncelle
-            </button>
-          </form>
+          </div>
         </div>
 
         <div className="bg-secondary/10 rounded-lg p-6">

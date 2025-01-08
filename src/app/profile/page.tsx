@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider, signOut } from 'firebase/auth';
-import { FirebaseError } from 'firebase/app';
+import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 const tabs = [
@@ -15,29 +14,9 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, loading, updateUserEmail } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  
-  // Ayrı hata ve yükleme durumları
-  const [emailError, setEmailError] = useState('');
-  const [emailSuccess, setEmailSuccess] = useState('');
-  const [emailLoading, setEmailLoading] = useState(false);
-  
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState('');
-  const [passwordLoading, setPasswordLoading] = useState(false);
-
-  // Form states
-  const [emailChangePassword, setEmailChangePassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [newEmail, setNewEmail] = useState('');
 
   // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
   React.useEffect(() => {
@@ -60,193 +39,6 @@ export default function ProfilePage() {
   if (!user) {
     return null; // Router will handle the redirect
   }
-
-  // Email değiştirme fonksiyonu
-  const handleEmailChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEmailError('');
-    setEmailSuccess('');
-    setEmailLoading(true);
-
-    try {
-      // Auth state'i yenile
-      await auth.authStateReady();
-      const currentUser = auth.currentUser;
-      
-      if (!currentUser || !user) {
-        throw new Error('Kullanıcı oturumu bulunamadı');
-      }
-
-      // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(
-        currentUser.email!,
-        emailChangePassword
-      );
-
-      await reauthenticateWithCredential(currentUser, credential);
-
-      // Update email in Firebase Auth and context
-      await updateUserEmail(newEmail.toLowerCase());
-
-      setEmailSuccess('E-posta adresiniz güncellendi.');
-      handleCloseEmailModal();
-
-    } catch (error) {
-      console.error('Email değiştirme hatası:', error);
-      if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/requires-recent-login':
-            setEmailError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
-            break;
-          case 'auth/invalid-email':
-            setEmailError('Geçersiz e-posta adresi');
-            break;
-          case 'auth/email-already-in-use':
-            setEmailError('Bu e-posta adresi zaten kullanımda');
-            break;
-          case 'auth/wrong-password':
-            setEmailError('Hatalı şifre');
-            break;
-          default:
-            setEmailError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
-        }
-      } else {
-        setEmailError('Beklenmeyen bir hata oluştu');
-      }
-    } finally {
-      setEmailLoading(false);
-    }
-  };
-
-  // Şifre değiştirme fonksiyonu
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError('');
-    setPasswordSuccess('');
-    setPasswordLoading(true);
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Yeni şifreler eşleşmiyor');
-      setPasswordLoading(false);
-      return;
-    }
-
-    try {
-      // Auth state'i yenile
-      await auth.authStateReady();
-      const currentUser = auth.currentUser;
-      
-      if (!currentUser || !user) {
-        throw new Error('Kullanıcı oturumu bulunamadı');
-      }
-
-      // Kullanıcıyı yeniden doğrula
-      const credential = EmailAuthProvider.credential(
-        currentUser.email!,
-        currentPassword
-      );
-
-      await reauthenticateWithCredential(currentUser, credential);
-
-      // Şifreyi güncelle
-      await updatePassword(currentUser, newPassword);
-
-      setPasswordSuccess('Şifreniz başarıyla güncellendi');
-
-      // Şifre değişince oturumu kapat
-      setTimeout(async () => {
-        try {
-          await signOut(auth);
-          localStorage.removeItem('token');
-          window.location.href = '/';
-        } catch (error) {
-          console.error('Logout error:', error);
-        }
-      }, 1500);
-    } catch (error) {
-      console.error('Şifre değiştirme hatası:', error);
-      if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/requires-recent-login':
-            setPasswordError('Güvenlik nedeniyle yeniden giriş yapmanız gerekiyor');
-            break;
-          case 'auth/weak-password':
-            setPasswordError('Şifre çok zayıf. En az 6 karakter kullanın');
-            break;
-          case 'auth/wrong-password':
-            setPasswordError('Mevcut şifreniz hatalı');
-            break;
-          default:
-            setPasswordError('Bir hata oluştu. Lütfen daha sonra tekrar deneyin');
-        }
-      } else {
-        setPasswordError('Beklenmeyen bir hata oluştu');
-      }
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
-
-  const renderEmailChangeModal = () => {
-    if (!isEmailModalOpen) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-[#162137] rounded-xl w-full max-w-md p-6 relative">
-          <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">E-posta Adresini Değiştir</h3>
-          <form onSubmit={handleEmailChange} className="space-y-4">
-            <div>
-              <label className="block text-slate-300 mb-2">Mevcut E-posta</label>
-              <input
-                type="email"
-                value={user?.email || ''}
-                disabled
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-2">Yeni E-posta</label>
-              <input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 mb-2">Şifreniz</label>
-              <input
-                type="password"
-                value={emailChangePassword}
-                onChange={(e) => setEmailChangePassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required
-              />
-            </div>
-            {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
-            {emailSuccess && <p className="text-green-500 text-sm">{emailSuccess}</p>}
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={emailLoading}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
-              >
-                {emailLoading ? 'Güncelleniyor...' : 'Güncelle'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCloseEmailModal}
-                className="flex-1 bg-slate-700 text-white font-risque py-2 rounded-lg hover:bg-slate-600 transition-all"
-              >
-                İptal
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
 
   const renderCharactersTab = () => (
     <div className="space-y-8">
@@ -300,103 +92,12 @@ export default function ProfilePage() {
             <label className="block text-slate-300 mb-2">E-posta</label>
             <div className="flex items-center gap-2">
               <p className="text-sm text-slate-400">{user.email}</p>
-              <button
-                onClick={() => setIsEmailModalOpen(true)}
-                className="text-xs text-amber-400 hover:text-amber-300"
-              >
-                Değiştir
-              </button>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="bg-[#162137] rounded-xl p-6">
-        <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Şifre Değiştir</h3>
-        <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div className="relative">
-            <label className="block text-slate-300 mb-2">Mevcut Şifre</label>
-            <div className="relative">
-              <input
-                type={showCurrentPassword ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-              >
-                {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-
-          <div className="relative">
-            <label className="block text-slate-300 mb-2">Yeni Şifre</label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-              >
-                {showNewPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-
-          <div className="relative">
-            <label className="block text-slate-300 mb-2">Yeni Şifre Tekrar</label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-              >
-                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </div>
-
-          {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
-          {passwordSuccess && <p className="text-green-500 text-sm">{passwordSuccess}</p>}
-
-          <button
-            type="submit"
-            disabled={passwordLoading}
-            className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-2 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50"
-          >
-            {passwordLoading ? 'İşleniyor...' : 'Şifreyi Değiştir'}
-          </button>
-        </form>
-      </div>
     </div>
   );
-
-  // Modal kapatıldığında tüm form alanlarını temizle
-  const handleCloseEmailModal = () => {
-    setEmailChangePassword('');
-    setNewEmail('');
-    setEmailError('');
-    setEmailSuccess('');
-    setIsEmailModalOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-[#0B1120] py-20">
@@ -453,7 +154,6 @@ export default function ProfilePage() {
                 {activeTab === 'adventures' && renderAdventuresTab()}
                 {activeTab === 'settings' && renderSettingsTab()}
               </div>
-              {renderEmailChangeModal()}
             </div>
           </div>
         </div>
