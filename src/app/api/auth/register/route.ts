@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { collection, setDoc, doc } from 'firebase/firestore';
 import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
