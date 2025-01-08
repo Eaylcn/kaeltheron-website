@@ -118,9 +118,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogOverlay className="bg-black/40 backdrop-blur-sm fixed inset-0" />
-      <DialogContent className="sm:max-w-[425px] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-[#0B1120] border border-[#2A3C5D] shadow-xl">
-        <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
+      <DialogContent className="fixed sm:max-w-[400px] w-[95%] left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-[#0B1120] border border-[#1a2236] shadow-xl rounded-lg overflow-hidden">
+        <DialogHeader className="pt-6 pb-2">
+          <DialogTitle className="text-center text-xl font-medium text-amber-500">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
           </DialogTitle>
         </DialogHeader>
@@ -128,38 +128,40 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
         <Tabs value={activeTab} onValueChange={(value) => {
           setActiveTab(value);
           setError(null);
-        }} className="w-full relative z-10">
-          <TabsList className="grid w-full grid-cols-2 bg-[#162137]">
-            <TabsTrigger 
-              value="login" 
-              className="data-[state=active]:bg-[#0B1120] data-[state=active]:text-amber-500 text-slate-300"
-            >
-              Giriş Yap
-            </TabsTrigger>
-            <TabsTrigger 
-              value="register" 
-              className="data-[state=active]:bg-[#0B1120] data-[state=active]:text-amber-500 text-slate-300"
-            >
-              Kayıt Ol
-            </TabsTrigger>
-          </TabsList>
+        }} className="w-full">
+          <div className="px-6">
+            <TabsList className="h-10 items-center justify-center grid w-full grid-cols-2 bg-[#0f1624] p-1 rounded">
+              <TabsTrigger 
+                value="login" 
+                className="inline-flex items-center justify-center whitespace-nowrap px-3 text-sm data-[state=active]:bg-[#162137] data-[state=active]:text-amber-500 text-slate-400 font-medium transition-all rounded h-full"
+              >
+                Giriş Yap
+              </TabsTrigger>
+              <TabsTrigger 
+                value="register" 
+                className="inline-flex items-center justify-center whitespace-nowrap px-3 text-sm data-[state=active]:bg-[#162137] data-[state=active]:text-amber-500 text-slate-400 font-medium transition-all rounded h-full"
+              >
+                Kayıt Ol
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="login">
+          <TabsContent value="login" className="px-6 py-6 data-[state=inactive]:opacity-0 data-[state=active]:opacity-100 transition-opacity duration-200">
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="login-username" className="text-slate-300 font-medium">Kullanıcı Adı</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="login-username" className="text-slate-300 text-sm">Kullanıcı Adı</Label>
                 <Input
                   id="login-username"
                   type="text"
                   value={loginData.username}
                   onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
                   required
-                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-0 focus:border-amber-500 h-12 rounded"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="login-password" className="text-slate-300 font-medium">Şifre</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="login-password" className="text-slate-300 text-sm">Şifre</Label>
                 <div className="relative">
                   <Input
                     id="login-password"
@@ -167,16 +169,16 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                     required
-                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-0 focus:border-amber-500 h-12 rounded"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-400 hover:text-slate-200 transition-colors"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
                   >
-                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </Button>
                 </div>
               </div>
@@ -187,7 +189,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium" disabled={loading}>
+              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium h-12 rounded transition-all mt-2" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -200,8 +202,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
             </form>
           </TabsContent>
 
-          <TabsContent value="register">
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+          <TabsContent value="register" className="px-6 py-6 data-[state=inactive]:opacity-0 data-[state=active]:opacity-100 transition-opacity duration-200">
+            <form onSubmit={handleRegisterSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="register-username" className="text-slate-300 font-medium">Kullanıcı Adı</Label>
                 <Input
@@ -210,7 +212,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                   value={registerData.username}
                   onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
                   required
-                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-amber-500 focus:border-amber-500 h-12 rounded"
                 />
               </div>
 
@@ -222,7 +224,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                   value={registerData.email}
                   onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                   required
-                  className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                  className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-amber-500 focus:border-amber-500 h-12 rounded"
                 />
               </div>
 
@@ -235,16 +237,16 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={registerData.password}
                     onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                     required
-                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-amber-500 focus:border-amber-500 h-12 rounded"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-400 hover:text-slate-200 transition-colors"
                     onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                   >
-                    {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showRegisterPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </Button>
                 </div>
               </div>
@@ -258,16 +260,16 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     value={registerData.confirmPassword}
                     onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                     required
-                    className="bg-[#162137] border-[#2A3C5D] text-slate-300 focus:ring-amber-500"
+                    className="bg-[#0f1624] border-[#1a2236] text-slate-300 focus:ring-amber-500 focus:border-amber-500 h-12 rounded"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-400 hover:text-slate-200 transition-colors"
                     onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
                   >
-                    {showRegisterConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showRegisterConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </Button>
                 </div>
               </div>
@@ -278,7 +280,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium" disabled={loading}>
+              <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium h-12 rounded transition-all" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

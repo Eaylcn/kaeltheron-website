@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Temel stil ayarları */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background: #0B1120;
+  overflow-x: hidden;
+}
+
+body {
+  background: #0B1120;
+  overflow-x: hidden;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+/* Scroll bar stilleri */
+::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B1120;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a2236;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2A3C5D;
+}
+
+/* Dialog stilleri */
+[role="dialog"] {
+  padding: 0 !important;
+}
+
 /* Leaflet Map Styles */
 .leaflet-container {
   background: #162137 !important;
