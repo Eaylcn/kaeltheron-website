@@ -50,25 +50,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           const userData = await response.json();
           setUser(userData);
-          // Set session cookie
+          
+          // Set session cookie with secure options
           setCookie('session', firebaseUser.uid, {
             maxAge: 30 * 24 * 60 * 60, // 30 days
             path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
           });
         } catch (error) {
           console.error('Auth state error:', error);
           setUser(null);
           deleteCookie('session');
+          router.replace('/');
         }
       } else {
         setUser(null);
         deleteCookie('session');
+        if (window.location.pathname === '/profile') {
+          router.replace('/');
+        }
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const login = async (username: string, password: string) => {
     setLoading(true);
@@ -88,6 +95,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const userData = await response.json();
       setUser(userData);
+      
+      // Set session cookie after successful login
+      setCookie('session', userData.uid, {
+        maxAge: 30 * 24 * 60 * 60,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
     } finally {
       setLoading(false);
     }
@@ -101,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       setUser(null);
       deleteCookie('session');
-      router.push('/');
+      router.replace('/');
     } finally {
       setLoading(false);
     }

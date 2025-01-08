@@ -12,43 +12,20 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, loading, logout, checkEmailVerification } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // If not loading and no user, redirect to home
     if (!loading && !user) {
       router.replace('/');
     }
   }, [user, loading, router]);
 
-  // Email verification durumunu periyodik olarak kontrol et
-  useEffect(() => {
-    if (user && !user.emailVerified) {
-      const checkVerification = async () => {
-        await checkEmailVerification();
-      };
-
-      // Sayfa yüklendiğinde kontrol et
-      checkVerification();
-
-      // Her 10 saniyede bir kontrol et
-      const interval = setInterval(checkVerification, 10000);
-
-      return () => clearInterval(interval);
-    }
-  }, [user, checkEmailVerification]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0B1120]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!user) {
+  // Show loading state while checking auth
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0B1120]">
         <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -60,12 +37,8 @@ export default function ProfilePage() {
     try {
       setIsLoading(true);
       await logout();
-      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
-      alert('Çıkış yapılırken bir hata oluştu');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -86,7 +59,6 @@ export default function ProfilePage() {
 
   const renderAdventuresTab = () => (
     <div className="space-y-8">
-      {/* Etkin Maceralar */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-4">Etkin Maceralar</h3>
         <div className="text-center">
@@ -98,7 +70,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Eski Maceralar */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-4">Eski Maceralar</h3>
         <p className="text-slate-300 text-center">Henüz tamamlanmış bir maceran bulunmuyor.</p>
@@ -108,19 +79,18 @@ export default function ProfilePage() {
 
   const renderSettingsTab = () => (
     <div className="space-y-8">
-      {/* Hesap Bilgileri */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Hesap Bilgileri</h3>
         <div className="space-y-6">
           <div>
             <h4 className="text-slate-400 text-sm mb-1">Kullanıcı Adı</h4>
-            <p className="text-slate-200 font-medium">{user?.username}</p>
+            <p className="text-slate-200 font-medium">{user.username}</p>
           </div>
           <div>
             <h4 className="text-slate-400 text-sm mb-1">E-posta</h4>
             <div className="flex items-center space-x-2">
-              <p className="text-slate-200 font-medium">{user?.email}</p>
-              {user?.emailVerified ? (
+              <p className="text-slate-200 font-medium">{user.email}</p>
+              {user.emailVerified ? (
                 <span className="inline-flex items-center text-xs text-emerald-400">
                   <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -140,7 +110,7 @@ export default function ProfilePage() {
           <div>
             <h4 className="text-slate-400 text-sm mb-1">Katılma Tarihi</h4>
             <p className="text-slate-200 font-medium">
-              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR', {
+              {user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -150,7 +120,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Çıkış Yap */}
       <div className="bg-[#162137] rounded-xl p-8">
         <h3 className="text-xl font-hennyPenny text-amber-400 mb-6">Oturumu Sonlandır</h3>
         <div className="space-y-4">
@@ -163,7 +132,7 @@ export default function ProfilePage() {
             {isLoading ? (
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>ÇÇıkış Yapılıyor...</span>
+                <span>Çıkış Yapılıyor...</span>
               </div>
             ) : (
               <>
@@ -180,7 +149,6 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-[#0B1120] pt-32">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-hennyPenny text-amber-400 mb-2">
             Hoşgeldin, {user.username}
@@ -190,7 +158,6 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="mb-8">
           <div className="flex justify-center space-x-4">
             {tabs.map((tab) => (
@@ -210,7 +177,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Tab Content */}
         <div className="pb-20">
           {activeTab === 'characters' && renderCharactersTab()}
           {activeTab === 'adventures' && renderAdventuresTab()}
