@@ -5,14 +5,15 @@ import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { setCookie, deleteCookie, getCookie } from 'cookies-next';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface User {
   uid: string;
-  email: string | null;
+  email: string;
   username: string;
-  displayName: string;
   emailVerified: boolean;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 interface AuthContextType {
@@ -215,6 +216,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Email verification check error:', error);
     }
   };
+
+  useEffect(() => {
+    // Auth state değişikliklerini dinle
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Kullanıcı oturum açtığında veya durumu değiştiğinde
+        try {
+          // Kullanıcı bilgilerini yenile
+          await user.reload();
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          const userData = userDoc.data();
+          
+          setUser({
+            uid: user.uid,
+            email: user.email || '',
+            username: userData?.username || '',
+            emailVerified: user.emailVerified,
+            createdAt: userData?.createdAt || null,
+          });
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    // Email doğrulama durumunu kontrol et
+    let emailVerificationTimer: NodeJS.Timeout;
+    if (user && !user.emailVerified) {
+      emailVerificationTimer = setInterval(async () => {
+        try {
+          // Mevcut Firebase kullanıcısını al
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            // Kullanıcı bilgilerini yenile
+            await currentUser.reload();
+            // Eğer email doğrulandıysa
+            if (currentUser.emailVerified) {
+              // Context'teki kullanıcı bilgilerini güncelle
+              const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+              const userData = userDoc.data();
+              
+              setUser({
+                uid: currentUser.uid,
+                email: currentUser.email || '',
+                username: userData?.username || '',
+                emailVerified: true,
+                createdAt: userData?.createdAt || null,
+              });
+              // Timer'ı temizle
+              clearInterval(emailVerificationTimer);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking email verification:', error);
+        }
+      }, 3000); // Her 3 saniyede bir kontrol et
+    }
+
+    // Cleanup
+    return () => {
+      unsubscribe();
+      if (emailVerificationTimer) {
+        clearInterval(emailVerificationTimer);
+      }
+    };
+  }, [user?.uid]);
 
   const value = {
     user,
