@@ -6,12 +6,12 @@ import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { username, password } = await request.json();
 
     // Validasyon kontrolleri
-    if (!email || typeof email !== 'string' || email.trim() === '') {
+    if (!username || typeof username !== 'string' || username.trim() === '') {
       return NextResponse.json(
-        { message: 'E-posta adresi gereklidir' },
+        { message: 'Kullanıcı adı gereklidir' },
         { status: 400 }
       );
     }
@@ -23,19 +23,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Firebase ile giriş yap
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-    const user = userCredential.user;
+    // Kullanıcı adına göre Firestore'dan email'i bul
+    const usersSnapshot = await adminDb
+      .collection('users')
+      .where('username', '==', username.trim().toLowerCase())
+      .get();
 
-    // Kullanıcı bilgilerini Firestore'dan al ve email verification durumunu güncelle
-    const userDoc = await adminDb.collection('users').doc(user.uid).get();
-    
-    if (!userDoc.exists) {
+    if (usersSnapshot.empty) {
       return NextResponse.json(
-        { message: 'Kullanıcı bulunamadı' },
-        { status: 404 }
+        { message: 'Kullanıcı adı veya şifre hatalı' },
+        { status: 400 }
       );
     }
+
+    // İlk eşleşen kullanıcının email'ini al
+    const userDoc = usersSnapshot.docs[0];
+    const userData = userDoc.data();
+    const email = userData.email;
+
+    // Firebase ile giriş yap
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
     // Firebase Auth'dan email verification durumunu kontrol et
     const isEmailVerified = user.emailVerified;
@@ -45,38 +53,29 @@ export async function POST(request: Request) {
       emailVerified: isEmailVerified
     });
 
-    const userData = userDoc.data();
-
     return NextResponse.json({
       uid: user.uid,
       email: user.email,
-      username: userData?.username,
-      displayName: userData?.displayName,
+      username: userData.username,
+      displayName: userData.displayName,
       emailVerified: isEmailVerified,
-      createdAt: userData?.createdAt
+      createdAt: userData.createdAt
     });
   } catch (error: unknown) {
     console.error('Login error:', error);
     
     if (error instanceof FirebaseError) {
-      if (error.code === 'auth/invalid-email') {
-        return NextResponse.json(
-          { message: 'Geçersiz e-posta adresi' },
-          { status: 400 }
-        );
-      }
-
-      if (error.code === 'auth/user-not-found') {
-        return NextResponse.json(
-          { message: 'Kullanıcı bulunamadı' },
-          { status: 404 }
-        );
-      }
-
       if (error.code === 'auth/wrong-password') {
         return NextResponse.json(
-          { message: 'Hatalı şifre' },
+          { message: 'Kullanıcı adı veya şifre hatalı' },
           { status: 400 }
+        );
+      }
+
+      if (error.code === 'auth/too-many-requests') {
+        return NextResponse.json(
+          { message: 'Çok fazla başarısız giriş denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' },
+          { status: 429 }
         );
       }
 

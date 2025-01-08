@@ -1,247 +1,216 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Dialog } from '@headlessui/react';
-import { FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: () => void;
+  defaultTab?: string;
+  onLogin?: () => void;
 }
 
-const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
-  const { login } = useAuth();
-  const [isLoginView, setIsLoginView] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLogin }: AuthModalProps) {
+  const { login, register } = useAuth();
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(false);
+
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    username: '',
+    password: '',
+  });
+
+  // Register form state
+  const [registerData, setRegisterData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError(null); // Kullanıcı yeni giriş yaptığında hata mesajını temizle
-  };
-
-  const validateForm = () => {
-    if (!isLoginView && formData.password !== formData.confirmPassword) {
-      setError('Şifreler eşleşmiyor');
-      return false;
-    }
-    if (!isLoginView && formData.password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
     setError(null);
-    
+    setLoading(true);
+
     try {
-      // API'ye istek at
-      const response = await fetch('/api/auth/' + (isLoginView ? 'login' : 'register'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Bir hata oluştu');
-      }
-
-      if (!isLoginView) {
-        // Kayıt başarılı, kullanıcıyı login formuna yönlendir
-        setIsLoginView(true);
-        setFormData({
-          username: formData.username,
-          email: '',
-          password: '',
-          confirmPassword: ''
-        });
-        setError(null);
-        // Başarı mesajını modal içinde göster
-        return setSuccessMessage('Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın ve giriş yapın.');
-      }
-      
-      // Login işlemi için
-      login(data);
-      localStorage.setItem('token', 'dummy-token');
-      onLogin();
+      const { username, password } = loginData;
+      await login(username, password);
+      if (onLogin) onLogin();
       onClose();
     } catch (error) {
-      console.error('Auth error:', error);
-      setError(error instanceof Error ? error.message : 'Bir hata oluştu');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Giriş yapılırken bir hata oluştu');
+      }
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const switchView = () => {
-    setIsLoginView(!isLoginView);
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
-    setFormData({
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
+    setLoading(true);
+
+    try {
+      const { username, email, password, confirmPassword } = registerData;
+
+      if (password !== confirmPassword) {
+        throw new Error('Şifreler eşleşmiyor');
+      }
+
+      if (password.length < 6) {
+        throw new Error('Şifre en az 6 karakter olmalıdır');
+      }
+
+      await register(username, email, password);
+      onClose();
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Kayıt olurken bir hata oluştu');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
-      
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-[#162137] rounded-xl w-full max-w-md p-6">
-          <Dialog.Title className="text-2xl font-hennyPenny text-amber-400 mb-6">
-            {isLoginView ? 'Giriş Yap' : 'Kayıt Ol'}
-          </Dialog.Title>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
+            {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+          </DialogTitle>
+        </DialogHeader>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center space-x-2">
-              <FaExclamationCircle className="text-red-500 flex-shrink-0" />
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Giriş Yap</TabsTrigger>
+            <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+          </TabsList>
 
-          {successMessage && (
-            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center space-x-2">
-              <svg className="w-5 h-5 text-emerald-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <p className="text-emerald-400 text-sm">{successMessage}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                disabled={isLoading}
-                required
-              />
-            </div>
-
-            {!isLoginView && (
-              <div>
-                <label className="block text-slate-300 mb-2">E-posta</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                  disabled={isLoading}
+          <TabsContent value="login">
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-username">Kullanıcı Adı</Label>
+                <Input
+                  id="login-username"
+                  type="text"
+                  value={loginData.username}
+                  onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
                   required
                 />
               </div>
-            )}
 
-            <div>
-              <label className="block text-slate-300 mb-2">Şifre</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                  disabled={isLoading}
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Şifre</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-                  disabled={isLoading}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
               </div>
-            </div>
 
-            {!isLoginView && (
-              <div>
-                <label className="block text-slate-300 mb-2">Şifre Tekrar</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
-                    disabled={isLoading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
-                    disabled={isLoading}
-                  >
-                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-risque py-3 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{isLoginView ? 'Giriş Yapılıyor...' : 'Kayıt Olunuyor...'}</span>
-                </div>
-              ) : (
-                <span>{isLoginView ? 'Giriş Yap' : 'Kayıt Ol'}</span>
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
-            </button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={switchView}
-                className="text-amber-400 hover:text-amber-300 text-sm"
-                disabled={isLoading}
-              >
-                {isLoginView ? 'Hesabın yok mu? Kayıt ol' : 'Zaten hesabın var mı? Giriş yap'}
-              </button>
-            </div>
-          </form>
-        </Dialog.Panel>
-      </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Giriş Yapılıyor...
+                  </>
+                ) : (
+                  'Giriş Yap'
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="register">
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="register-username">Kullanıcı Adı</Label>
+                <Input
+                  id="register-username"
+                  type="text"
+                  value={registerData.username}
+                  onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="register-email">E-posta</Label>
+                <Input
+                  id="register-email"
+                  type="email"
+                  value={registerData.email}
+                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="register-password">Şifre</Label>
+                <Input
+                  id="register-password"
+                  type="password"
+                  value={registerData.password}
+                  onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="register-confirm-password">Şifre Tekrar</Label>
+                <Input
+                  id="register-confirm-password"
+                  type="password"
+                  value={registerData.confirmPassword}
+                  onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Kayıt Yapılıyor...
+                  </>
+                ) : (
+                  'Kayıt Ol'
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
     </Dialog>
   );
-};
-
-export default AuthModal; 
+} 
