@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '@/context/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,9 +12,20 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
+  const { login } = useAuth();
   const [isLoginView, setIsLoginView] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +34,16 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Login the user
+      login(formData.username, formData.email || 'user@example.com');
+      
+      // Set token
+      localStorage.setItem('token', 'dummy-token');
+      
+      // Close modal and notify parent
       onLogin();
+      onClose();
     } catch (error) {
       console.error('Auth error:', error);
     } finally {
@@ -45,8 +66,12 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               <label className="block text-slate-300 mb-2">Kullanıcı Adı</label>
               <input
                 type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
                 className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                 disabled={isLoading}
+                required
               />
             </div>
 
@@ -55,6 +80,9 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
                 <label className="block text-slate-300 mb-2">E-posta</label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                   disabled={isLoading}
                 />
@@ -66,8 +94,12 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
                   disabled={isLoading}
+                  required
                 />
                 <button
                   type="button"

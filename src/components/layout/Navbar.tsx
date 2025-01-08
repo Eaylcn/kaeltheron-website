@@ -6,11 +6,12 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { FaUser } from 'react-icons/fa';
 import AuthModal from '../auth/AuthModal';
+import { useAuth } from '@/context/AuthContext';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user } = useAuth();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -23,7 +24,6 @@ const Navbar = () => {
   }, []);
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
     setIsAuthModalOpen(false);
   };
 
@@ -75,7 +75,7 @@ const Navbar = () => {
             {/* User Icon */}
             <div className="flex-shrink-0">
               <div className="flex items-center space-x-4">
-                {isLoggedIn ? (
+                {user ? (
                   <Link 
                     href="/profile"
                     className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-100/10 to-white/10 text-slate-100 hover:text-amber-300 hover:from-amber-500/20 hover:to-yellow-500/20 transition-all"
