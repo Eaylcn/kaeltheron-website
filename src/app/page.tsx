@@ -1,28 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react'
-// Main homepage component for Kael'Theron website
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaDiceD20, FaPaintBrush, FaRobot, FaBrain, FaUsers, FaDragon, FaMagic, FaMap } from 'react-icons/fa'
-
-interface Character {
-  name: string;
-  image: string;
-  description: string;
-  appearance: string;
-  stats: string;
-  abilities: string[];
-  goal: string;
-}
-
-const CharacterCard = ({ character }: { character: Character }) => {
-  return (
-    <div className="flip-card h-[600px] perspective-1000">
-      {/* Rest of the component code */}
-    </div>
-  );
-};
 
 export default function HomePage() {
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -252,12 +233,13 @@ export default function HomePage() {
 
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 rounded-3xl blur-3xl" />
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+              <div className="relative">
                 <Image
-                  src="/gameplay-preview.jpg"
-                  alt="Kael'Theron Gameplay"
-                  fill
-                  className="object-cover"
+                  src="/showcase-character.png"
+                  alt="AI Generated Character"
+                  width={600}
+                  height={600}
+                  className="w-full h-auto rounded-2xl"
                 />
               </div>
             </div>
@@ -351,5 +333,5 @@ export default function HomePage() {
         </div>
       </section>
     </main>
-  )
+  );
 }

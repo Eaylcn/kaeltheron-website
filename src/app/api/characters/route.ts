@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const data = getCharacters();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to load characters' }, { status: 500 });
   }
 } 
