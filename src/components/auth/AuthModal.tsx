@@ -40,6 +40,24 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
     confirmPassword: '',
   });
 
+  // Reset all states when modal closes
+  const handleClose = () => {
+    setError(null);
+    setLoading(false);
+    setShowLoginPassword(false);
+    setShowRegisterPassword(false);
+    setShowRegisterConfirmPassword(false);
+    setLoginData({ username: '', password: '' });
+    setRegisterData({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    });
+    setActiveTab(defaultTab);
+    onClose();
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -98,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogOverlay className="bg-black/40 backdrop-blur-sm fixed inset-0" />
       <DialogContent className="sm:max-w-[425px] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-[#0B1120] border border-[#2A3C5D] shadow-xl">
         <DialogHeader>
@@ -107,7 +125,10 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+          setError(null);
+        }} className="w-full relative z-10">
           <TabsList className="grid w-full grid-cols-2 bg-[#162137]">
             <TabsTrigger 
               value="login" 
@@ -152,7 +173,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-[#2A3C5D] text-slate-300"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
                   >
                     {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -220,7 +241,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-[#2A3C5D] text-slate-300"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
                     onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                   >
                     {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -243,7 +264,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-[#2A3C5D] text-slate-300"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 hover:bg-transparent text-slate-300 hover:text-amber-500 transition-colors"
                     onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
                   >
                     {showRegisterConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
