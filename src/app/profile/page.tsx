@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaUserCircle, FaDragon, FaScroll, FaCog, FaPlus, FaPlay, FaSignOutAlt } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const tabs = [
   { id: 'characters', label: 'Karakterlerim', icon: <FaDragon /> },
@@ -12,52 +15,45 @@ const tabs = [
 ];
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, loading, logout, checkEmailVerification } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('characters');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Kullanıcı giriş yapmamışsa ana sayfaya yönlendir
-  React.useEffect(() => {
-    if (!user) {
-      router.push('/');
+  useEffect(() => {
+    if (!user && !loading) {
+      router.push('/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  // E-posta doğrulama durumunu kontrol et
-  React.useEffect(() => {
-    const checkVerification = async () => {
-      if (user?.uid) {
-        try {
-          const response = await fetch('/api/auth/check-verification', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ uid: user.uid }),
-          });
+  // Email verification durumunu periyodik olarak kontrol et
+  useEffect(() => {
+    if (user && !user.emailVerified) {
+      const checkVerification = async () => {
+        await checkEmailVerification();
+      };
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.emailVerified !== user.emailVerified) {
-              // Sayfayı yenile
-              window.location.reload();
-            }
-          }
-        } catch (error) {
-          console.error('Verification check error:', error);
-        }
-      }
-    };
+      // Sayfa yüklendiğinde kontrol et
+      checkVerification();
 
-    // Sayfa yüklendiğinde ve her 30 saniyede bir kontrol et
-    checkVerification();
-    const interval = setInterval(checkVerification, 30000);
+      // Her 10 saniyede bir kontrol et
+      const interval = setInterval(checkVerification, 10000);
 
-    return () => clearInterval(interval);
-  }, [user]);
+      return () => clearInterval(interval);
+    }
+  }, [user, checkEmailVerification]);
 
-  if (!user) return null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleLogout = async () => {
     try {
