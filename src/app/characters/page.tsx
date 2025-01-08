@@ -221,10 +221,13 @@ export default function CharactersPage() {
 
   const filteredFactions = factions.filter(faction => {
     const matchesSearch = faction.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        faction.description.toLowerCase().includes(searchTerm.toLowerCase());
+                       faction.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = !selectedType || selectedType === 'faction';
+    const matchesCategory = !selectedCategory || faction.type === selectedCategory;
+    const matchesRegion = !selectedRace || faction.details.etkiAlani.toLowerCase().includes(selectedRace);
+    const matchesExpertise = !selectedFaction || faction.details.uzmanlik === selectedFaction;
 
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesType && matchesCategory && matchesRegion && matchesExpertise;
   });
 
   if (loading) {

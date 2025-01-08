@@ -34,6 +34,23 @@ export default function CharacterFilters({
     setSelectedCategory('');
     setSelectedRace('');
     setSelectedFaction('');
+    // Focus'u kaldır
+    (document.activeElement as HTMLElement).blur();
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    (document.activeElement as HTMLElement).blur();
+  };
+
+  const handleRaceChange = (value: string) => {
+    setSelectedRace(value);
+    (document.activeElement as HTMLElement).blur();
+  };
+
+  const handleFactionChange = (value: string) => {
+    setSelectedFaction(value);
+    (document.activeElement as HTMLElement).blur();
   };
 
   return (
@@ -57,7 +74,13 @@ export default function CharacterFilters({
           <select
             value={selectedType}
             onChange={(e) => handleTypeChange(e.target.value)}
-            className="w-full bg-[#162137] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none pr-10"
+            onMouseDown={(e) => {
+              if (document.activeElement === e.currentTarget) {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
+            className="w-full bg-[#162137] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 appearance-none pr-10 transition-colors duration-200 hover:bg-[#0f1624]"
           >
             <option value="">Tüm İçerik</option>
             <option value="character">Karakterler</option>
@@ -78,8 +101,14 @@ export default function CharacterFilters({
             <div className="relative">
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none pr-10"
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                onMouseDown={(e) => {
+                  if (document.activeElement === e.currentTarget) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 appearance-none pr-10 transition-colors duration-200 hover:bg-[#0f1624]"
               >
                 {selectedType === 'faction' ? (
                   <>
@@ -102,7 +131,7 @@ export default function CharacterFilters({
                   </>
                 )}
               </select>
-              <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-transform duration-200 group-hover:text-amber-500" />
             </div>
           </div>
 
@@ -114,22 +143,24 @@ export default function CharacterFilters({
             <div className="relative">
               <select
                 value={selectedRace}
-                onChange={(e) => setSelectedRace(e.target.value)}
-                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none pr-10"
+                onChange={(e) => handleRaceChange(e.target.value)}
+                onMouseDown={(e) => {
+                  if (document.activeElement === e.currentTarget) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 appearance-none pr-10 transition-colors duration-200 hover:bg-[#0f1624]"
               >
                 {selectedType === 'faction' ? (
                   <>
                     <option value="">Tüm Bölgeler</option>
-                    <optgroup label="Ana Bölgeler">
-                      <option value="merkez">Merkez Topraklar</option>
-                      <option value="kuzey">Kuzey Toprakları</option>
-                      <option value="guney">Güney Toprakları</option>
-                    </optgroup>
-                    <optgroup label="Özel Bölgeler">
-                      <option value="eryndor">Eryndor Ormanları</option>
-                      <option value="anvilheim">Anvilheim Dağları</option>
-                      <option value="auroras">Auroras Buz Çölü</option>
-                    </optgroup>
+                    <option value="merkez">Merkez Topraklar</option>
+                    <option value="kuzey">Kuzey Toprakları</option>
+                    <option value="guney">Güney Toprakları</option>
+                    <option value="eryndor">Eryndor Ormanları</option>
+                    <option value="anvilheim">Anvilheim Dağları</option>
+                    <option value="auroras">Auroras Buz Çölü</option>
                   </>
                 ) : (
                   <>
@@ -165,8 +196,14 @@ export default function CharacterFilters({
             <div className="relative">
               <select
                 value={selectedFaction}
-                onChange={(e) => setSelectedFaction(e.target.value)}
-                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 appearance-none pr-10"
+                onChange={(e) => handleFactionChange(e.target.value)}
+                onMouseDown={(e) => {
+                  if (document.activeElement === e.currentTarget) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                  }
+                }}
+                className="w-full bg-[#162137] rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50 appearance-none pr-10 transition-colors duration-200 hover:bg-[#0f1624]"
               >
                 {selectedType === 'faction' ? (
                   <>
