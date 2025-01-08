@@ -360,3 +360,27 @@ body {
 .card-enter {
   animation: fadeSlideUp 0.5s ease forwards;
 }
+
+/* Select scrollbar özelleştirmesi */
+select {
+  scrollbar-width: thin;
+  scrollbar-color: #162137 transparent;
+}
+
+select::-webkit-scrollbar {
+  width: 6px;
+}
+
+select::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+select::-webkit-scrollbar-thumb {
+  background-color: #162137;
+  border-radius: 20px;
+  border: 2px solid transparent;
+}
+
+select:hover::-webkit-scrollbar-thumb {
+  background-color: #1C2B4B;
+}
