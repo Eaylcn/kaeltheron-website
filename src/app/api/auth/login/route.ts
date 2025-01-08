@@ -41,37 +41,45 @@ export async function POST(request: Request) {
     const userData = userDoc.data();
     const email = userData.email;
 
-    // Firebase ile giriş yap
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    try {
+      // Firebase ile giriş yap
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    // Firebase Auth'dan email verification durumunu kontrol et
-    const isEmailVerified = user.emailVerified;
+      // Firebase Auth'dan email verification durumunu kontrol et
+      const isEmailVerified = user.emailVerified;
 
-    // Firestore'daki kullanıcı verisini güncelle
-    await adminDb.collection('users').doc(user.uid).update({
-      emailVerified: isEmailVerified
-    });
+      // Firestore'daki kullanıcı verisini güncelle
+      await adminDb.collection('users').doc(user.uid).update({
+        emailVerified: isEmailVerified,
+        lastLoginAt: new Date().toISOString()
+      });
 
-    return NextResponse.json({
-      uid: user.uid,
-      email: user.email,
-      username: userData.username,
-      displayName: userData.displayName,
-      emailVerified: isEmailVerified,
-      createdAt: userData.createdAt
-    });
+      // Kullanıcı bilgilerini döndür
+      return NextResponse.json({
+        uid: user.uid,
+        email: user.email,
+        username: userData.username,
+        displayName: userData.displayName,
+        emailVerified: isEmailVerified,
+        createdAt: userData.createdAt
+      });
+    } catch (authError) {
+      if (authError instanceof FirebaseError) {
+        if (authError.code === 'auth/wrong-password') {
+          return NextResponse.json(
+            { message: 'Kullanıcı adı veya şifre hatalı' },
+            { status: 400 }
+          );
+        }
+        throw authError;
+      }
+      throw authError;
+    }
   } catch (error: unknown) {
     console.error('Login error:', error);
     
     if (error instanceof FirebaseError) {
-      if (error.code === 'auth/wrong-password') {
-        return NextResponse.json(
-          { message: 'Kullanıcı adı veya şifre hatalı' },
-          { status: 400 }
-        );
-      }
-
       if (error.code === 'auth/too-many-requests') {
         return NextResponse.json(
           { message: 'Çok fazla başarısız giriş denemesi yaptınız. Lütfen daha sonra tekrar deneyin.' },
@@ -80,8 +88,8 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json(
-        { message: `Firebase hatası: ${error.message}` },
-        { status: 500 }
+        { message: `Giriş hatası: ${error.message}` },
+        { status: 400 }
       );
     }
 

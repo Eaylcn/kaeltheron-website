@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -22,6 +22,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -75,7 +78,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
       }
 
       await register(username, email, password);
-      onClose();
+      // Switch to login tab after successful registration
+      setActiveTab('login');
+      setRegisterData({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      });
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -89,7 +99,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-slate-900 text-white">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-hennyPenny text-amber-500">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
@@ -117,13 +127,24 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
               <div className="space-y-2">
                 <Label htmlFor="login-password">Şifre</Label>
-                <Input
-                  id="login-password"
-                  type="password"
-                  value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="login-password"
+                    type={showLoginPassword ? "text" : "password"}
+                    value={loginData.password}
+                    onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  >
+                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
 
               {error && (
@@ -171,24 +192,46 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
 
               <div className="space-y-2">
                 <Label htmlFor="register-password">Şifre</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  value={registerData.password}
-                  onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="register-password"
+                    type={showRegisterPassword ? "text" : "password"}
+                    value={registerData.password}
+                    onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                  >
+                    {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="register-confirm-password">Şifre Tekrar</Label>
-                <Input
-                  id="register-confirm-password"
-                  type="password"
-                  value={registerData.confirmPassword}
-                  onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="register-confirm-password"
+                    type={showRegisterConfirmPassword ? "text" : "password"}
+                    value={registerData.confirmPassword}
+                    onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
+                  >
+                    {showRegisterConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
 
               {error && (
