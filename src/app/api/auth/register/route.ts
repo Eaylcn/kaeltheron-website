@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     // E-posta doğrulama linki gönder
     await sendEmailVerification(user, {
-      url: process.env.NEXT_PUBLIC_APP_URL + '/login?verified=true',
+      url: (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/login?verified=true',
       handleCodeInApp: false,
     });
 
@@ -107,10 +107,39 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+
+      if (error.code === 'auth/network-request-failed') {
+        return NextResponse.json(
+          { message: 'Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.' },
+          { status: 503 }
+        );
+      }
+
+      if (error.code === 'auth/operation-not-allowed') {
+        return NextResponse.json(
+          { message: 'E-posta/şifre girişi bu proje için devre dışı bırakılmış.' },
+          { status: 403 }
+        );
+      }
+
+      // Diğer Firebase hataları için genel mesaj
+      return NextResponse.json(
+        { message: `Firebase hatası: ${error.message}` },
+        { status: 500 }
+      );
     }
 
+    // Firebase hatası değilse ve Error instance'ı ise
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: 500 }
+      );
+    }
+
+    // Genel hata durumu
     return NextResponse.json(
-      { message: 'Kayıt olurken bir hata oluştu' },
+      { message: 'Kayıt olurken beklenmeyen bir hata oluştu' },
       { status: 500 }
     );
   }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaExclamationCircle } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 
 interface AuthModalProps {
@@ -15,21 +15,40 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
   const { login } = useAuth();
   const [isLoginView, setIsLoginView] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null); // Kullanıcı yeni giriş yaptığında hata mesajını temizle
+  };
+
+  const validateForm = () => {
+    if (!isLoginView && formData.password !== formData.confirmPassword) {
+      setError('Şifreler eşleşmiyor');
+      return false;
+    }
+    if (!isLoginView && formData.password.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır');
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setIsLoading(true);
+    setError(null);
     
     try {
       // API'ye istek at
@@ -38,7 +57,11 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        }),
       });
 
       const data = await response.json();
@@ -63,10 +86,21 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
       onClose();
     } catch (error) {
       console.error('Auth error:', error);
-      alert(error instanceof Error ? error.message : 'Bir hata oluştu');
+      setError(error instanceof Error ? error.message : 'Bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const switchView = () => {
+    setIsLoginView(!isLoginView);
+    setError(null);
+    setFormData({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
   return (
@@ -78,6 +112,13 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
           <Dialog.Title className="text-2xl font-hennyPenny text-amber-400 mb-6">
             {isLoginView ? 'Giriş Yap' : 'Kayıt Ol'}
           </Dialog.Title>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center space-x-2">
+              <FaExclamationCircle className="text-red-500 flex-shrink-0" />
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -103,6 +144,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
                   onChange={handleChange}
                   className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 text-slate-200 focus:outline-none focus:border-amber-500/50"
                   disabled={isLoading}
+                  required
                 />
               </div>
             )}
@@ -130,6 +172,31 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               </div>
             </div>
 
+            {!isLoginView && (
+              <div>
+                <label className="block text-slate-300 mb-2">Şifre Tekrar</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full bg-[#0B1120] border border-slate-700 rounded-lg py-2 px-4 pr-12 text-slate-200 focus:outline-none focus:border-amber-500/50"
+                    disabled={isLoading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300 transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isLoading}
@@ -148,7 +215,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setIsLoginView(!isLoginView)}
+                onClick={switchView}
                 className="text-amber-400 hover:text-amber-300 text-sm"
                 disabled={isLoading}
               >
