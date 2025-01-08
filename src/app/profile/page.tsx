@@ -24,6 +24,39 @@ export default function ProfilePage() {
     }
   }, [user, router]);
 
+  // E-posta doğrulama durumunu kontrol et
+  React.useEffect(() => {
+    const checkVerification = async () => {
+      if (user?.uid) {
+        try {
+          const response = await fetch('/api/auth/check-verification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ uid: user.uid }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.emailVerified !== user.emailVerified) {
+              // Sayfayı yenile
+              window.location.reload();
+            }
+          }
+        } catch (error) {
+          console.error('Verification check error:', error);
+        }
+      }
+    };
+
+    // Sayfa yüklendiğinde ve her 30 saniyede bir kontrol et
+    checkVerification();
+    const interval = setInterval(checkVerification, 30000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   if (!user) return null;
 
   const handleLogout = async () => {

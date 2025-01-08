@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
+  uid: string;
   username: string;
   email: string;
   emailVerified: boolean;
