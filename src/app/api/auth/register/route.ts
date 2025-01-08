@@ -31,8 +31,9 @@ export async function POST(request: Request) {
     }
 
     // Kullanıcı adının benzersiz olup olmadığını kontrol et
+    const usersRef = collection(db, 'users');
     const usernameQuery = query(
-      collection(db, 'users'),
+      usersRef,
       where('username', '==', username.trim().toLowerCase())
     );
     
@@ -53,26 +54,31 @@ export async function POST(request: Request) {
       displayName: username.trim()
     });
 
-    // E-posta doğrulama linki gönder
-    await sendEmailVerification(user, {
-      url: (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/login?verified=true',
-      handleCodeInApp: false,
-    });
-
     // Firestore'a kullanıcı bilgilerini kaydet
-    await setDoc(doc(db, 'users', user.uid), {
+    const userData = {
+      uid: user.uid,
       username: username.trim().toLowerCase(),
       email: email.trim().toLowerCase(),
       displayName: username.trim(),
       createdAt: new Date().toISOString(),
       emailVerified: false
-    });
+    };
+
+    await setDoc(doc(db, 'users', user.uid), userData);
+
+    // E-posta doğrulama linki gönder
+    try {
+      await sendEmailVerification(user, {
+        url: (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000') + '/login?verified=true',
+        handleCodeInApp: false,
+      });
+    } catch (emailError) {
+      console.error('Email verification error:', emailError);
+      // E-posta gönderimi başarısız olsa bile kullanıcı kaydını tamamla
+    }
 
     return NextResponse.json({
-      username: username.trim(),
-      email: user.email,
-      emailVerified: false,
-      createdAt: new Date().toISOString(),
+      ...userData,
       message: 'Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.'
     });
   } catch (error: unknown) {
@@ -108,36 +114,12 @@ export async function POST(request: Request) {
         );
       }
 
-      if (error.code === 'auth/network-request-failed') {
-        return NextResponse.json(
-          { message: 'Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.' },
-          { status: 503 }
-        );
-      }
-
-      if (error.code === 'auth/operation-not-allowed') {
-        return NextResponse.json(
-          { message: 'E-posta/şifre girişi bu proje için devre dışı bırakılmış.' },
-          { status: 403 }
-        );
-      }
-
-      // Diğer Firebase hataları için genel mesaj
       return NextResponse.json(
         { message: `Firebase hatası: ${error.message}` },
         { status: 500 }
       );
     }
 
-    // Firebase hatası değilse ve Error instance'ı ise
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { message: error.message },
-        { status: 500 }
-      );
-    }
-
-    // Genel hata durumu
     return NextResponse.json(
       { message: 'Kayıt olurken beklenmeyen bir hata oluştu' },
       { status: 500 }
