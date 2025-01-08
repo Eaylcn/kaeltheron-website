@@ -1,0 +1,290 @@
+{
+  "characters": [
+    {
+      "id": "cassian-velaris",
+      "type": "npc",
+      "category": "leader",
+      "race": "human",
+      "faction": "velisara-kingdom",
+      "name": "Cassian Velaris",
+      "image": "/leaders/cassian-velaris.png",
+      "description": "İnsanların lideri ve Velisara'nın Kralı",
+      "appearance": "Asil duruşlu, diplomatik ve karizmatik bir insan",
+      "stats": "Level 10 Bard (College of Eloquence)\nHP: 85 (10d8 + 30)\nAC: 16 (Studded Leather + Dex)",
+      "abilities": ["Diplomatik Dokunuş", "İlham Verici Lider", "Büyülü Müzik"],
+      "goal": "İnsanların çıkarlarını korumak ve ırklar arası dengeyi sağlamak"
+    },
+    {
+      "id": "lorianthal-sylvaris",
+      "type": "npc",
+      "category": "leader",
+      "race": "elf",
+      "faction": "eryndor-council",
+      "name": "Lorianthal Sylvaris",
+      "image": "/leaders/lorianthal-sylvaris.png",
+      "description": "Elflerin lideri ve Eryndor Konseyi'nin başkanı",
+      "appearance": "Zarif, bilge bakışlı, büyülü asasıyla dolaşan bir elf",
+      "stats": "Level 14 Wizard (Abjuration)\nHP: 100 (14d6 + 42)\nAC: 16 (Mage Armor + Shield)",
+      "abilities": ["Büyü Kalkanı", "Büyü Ustalığı", "Bilgelik Aurası"],
+      "goal": "Büyü geleneklerini korumak ve kaos tehdidini engellemek"
+    },
+    {
+      "id": "durnik-anvilstone",
+      "type": "npc",
+      "category": "leader",
+      "race": "dwarf",
+      "faction": "anvilheim",
+      "name": "Durnik Anvilstone",
+      "image": "/leaders/durnik-anvilstone.png",
+      "description": "Cücelerin kralı ve Anvilheim'ın yöneticisi",
+      "appearance": "Güçlü yapılı, savaş çekici taşıyan, zırhlı bir cüce",
+      "stats": "Level 12 Fighter (Battle Master)\nHP: 120 (12d10 + 48)\nAC: 20 (Plate + Shield)",
+      "abilities": ["Savaş Ustası", "Mühendislik Dehası", "Liderlik"],
+      "goal": "Cüce krallığını güçlendirmek ve teknolojik üstünlük sağlamak"
+    },
+    {
+      "id": "nartharax",
+      "type": "npc",
+      "category": "legend",
+      "race": "dragon",
+      "faction": "chaos",
+      "name": "Kaos Lordu Nartharax",
+      "image": "/kaos-lordu-nartharax.png",
+      "description": "Antik çağlardan kalma güçlü bir kaos varlığı",
+      "appearance": "Devasa, kara pullu, kızıl gözlü ejderha formu",
+      "stats": "Ancient Chaos Dragon\nHP: 450 (25d20 + 200)\nAC: 22 (Natural Armor)",
+      "abilities": ["Kaos Nefesi", "Gerçeklik Çarpıtma", "Düzen Yıkımı"],
+      "goal": "Dünyayı kaosa sürüklemek ve tüm düzeni yok etmek"
+    },
+    {
+      "id": "storm-leviathan",
+      "type": "npc",
+      "category": "legend",
+      "race": "beast",
+      "faction": "independent",
+      "name": "Fırtına Leviathanı",
+      "image": "/firtina-leviathanı.png",
+      "description": "Derin denizlerin kadim bekçisi",
+      "appearance": "Devasa, mavi pullu, deniz yılanı benzeri yaratık",
+      "stats": "Mythical Sea Creature\nHP: 400 (20d20 + 180)\nAC: 20 (Natural Armor)",
+      "abilities": ["Fırtına Çağırma", "Tsunami Dalgası", "Deniz Hakimiyeti"],
+      "goal": "Denizlerin dengesini korumak ve istilacıları cezalandırmak"
+    },
+    {
+      "id": "arathion-duskthorn",
+      "type": "npc",
+      "category": "legend",
+      "race": "elf",
+      "faction": "karabuyu-tarikati",
+      "name": "Arathion Duskthorn",
+      "image": "/arathion-duskthorn.png",
+      "description": "Eryndor Sürgünü ve Karabüyü Tarikatı'nın kurucusu",
+      "appearance": "Uzun, soluk tenli, üzerinde siyah ve gri tonlarda dalgalanan bir pelerin var. Gözleri kaos enerjisiyle parlayan koyu mor renkte",
+      "stats": "Level 18 Sorcerer (Shadow Magic Origin)\nHP: 145 (18d6 + 54)\nAC: 15 (Mage Armor)",
+      "abilities": ["Gölge Yürüyüşü", "Kaotik Enerji Patlaması", "Kaos Mantosu"],
+      "goal": "Kaosu dünyaya salarak düzeni yıkmak ve kendisini büyüden beslenen bir yarı-tanrıya dönüştürmek"
+    },
+    {
+      "id": "azuris",
+      "type": "npc",
+      "category": "legend",
+      "race": "dragon",
+      "faction": "order",
+      "name": "Kadim Ejderha Kralı Azuris",
+      "image": "/azuris.png",
+      "description": "Kael'Theron'un ilk çağlarından kalma, metalik ejderhaların efsanevi kralı",
+      "appearance": "Altın ve gümüş pullu, görkemli kanatları olan devasa ejderha. Gözleri yıldızlar gibi parlıyor",
+      "stats": "Ancient Metallic Dragon\nHP: 500 (25d20 + 250)\nAC: 23 (Natural Armor)",
+      "abilities": ["Kutsal Alev", "Düzen Kalkanı", "Ejderha Hükümranlığı"],
+      "goal": "Düzenin ve dengenin koruyucusu olarak Nartharax'ın yükselişini engellemek"
+    },
+    {
+      "id": "maldrak-thornsoul",
+      "type": "npc",
+      "category": "faction-member",
+      "race": "human",
+      "faction": "karabuyu-tarikati",
+      "name": "Maldrak Thornsoul",
+      "image": "/maldrak-thornsoul.png",
+      "description": "Karabüyü Tarikatı'nın üst düzey büyücüsü",
+      "appearance": "Mor ve siyah cübbeli, solgun tenli büyücü",
+      "stats": "Level 12 Warlock (Undead Patron)\nHP: 95 (12d8 + 36)\nAC: 15 (Mage Armor)",
+      "abilities": ["Ruh Çağırma", "Gölge Büyüsü", "Yaşam Çalma"],
+      "goal": "Ruh dünyasının sırlarını keşfetmek ve güç toplamak"
+    },
+    {
+      "id": "sylvanna-nightshade",
+      "type": "npc",
+      "category": "faction-member",
+      "race": "elf",
+      "faction": "karabuyu-tarikati",
+      "name": "Sylvanna Nightshade",
+      "image": "/sylvanna-nightshade.png",
+      "description": "Karabüyü Tarikatı'nın gölge suikastçısı",
+      "appearance": "Siyah deri zırhlı, gölgeler içinde hareket eden suikastçı",
+      "stats": "Level 10 Rogue (Assassin)\nHP: 80 (10d8 + 30)\nAC: 17 (Studded Leather + Dex)",
+      "abilities": ["Gölge Adımı", "Ölümcül Vuruş", "Zehir Ustası"],
+      "goal": "Tarikat için bilgi toplamak ve düşmanları ortadan kaldırmak"
+    },
+    {
+      "id": "thalindra-elaris",
+      "type": "npc",
+      "category": "faction-member",
+      "race": "elf",
+      "faction": "eryndor-council",
+      "name": "Thalindra Elaris",
+      "image": "/thalindra-elaris.png",
+      "description": "Büyü Muhafızı ve Konsey'in baş büyücüsü",
+      "appearance": "Mor ve siyah cübbeli, solgun tenli büyücü",
+      "stats": "Level 12 Warlock (Undead Patron)\nHP: 95 (12d8 + 36)\nAC: 15 (Mage Armor)",
+      "abilities": ["Ruh Çağırma", "Gölge Büyüsü", "Yaşam Çalma"],
+      "goal": "Ruh dünyasının sırlarını keşfetmek ve güç toplamak"
+    },
+    {
+      "id": "orman-kurdu",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Orman Kurdu",
+      "image": "/orman-kurd.png",
+      "description": "Eryndor Ormanları'nda yaşayan vahşi kurt",
+      "appearance": "Normal kurtlardan daha büyük, gümüş tüylü",
+      "stats": "CR 1 (Beast)\nHP: 25 (4d8 + 8)\nAC: 11 (Natural Armor)",
+      "abilities": ["Keskin Duyu", "Sürü Taktiği"],
+      "goal": "Eryndor Ormanları'nda yaşayan vahşi kurt"
+    },
+    {
+      "id": "buz-orumcegi",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Buz Örümceği",
+      "image": "/buz-orumcegi.png",
+      "description": "Auroras Buz Çölü'nde yaşayan tehlikeli örümcek",
+      "appearance": "Kristal benzeri buz kabuklu, mavi gözlü",
+      "stats": "CR 2 (Beast)\nHP: 32 (5d8 + 10)\nAC: 12 (Natural Armor)",
+      "abilities": ["Buz Zehri", "Tırmanma"],
+      "goal": "Auroras Buz Çölü'nde yaşayan tehlikeli örümcek"
+    },
+    {
+      "id": "bataklik-sulugu",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Bataklık Sülüğü",
+      "image": "/bataklik-suluk.png",
+      "description": "Güney Bataklıkları'nda yaşayan dev sülük",
+      "appearance": "Yeşilimsi kahverengi, 1 metre uzunluğunda",
+      "stats": "CR 1/2 (Beast)\nHP: 22 (4d8 + 4)\nAC: 10 (Natural Armor)",
+      "abilities": ["Kan Emme", "Amfibi"],
+      "goal": "Güney Bataklıkları'nda yaşayan dev sülük"
+    },
+    {
+      "id": "col-akrebi",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Çöl Akrebi",
+      "image": "/col-akrebi.png",
+      "description": "Kuzey Diken Tepeleri'nin kumlu bölgelerinde yaşayan zehirli akrep",
+      "appearance": "Kum rengi, 30 cm boyunda, keskin kıskaçlı",
+      "stats": "CR 1/4 (Beast)\nHP: 15 (3d6 + 3)\nAC: 11 (Natural Armor)",
+      "abilities": ["Zehirli İğne", "Kum Gizlenme"],
+      "goal": "Kuzey Diken Tepeleri'nin kumlu bölgelerinde yaşayan zehirli akrep"
+    },
+    {
+      "id": "magara-yarasasi",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Mağara Yarasası",
+      "image": "/magara-yarasasi.png",
+      "description": "Anvilheim Zirvesi'nin mağaralarında yaşayan büyük yarasa",
+      "appearance": "Siyah tüylü, 1 metre kanat açıklığı, keskin dişli",
+      "stats": "CR 1/8 (Beast)\nHP: 12 (2d8 + 2)\nAC: 9 (Natural Armor)",
+      "abilities": ["Yankı Konumu", "Karanlık Görüş"],
+      "goal": "Anvilheim Zirvesi'nin mağaralarında yaşayan büyük yarasa"
+    },
+    {
+      "id": "orman-tilkisi",
+      "type": "creature",
+      "category": "creature",
+      "race": "beast",
+      "faction": "wild",
+      "name": "Orman Tilkisi",
+      "image": "/orman-tilkisi.png",
+      "description": "Eryndor Ormanları'nda yaşayan kurnaz tilki",
+      "appearance": "Kızıl tüylü, ince yapılı, parlak gözlü",
+      "stats": "CR 0 (Beast)\nHP: 8 (2d6)\nAC: 10 (Natural Armor)",
+      "abilities": ["Koku Alma", "Çeviklik"],
+      "goal": "Eryndor Ormanları'nda yaşayan kurnaz tilki"
+    }
+  ],
+  "factions": [
+    {
+      "id": "karabuyu-tarikati",
+      "type": "evil",
+      "name": "Karabüyü Tarikatı",
+      "image": "/factions/karabuyu-tarikati.png",
+      "description": "Karanlık büyü ve kaos güçlerini kullanan gizli bir organizasyon",
+      "goal": "Düzeni yıkıp kaosun hüküm sürdüğü yeni bir dünya düzeni kurmak",
+      "details": {
+        "merkez": "Auroras Buz Çölünün derinliklerindeki gizli tapınak",
+        "lider": "Arathion Duskthorn",
+        "uyeSayisi": "100+",
+        "etkiAlani": "Kuzey Toprakları",
+        "uzmanlik": "Karanlık Büyü ve Gizli Operasyonlar"
+      },
+      "varliklar": [
+        "Gölge Ajanları: Gizli istihbarat ağı",
+        "Kaos Savaşçıları: Seçkin savaşçı birliği",
+        "Ritüel Ustaları: Karanlık büyü uzmanları"
+      ]
+    },
+    {
+      "id": "eryndor-council",
+      "type": "good",
+      "name": "Eryndor Konseyi",
+      "image": "/factions/eryndor-konseyi.png",
+      "description": "Elflerin en yüksek yönetim organı ve büyü araştırma merkezi",
+      "goal": "Antik büyü bilgisini korumak ve dünyayı kaos tehdidinden korumak",
+      "details": {
+        "merkez": "Sylvaris, Eryndor Ormanlarının kalbindeki kristal kuleler",
+        "lider": "Lorianthal Sylvaris",
+        "uyeSayisi": "12 Arşimag",
+        "etkiAlani": "Eryndor Ormanları",
+        "uzmanlik": "Antik Büyü ve Koruma"
+      },
+      "varliklar": [
+        "Büyü Muhafızları: Antik büyülerin koruyucuları",
+        "Bilgi Kütüphanesi: Dünyanın en büyük büyü arşivi",
+        "Kristal Ağı: Büyülü iletişim sistemi"
+      ]
+    },
+    {
+      "id": "velisara-kingdom",
+      "type": "neutral",
+      "name": "Velisara Krallığı",
+      "image": "/factions/velisara-kralligi.png",
+      "description": "İnsanların en güçlü krallığı ve ticaret merkezi",
+      "goal": "İnsanlığın refahını artırmak ve ırklar arası barışı korumak",
+      "details": {
+        "merkez": "Velisara, Altın Kuleleriyle ünlü başkent",
+        "lider": "Kral Cassian Velaris",
+        "uyeSayisi": "1.000.000+",
+        "etkiAlani": "Merkez Topraklar",
+        "uzmanlik": "Diplomasi ve Ticaret"
+      },
+      "varliklar": [
+        "Kraliyet Ordusu: Seçkin askeri birlikler",
+        "Ticaret Loncası: Dünya çapında ticaret ağı",
+        "Diplomatik Konsey: Uluslararası ilişkiler kurumu"
+      ]
+    }
+  ]
+} 

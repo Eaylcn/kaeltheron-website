@@ -6,6 +6,24 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { FaDiceD20, FaPaintBrush, FaRobot, FaBrain, FaUsers, FaDragon, FaMagic, FaMap } from 'react-icons/fa'
 
+interface Character {
+  name: string;
+  image: string;
+  description: string;
+  appearance: string;
+  stats: string;
+  abilities: string[];
+  goal: string;
+}
+
+const CharacterCard = ({ character }: { character: Character }) => {
+  return (
+    <div className="flip-card h-[600px] perspective-1000">
+      {/* Rest of the component code */}
+    </div>
+  );
+};
+
 export default function HomePage() {
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const testimonialRefs = useRef<(HTMLDivElement | null)[]>([]);
