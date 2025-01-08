@@ -235,21 +235,23 @@ export default function CharactersPage() {
         </div>
       </section>
 
-      {/* Main Content */}
-      <div className="max-w-[1200px] mx-auto px-4 py-16">
+        {/* Main Content */}
+        <div className="max-w-[1200px] mx-auto px-4 py-16">
         {/* Filters */}
-        <CharacterFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          selectedRace={selectedRace}
-          setSelectedRace={setSelectedRace}
-          selectedFaction={selectedFaction}
-          setSelectedFaction={setSelectedFaction}
-        />
+        <div className="mb-20">
+          <CharacterFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedType={selectedType}
+            setSelectedType={setSelectedType}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            selectedRace={selectedRace}
+            setSelectedRace={setSelectedRace}
+            selectedFaction={selectedFaction}
+            setSelectedFaction={setSelectedFaction}
+          />
+        </div>
 
         {/* Content Grid */}
         <div className="space-y-20">
@@ -265,7 +267,7 @@ export default function CharactersPage() {
             </section>
           )}
 
-          {/* Factions Section */}
+            {/* Factions Section */}
           {(!selectedType || selectedType === 'faction') && filteredFactions.length > 0 && (
             <section>
               <h2 className="text-4xl font-hennyPenny text-white mb-12">Fraksiyonlar</h2>
@@ -281,7 +283,7 @@ export default function CharactersPage() {
           {filteredCharacters.length === 0 && filteredFactions.length === 0 && (
             <div className="text-center text-gray-400 font-risque text-xl py-20">
               Arama kriterlerinize uygun sonuç bulunamadı.
-            </div>
+                    </div>
           )}
         </div>
       </div>
