@@ -265,19 +265,19 @@ export default function HomePage() {
               {
                 name: "Eren Yıldız",
                 role: "Elf Büyücü",
-                quote: "Yapay zeka DM'in dinamik hikaye anlatımı ve anlık görsel üretimi sayesinde her oyun benzersiz bir deneyime dönüşüyor.",
+                quote: '"Yapay zeka DM\'in dinamik hikaye anlatımı ve anlık görsel üretimi sayesinde her oyun benzersiz bir deneyime dönüşüyor."',
                 image: "/testimonials/player1.jpg"
               },
               {
                 name: "Zeynep Akar",
                 role: "İnsan Savaşçı",
-                quote: "Karakterimin her kararının dünyayı etkilediğini görmek ve bunun sonuçlarıyla yüzleşmek inanılmaz bir deneyim.",
+                quote: '"Karakterimin her kararının dünyayı etkilediğini görmek ve bunun sonuçlarıyla yüzleşmek inanılmaz bir deneyim."',
                 image: "/testimonials/player2.jpg"
               },
               {
                 name: "Kaan Demir",
                 role: "Cüce Paladin",
-                quote: "Arkadaşlarımla birlikte keşfettiğimiz bu dünyada her macera beklenmedik sürprizlerle dolu.",
+                quote: '"Arkadaşlarımla birlikte keşfettiğimiz bu dünyada her macera beklenmedik sürprizlerle dolu."',
                 image: "/testimonials/player3.jpg"
               }
             ].map((testimonial, index) => (
@@ -308,7 +308,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <blockquote className="font-risque text-slate-200 italic mb-6">
-                    "{testimonial.quote}"
+                    {testimonial.quote}
                   </blockquote>
                   <div>
                     <cite className="font-hennyPenny text-amber-300 text-lg not-italic">
