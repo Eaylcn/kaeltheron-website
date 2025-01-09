@@ -33,35 +33,53 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     const data: UpdateRequest = await request.json();
     const { regionId, icons, bounds, color } = data;
 
-    const regionRef = doc(db, 'regions', regionId);
-    const updateData: Partial<{
-      locations: UpdateIcon[];
-      'mapData.bounds': Point[];
-      'mapData.color': Color;
-    }> = {};
+    if (!regionId) {
+      return NextResponse.json({ error: 'Region ID is required' }, { status: 400 });
+    }
 
-    if (icons) {
-      updateData.locations = icons.map((icon) => ({
+    const regionRef = doc(db, 'regions', regionId);
+    const updateData: Record<string, any> = {};
+
+    if (icons !== undefined) {
+      const validIcons = icons.filter(icon => 
+        icon.name && 
+        icon.type && 
+        Array.isArray(icon.coordinates) && 
+        icon.coordinates.length === 2 &&
+        icon.color
+      ).map(icon => ({
         name: icon.name,
         type: icon.type,
         coordinates: icon.coordinates,
         color: icon.color,
-        description: icon.description,
-        population: icon.population
+        description: icon.description || null,
+        population: icon.population || null
       }));
+      updateData.locations = validIcons;
     }
 
-    if (bounds) {
-      updateData['mapData.bounds'] = bounds;
+    if (bounds !== undefined) {
+      const validBounds = bounds.filter(point => 
+        typeof point.x === 'number' && 
+        typeof point.y === 'number'
+      );
+      updateData['mapData.bounds'] = validBounds;
     }
 
-    if (color) {
-      updateData['mapData.color'] = color;
+    if (color !== undefined && color.fill && color.stroke) {
+      updateData['mapData.color'] = {
+        fill: color.fill,
+        stroke: color.stroke
+      };
     }
 
-    await updateDoc(regionRef, updateData);
-
-    return NextResponse.json({ success: true });
+    // Sadece geçerli veriler varsa güncelle
+    if (Object.keys(updateData).length > 0) {
+      await updateDoc(regionRef, updateData);
+      return NextResponse.json({ success: true });
+    } else {
+      return NextResponse.json({ error: 'No valid data to update' }, { status: 400 });
+    }
   } catch (error) {
     console.error('Bölge güncelleme hatası:', error);
     return NextResponse.json(
