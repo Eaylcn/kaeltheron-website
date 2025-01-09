@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, FieldValue } from 'firebase/firestore';
 
 interface UpdateIcon {
   name: string;
   type: string;
   coordinates: [number, number];
   color: string;
-  description?: string;
-  population?: string;
+  description: string | null;
+  population: string | null;
 }
 
 interface Point {
@@ -28,6 +28,10 @@ interface UpdateRequest {
   color?: Color;
 }
 
+type FirestoreData = {
+  [key: string]: FieldValue | Partial<unknown> | undefined;
+};
+
 export async function POST(request: Request): Promise<NextResponse<{ success: boolean } | { error: string }>> {
   try {
     const data: UpdateRequest = await request.json();
@@ -38,7 +42,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     }
 
     const regionRef = doc(db, 'regions', regionId);
-    const updateData: Record<string, any> = {};
+    const updateData: FirestoreData = {};
 
     if (icons !== undefined) {
       const validIcons = icons.filter(icon => 
