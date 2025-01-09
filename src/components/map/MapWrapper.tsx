@@ -50,6 +50,7 @@ interface Region {
   type: string;
   mapData: {
     bounds: number[][];
+    center?: [number, number];
     color?: {
       fill: string;
       stroke: string;
@@ -348,6 +349,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
               const validBounds = bounds.filter(point => 
                 Array.isArray(point) && 
                 point.length === 2 && 
+                !isNaN(point[0]) && 
+                !isNaN(point[1]) &&
                 typeof point[0] === 'number' && 
                 typeof point[1] === 'number'
               );
@@ -357,7 +360,14 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
               }
             }
             
-            // Geçerli bir path yoksa varsayılan oluştur
+            // Geçerli bir path yoksa ve mapData.center varsa, merkez etrafında varsayılan oluştur
+            if (!path && typedRegion.mapData.center) {
+              const [centerX, centerY] = typedRegion.mapData.center;
+              const size = 5;
+              path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
+            }
+            
+            // Hala geçerli bir path yoksa, haritanın ortasında varsayılan oluştur
             if (!path) {
               const centerX = 50;
               const centerY = 50;
