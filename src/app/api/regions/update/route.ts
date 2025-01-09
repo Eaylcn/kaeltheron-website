@@ -77,7 +77,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     }
 
     // mapData nesnesini hazırla
-    const mapData = { ...currentData.mapData } || {};
+    const mapData = currentData?.mapData ? { ...currentData.mapData } : {};
 
     if (bounds !== undefined && Array.isArray(bounds)) {
       const validBounds = bounds.filter(point => 
