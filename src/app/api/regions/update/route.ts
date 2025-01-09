@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, DocumentData } from 'firebase/firestore';
 
 interface UpdateIcon {
   name: string;
@@ -107,7 +107,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
 
     // Sadece geçerli veriler varsa güncelle
     if (Object.keys(updateData).length > 0) {
-      await updateDoc(regionRef, updateData as { [x: string]: any });
+      await updateDoc(regionRef, updateData as DocumentData);
       console.log('Update successful');
       return NextResponse.json({ success: true });
     } else {
