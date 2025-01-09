@@ -13,6 +13,7 @@ import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pa
 interface MapWrapperProps {
   onRegionClick: (regionId: string) => void;
   selectedRegion: string | null;
+  onLocationsUpdate?: (regionId: string) => void;
 }
 
 interface Point {
@@ -308,7 +309,7 @@ const Controls = ({
   );
 };
 
-export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapperProps) {
+export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -644,6 +645,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
       });
 
       if (!response.ok) throw new Error('İkon kaydetme başarısız');
+      
+      // İkon başarıyla eklendiğinde bölge bilgilerini güncelle
+      onLocationsUpdate?.(selectedRegion);
     } catch (error) {
       console.error('İkon kaydetme hatası:', error);
     }
@@ -680,6 +684,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         });
 
         if (!response.ok) throw new Error('Silme işlemi kaydedilemedi');
+        
+        // İkon başarıyla silindiğinde bölge bilgilerini güncelle
+        onLocationsUpdate?.(selectedRegion);
       } catch (error) {
         console.error('Silme hatası:', error);
       }
@@ -856,9 +863,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
                       >
                         <div className="relative group">
                           {getLocationIcon(icon.type, editMode === 'delete' ? 'text-red-500' : icon.color)}
-                          <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm ${
-                            editMode === 'delete' ? 'text-red-500' : icon.color || 'text-gray-400'
-                          } font-risque ${
+                          <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque ${
                             isCapital ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                           } transition-opacity duration-200`}>
                             {icon.name}
@@ -884,9 +889,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
                     >
                       <div className="relative">
                         {getLocationIcon(selectedIconType, selectedIconColor)}
-                        <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm ${
-                          selectedIconColor || 'text-gray-400'
-                        } font-risque`}>
+                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque">
                           {iconName}
                         </div>
                       </div>
