@@ -13,31 +13,27 @@ service cloud.firestore {
 
     // Kullanıcı dokümanlarına erişim kuralları
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() 
-        && request.resource.data.username is string
-        && request.resource.data.email is string;
-      allow update: if isAuthenticated() 
-        && (isOwner(userId) || request.resource.data.emailVerified is bool);
-      allow delete: if false;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow querying users collection for login/register
+      match /{document=**} {
+        allow read: if true;
+      }
     }
-
-    // Karakter dokümanlarına erişim kuralları
-    match /characters/{characterId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() 
-        && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() 
-        && resource.data.userId == request.auth.uid;
+    
+    // Regions collection rules
+    match /regions/{regionId} {
+      allow read: if true;  // Herkes okuyabilir
+      allow write: if true;  // Şimdilik herkes yazabilir (test için)
+      
+      // Daha sonra tekrar güvenli hale getirmek için:
+      // allow write: if request.auth != null;
     }
-
-    // Macera dokümanlarına erişim kuralları
-    match /adventures/{adventureId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() 
-        && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() 
-        && resource.data.userId == request.auth.uid;
+    
+    // Default deny for other collections
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 } 

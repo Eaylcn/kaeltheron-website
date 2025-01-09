@@ -527,9 +527,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         // Yeni sınırları ve rengi kaydet
         const updateData = {
           regionId: selectedRegion,
-          bounds: drawingPoints.map(p => [p.x, p.y]),
+          bounds: drawingPoints.map(p => [p.x, p.y] as [number, number]),
           color: newColor
         };
+
+        console.log('Sending update data:', updateData);
 
         const response = await fetch('/api/regions/update', {
           method: 'POST',
@@ -539,8 +541,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
           body: JSON.stringify(updateData),
         });
 
+        const result = await response.json();
+        console.log('Update response:', result);
+
         if (!response.ok) {
-          throw new Error('Kaydetme başarısız');
+          throw new Error('Kaydetme başarısız: ' + (result.error || 'Bilinmeyen hata'));
         }
 
         console.log('Bölge başarıyla güncellendi:', updateData);
