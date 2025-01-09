@@ -48,3 +48,7 @@ next-env.d.ts
 .env.production.local
 
 .vercel
+
+# Firebase service account
+src/service-account.json
+service-account.json
