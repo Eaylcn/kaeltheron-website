@@ -50,7 +50,6 @@ interface Region {
   type: string;
   mapData: {
     bounds: number[][];
-    center?: [number, number];
     color?: {
       fill: string;
       stroke: string;
@@ -349,8 +348,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
               const validBounds = bounds.filter(point => 
                 Array.isArray(point) && 
                 point.length === 2 && 
-                !isNaN(point[0]) && 
-                !isNaN(point[1]) &&
                 typeof point[0] === 'number' && 
                 typeof point[1] === 'number'
               );
@@ -360,33 +357,19 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
               }
             }
             
-            // Geçerli bir path yoksa ve mapData.center varsa, merkez etrafında varsayılan oluştur
-            if (!path && typedRegion.mapData.center) {
-              const [centerX, centerY] = typedRegion.mapData.center;
-              const size = 10; // Daha büyük varsayılan boyut
-              path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
-            }
-            
-            // Hala geçerli bir path yoksa, haritanın ortasında varsayılan oluştur
+            // Geçerli bir path yoksa varsayılan oluştur
             if (!path) {
               const centerX = 50;
               const centerY = 50;
-              const size = 10; // Daha büyük varsayılan boyut
-              const index = paths.length; // Bölgenin indeksini kullan
-              const offset = index * 5; // Her bölge için offset ekle
-              
-              // Bölgeleri merkez etrafında dağıt
-              const adjustedX = centerX + offset;
-              const adjustedY = centerY + offset;
-              
-              path = `M ${adjustedX-size},${adjustedY-size} L ${adjustedX+size},${adjustedY-size} L ${adjustedX+size},${adjustedY+size} L ${adjustedX-size},${adjustedY+size} Z`;
+              const size = 5;
+              path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
             }
 
-            const color = typedRegion.mapData?.color || (
-              typedRegion.type === 'forest'
-                ? { fill: 'rgba(34,197,94,0.15)', stroke: 'rgba(34,197,94,0.5)' }
-                : { fill: 'rgba(156,163,175,0.15)', stroke: 'rgba(156,163,175,0.5)' }
-            );
+            // Kaydedilmiş rengi kullan veya varsayılan rengi ata
+            const color = typedRegion.mapData?.color || {
+              fill: 'rgba(156,163,175,0.15)',
+              stroke: 'rgba(156,163,175,0.5)'
+            };
 
             return { id: typedRegion.id, path, color };
           });
@@ -534,6 +517,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         updatedPath = getPathFromPoints();
         const newColor = colorPalette[selectedColor];
         
+        // Önce state'i güncelle
         setRegionPaths(prev => prev.map(rp => 
           rp.id === selectedRegion
             ? { ...rp, path: updatedPath!, color: newColor }
@@ -543,7 +527,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         // Yeni sınırları ve rengi kaydet
         const updateData = {
           regionId: selectedRegion,
-          bounds: drawingPoints.map(p => [p.x, p.y] as [number, number]),
+          bounds: drawingPoints.map(p => [p.x, p.y]),
           color: newColor
         };
 
@@ -555,7 +539,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
           body: JSON.stringify(updateData),
         });
 
-        if (!response.ok) throw new Error('Kaydetme başarısız');
+        if (!response.ok) {
+          throw new Error('Kaydetme başarısız');
+        }
+
+        console.log('Bölge başarıyla güncellendi:', updateData);
       }
       
       setIsEditMode(false);
@@ -564,6 +552,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
       onRegionClick(''); // Bölge seçimini kaldır
     } catch (error) {
       console.error('Kaydetme hatası:', error);
+      alert('Bölge kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
