@@ -86,20 +86,22 @@ export default function MapPage() {
   };
 
   const filterRegions = () => {
-    if (!regionsData) return [];
+    if (!regionsData?.regions) return [];
     
     return Object.entries(regionsData.regions).filter(([, region]) => {
-      const matchesSearch = searchTerm === '' || 
-        region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        region.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        region.locations.some(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      if (!region) return false;
+
+      const matchesSearch = !searchTerm || 
+        (region.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        region.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        region.locations?.some(loc => loc.name?.toLowerCase().includes(searchTerm.toLowerCase()))) || false;
 
       const matchesType = !filters.type || region.type === filters.type;
       const matchesClimate = !filters.climate || region.climate === filters.climate;
       const matchesRace = !filters.race || region.dominantRace === filters.race;
-      const matchesDanger = !filters.dangerLevel || region.dangerLevel.toString() === filters.dangerLevel;
+      const matchesDanger = !filters.dangerLevel || region.dangerLevel?.toString() === filters.dangerLevel;
       const matchesResource = !filters.resourceType || 
-        region.resources.some(res => res.type === filters.resourceType);
+        region.resources?.some(res => res.type === filters.resourceType) || false;
 
       return matchesSearch && matchesType && matchesClimate && matchesRace && 
              matchesDanger && matchesResource;

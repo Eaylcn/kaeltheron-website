@@ -74,9 +74,44 @@ export async function GET(): Promise<NextResponse<RegionsResponse | { error: str
     const regionsSnapshot = await getDocs(regionsCollection);
     
     const regions: Record<string, Region> = {};
+    
     regionsSnapshot.forEach((doc) => {
-      const data = doc.data() as Omit<Region, 'id'>;
-      regions[doc.id] = { ...data, id: doc.id };
+      try {
+        const data = doc.data();
+        // Veri dönüşümlerini ve validasyonunu yap
+        const region: Region = {
+          id: doc.id,
+          name: data.name || '',
+          description: data.description || '',
+          image: data.image || '',
+          type: data.type || '',
+          climate: data.climate || '',
+          dominantRace: data.dominantRace || '',
+          dangerLevel: Number(data.dangerLevel) || 0,
+          features: Array.isArray(data.features) ? data.features : [],
+          locations: Array.isArray(data.locations) ? data.locations.map((loc: any) => ({
+            name: loc.name || '',
+            type: loc.type || '',
+            description: loc.description,
+            population: loc.population,
+            coordinates: Array.isArray(loc.coordinates) ? loc.coordinates : [0, 0],
+            color: loc.color || 'text-gray-400'
+          })) : [],
+          mapData: {
+            bounds: Array.isArray(data.mapData?.bounds) ? data.mapData.bounds : [],
+            center: Array.isArray(data.mapData?.center) ? data.mapData.center : [0, 0],
+            color: data.mapData?.color || undefined
+          },
+          resources: Array.isArray(data.resources) ? data.resources : [],
+          threats: Array.isArray(data.threats) ? data.threats : [],
+          travelTimes: Array.isArray(data.travelTimes) ? data.travelTimes : [],
+          temperature: data.temperature || undefined
+        };
+        
+        regions[doc.id] = region;
+      } catch (error) {
+        console.error(`Bölge dönüşüm hatası (${doc.id}):`, error);
+      }
     });
 
     return NextResponse.json({ regions });

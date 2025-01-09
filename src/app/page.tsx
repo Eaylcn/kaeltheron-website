@@ -68,8 +68,7 @@ export default function HomePage() {
                   Maceraya Atıl
                 </h1>
                 <p className="text-xl font-risque text-slate-200 leading-relaxed opacity-0 animate-description">
-                  {"Yapay zeka DM'liğinde, sınırsız hayal gücü ve gerçek zamanlı görsel üretimi ile"}
-                  her an benzersiz bir deneyim yaşayın.
+                  {"Yapay zeka DM'liğinde, sınırsız hayal gücü ve gerçek zamanlı görsel üretimi ile her an benzersiz bir deneyim yaşayın."}
                 </p>
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <button 
