@@ -140,7 +140,8 @@ export async function POST(request: Request) {
         await deleteUser(authUser);
         
         // Firestore dökümanını sil
-        await adminDb.collection('users').doc(authUser.uid).delete();
+        const userId = (authUser as { uid: string }).uid;
+        await adminDb.collection('users').doc(userId).delete();
       } catch (cleanupError) {
         console.error('Cleanup error:', cleanupError);
       }
