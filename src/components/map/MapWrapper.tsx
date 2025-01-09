@@ -49,7 +49,7 @@ interface Region {
   name: string;
   type: string;
   mapData: {
-    bounds: number[][];
+    bounds: number[];
     color?: {
       fill: string;
       stroke: string;
@@ -343,17 +343,17 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             const bounds = typedRegion.mapData.bounds;
             let path = '';
             
-            if (bounds && bounds.length >= 3) {
-              // Her noktanın geçerli olduğundan emin ol
-              const validBounds = bounds.filter(point => 
-                Array.isArray(point) && 
-                point.length === 2 && 
-                typeof point[0] === 'number' && 
-                typeof point[1] === 'number'
-              );
+            if (bounds && bounds.length >= 6) { // En az 3 nokta için 6 koordinat gerekli
+              // Düz array'i koordinat çiftlerine dönüştür
+              const coordinates = [];
+              for (let i = 0; i < bounds.length; i += 2) {
+                if (typeof bounds[i] === 'number' && typeof bounds[i + 1] === 'number') {
+                  coordinates.push([bounds[i], bounds[i + 1]]);
+                }
+              }
 
-              if (validBounds.length >= 3) {
-                path = `M ${validBounds.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
+              if (coordinates.length >= 3) {
+                path = `M ${coordinates.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
               }
             }
             
@@ -374,34 +374,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             return { id: typedRegion.id, path, color };
           });
 
-        // İkonları oluştur
-        const allIcons: Icon[] = [];
-        Object.values(data.regions).forEach((region) => {
-          const typedRegion = region as Region;
-          if (typedRegion.locations && Array.isArray(typedRegion.locations)) {
-            typedRegion.locations.forEach((location) => {
-              if (location && location.coordinates && Array.isArray(location.coordinates)) {
-                allIcons.push({
-                  id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
-                  type: location.type,
-                  position: { 
-                    x: location.coordinates[0], 
-                    y: location.coordinates[1] 
-                  },
-                  name: location.name,
-                  regionId: typedRegion.id,
-                  color: location.color || 'text-gray-400'
-                });
-              }
-            });
-          }
-        });
-
         console.log('Loaded paths:', paths);
-        console.log('Loaded icons:', allIcons);
-
         setRegionPaths(paths);
-        setIcons(allIcons);
         setIsLoading(false);
       } catch (error) {
         console.error('Veri yükleme hatası:', error);
