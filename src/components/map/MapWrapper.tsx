@@ -333,49 +333,72 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         const data = await response.json();
         
         // Region paths'i oluştur
-        const paths: RegionPath[] = Object.values(data.regions).map((region) => {
-          const typedRegion = region as Region;
-          const bounds = typedRegion.mapData?.bounds || [];
-          let path = '';
-          
-          if (bounds.length >= 3) {
-            path = `M ${bounds.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
-          } else {
-            const centerX = 50;
-            const centerY = 50;
-            const size = 5;
-            path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
-          }
+        const paths: RegionPath[] = Object.values(data.regions)
+          .filter((region) => {
+            const typedRegion = region as Region;
+            return typedRegion && typedRegion.mapData && Array.isArray(typedRegion.mapData.bounds);
+          })
+          .map((region) => {
+            const typedRegion = region as Region;
+            const bounds = typedRegion.mapData.bounds;
+            let path = '';
+            
+            if (bounds && bounds.length >= 3) {
+              // Her noktanın geçerli olduğundan emin ol
+              const validBounds = bounds.filter(point => 
+                Array.isArray(point) && 
+                point.length === 2 && 
+                typeof point[0] === 'number' && 
+                typeof point[1] === 'number'
+              );
 
-          const color = typedRegion.mapData?.color || (
-            typedRegion.type === 'forest'
-              ? { fill: 'rgba(34,197,94,0.15)', stroke: 'rgba(34,197,94,0.5)' }
-              : { fill: 'rgba(156,163,175,0.15)', stroke: 'rgba(156,163,175,0.5)' }
-          );
+              if (validBounds.length >= 3) {
+                path = `M ${validBounds.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
+              }
+            }
+            
+            // Geçerli bir path yoksa varsayılan oluştur
+            if (!path) {
+              const centerX = 50;
+              const centerY = 50;
+              const size = 5;
+              path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
+            }
 
-          return { id: typedRegion.id, path, color };
-        });
+            const color = typedRegion.mapData?.color || (
+              typedRegion.type === 'forest'
+                ? { fill: 'rgba(34,197,94,0.15)', stroke: 'rgba(34,197,94,0.5)' }
+                : { fill: 'rgba(156,163,175,0.15)', stroke: 'rgba(156,163,175,0.5)' }
+            );
+
+            return { id: typedRegion.id, path, color };
+          });
 
         // İkonları oluştur
         const allIcons: Icon[] = [];
         Object.values(data.regions).forEach((region) => {
           const typedRegion = region as Region;
-          typedRegion.locations?.forEach((location) => {
-            if (location.coordinates) {
-              allIcons.push({
-                id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
-                type: location.type,
-                position: { 
-                  x: location.coordinates[0], 
-                  y: location.coordinates[1] 
-                },
-                name: location.name,
-                regionId: typedRegion.id,
-                color: location.color || 'text-gray-400'
-              });
-            }
-          });
+          if (typedRegion.locations && Array.isArray(typedRegion.locations)) {
+            typedRegion.locations.forEach((location) => {
+              if (location && location.coordinates && Array.isArray(location.coordinates)) {
+                allIcons.push({
+                  id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
+                  type: location.type,
+                  position: { 
+                    x: location.coordinates[0], 
+                    y: location.coordinates[1] 
+                  },
+                  name: location.name,
+                  regionId: typedRegion.id,
+                  color: location.color || 'text-gray-400'
+                });
+              }
+            });
+          }
         });
+
+        console.log('Loaded paths:', paths);
+        console.log('Loaded icons:', allIcons);
 
         setRegionPaths(paths);
         setIcons(allIcons);
@@ -492,49 +515,31 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
       
       if (editMode === 'draw' && drawingPoints.length >= 3) {
         updatedPath = getPathFromPoints();
+        const newColor = colorPalette[selectedColor];
+        
         setRegionPaths(prev => prev.map(rp => 
           rp.id === selectedRegion
-            ? { ...rp, path: updatedPath!, color: colorPalette[selectedColor] }
+            ? { ...rp, path: updatedPath!, color: newColor }
             : rp
         ));
+
+        // Yeni sınırları ve rengi kaydet
+        const updateData = {
+          regionId: selectedRegion,
+          bounds: drawingPoints.map(p => [p.x, p.y] as [number, number]),
+          color: newColor
+        };
+
+        const response = await fetch('/api/regions/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        if (!response.ok) throw new Error('Kaydetme başarısız');
       }
-
-      interface UpdateData {
-        regionId: string;
-        icons: {
-          name: string;
-          type: string;
-          coordinates: [number, number];
-          color: string;
-        }[];
-        bounds?: Point[];
-        color?: typeof colorPalette[number];
-      }
-
-      const updateData: UpdateData = {
-        regionId: selectedRegion,
-        icons: icons.filter(icon => icon.regionId === selectedRegion).map(icon => ({
-          name: icon.name,
-          type: icon.type,
-          coordinates: [icon.position.x, icon.position.y],
-          color: icon.color
-        }))
-      };
-
-      if (editMode === 'draw' && drawingPoints.length >= 3) {
-        updateData.bounds = drawingPoints;
-        updateData.color = colorPalette[selectedColor];
-      }
-
-      const response = await fetch('/api/regions/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) throw new Error('Kaydetme başarısız');
       
       setIsEditMode(false);
       setEditMode(null);
