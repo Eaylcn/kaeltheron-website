@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { 
   FaCrown, FaCity, FaFortAwesome, FaTree, FaMountain, FaSkull, 
   FaSearchPlus, FaSearchMinus, FaCompass, FaPen, FaSave, FaUndo,
@@ -10,7 +10,7 @@ import { GiCastle, GiMiner, GiWoodCabin, GiPortal, GiAncientColumns } from 'reac
 import Image from 'next/image';
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
 
-interface Props {
+interface MapWrapperProps {
   onRegionClick: (regionId: string) => void;
   selectedRegion: string | null;
 }
@@ -308,13 +308,19 @@ const Controls = ({
   );
 };
 
-const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
+export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapperProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [drawingPoints, setDrawingPoints] = useState<Point[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [regionPaths, setRegionPaths] = useState<RegionPath[]>([]);
   const [icons, setIcons] = useState<Icon[]>([]);
@@ -429,19 +435,22 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
     setShowDeleteZone(true);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !selectedIcon) return;
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
 
-    setIcons(prev => prev.map(icon => 
-      icon.id === selectedIcon.id 
-        ? { ...icon, position: { x, y } }
-        : icon
-    ));
-  };
+    setOffset({
+      x: offset.x + dx,
+      y: offset.y + dy
+    });
+
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
+  }, [isDragging, dragStart, offset]);
 
   const handleMouseUp = (e: React.MouseEvent) => {
     if (isDragging && selectedIcon) {
@@ -518,10 +527,9 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
     return `M ${drawingPoints.map(p => `${p.x},${p.y}`).join(' L ')} Z`;
   };
 
-  const handleRegionClick = (regionId: string) => {
-    if (!isEditMode) {
-      onRegionClick(regionId);
-    }
+  const handleRegionClick = (event: React.MouseEvent<SVGPathElement>, regionId: string) => {
+    event.stopPropagation();
+    onRegionClick(regionId);
   };
 
   const handleAddIcon = async () => {
@@ -608,6 +616,62 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
     }
   };
 
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    const delta = -e.deltaY;
+    const scaleFactor = delta > 0 ? 1.1 : 0.9;
+    const newScale = scale * scaleFactor;
+
+    if (newScale >= 0.5 && newScale <= 4) {
+      const rect = mapRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const viewBoxX = viewBox.x + (mouseX / rect.width) * viewBox.width;
+      const viewBoxY = viewBox.y + (mouseY / rect.height) * viewBox.height;
+
+      const newWidth = 1000 / newScale;
+      const newHeight = 1000 / newScale;
+
+      const newViewBoxX = viewBoxX - (newWidth / 2);
+      const newViewBoxY = viewBoxY - (newHeight / 2);
+
+      setScale(newScale);
+      setViewBox({
+        x: newViewBoxX,
+        y: newViewBoxY,
+        width: newWidth,
+        height: newHeight
+      });
+    }
+  }, [scale, viewBox]);
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove as unknown as EventListener);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove as unknown as EventListener);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove]);
+
+  const handleMouseDown = (e: React.MouseEvent<SVGElement>) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
   return (
     <div className="relative w-full h-[800px] bg-[#0B1120] rounded-lg overflow-hidden">
       {isLoading ? (
@@ -692,7 +756,7 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
                           className={`transition-colors ${
                             !isEditMode ? 'cursor-pointer hover:stroke-amber-500' : ''
                           } ${selectedRegion === region.id ? 'stroke-amber-500' : ''}`}
-                          onClick={() => !isEditMode && handleRegionClick(region.id)}
+                          onClick={(event) => handleRegionClick(event, region.id)}
                           style={{ pointerEvents: !isEditMode ? 'all' : 'none' }}
                         />
                       );
@@ -806,6 +870,4 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
       )}
       </div>
   );
-};
-
-export default MapWrapper; 
+} 
