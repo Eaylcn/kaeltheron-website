@@ -93,7 +93,8 @@ export async function POST(request: Request) {
       }
 
       // Firestore'a kullanıcı bilgilerini kaydet
-      const userRef = usersCollection.doc(authUser.uid);
+      const userId = (authUser as { uid: string }).uid;
+      const userRef = usersCollection.doc(userId);
       const userData: UserData = {
         username: username.trim().toLowerCase(),
         displayName: username.trim(),
@@ -117,8 +118,8 @@ export async function POST(request: Request) {
       }
 
       const response: RegisterResponse = {
-        uid: authUser.uid,
-        email: authUser.email,
+        uid: userId,
+        email: (authUser as { email: string | null }).email,
         username: userData.username,
         displayName: userData.displayName,
         emailVerified: userData.emailVerified,
