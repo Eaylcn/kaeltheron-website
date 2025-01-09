@@ -1,11 +1,27 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from 'firebase/auth';
+import { 
+  createUserWithEmailAndPassword, 
+  sendEmailVerification, 
+  deleteUser,
+  UserCredential,
+  User as FirebaseUser
+} from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { adminDb as db } from '@/lib/firebase-admin';
+import { CollectionReference, DocumentReference } from 'firebase-admin/firestore';
+
+interface UserData {
+  username: string;
+  displayName: string;
+  email: string;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export async function POST(request: Request) {
-  let createdUser = null;
+  let authUser: FirebaseUser | null = null;
 
   try {
     const { username, email, password } = await request.json();
@@ -34,9 +50,11 @@ export async function POST(request: Request) {
 
     // Transaction başlat
     const result = await db.runTransaction(async (transaction) => {
+      const usersCollection = db.collection('users') as CollectionReference<UserData>;
+
       // Kullanıcı adının benzersiz olduğunu kontrol et
       const usernameSnapshot = await transaction.get(
-        db.collection('users').where('username', '==', username.trim().toLowerCase())
+        usersCollection.where('username', '==', username.trim().toLowerCase())
       );
 
       if (!usernameSnapshot.empty) {
@@ -45,7 +63,7 @@ export async function POST(request: Request) {
 
       // E-posta adresinin benzersiz olduğunu kontrol et
       const emailSnapshot = await transaction.get(
-        db.collection('users').where('email', '==', email.trim().toLowerCase())
+        usersCollection.where('email', '==', email.trim().toLowerCase())
       );
 
       if (!emailSnapshot.empty) {
@@ -53,23 +71,34 @@ export async function POST(request: Request) {
       }
 
       // Firebase Auth ile kullanıcı oluştur
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      createdUser = userCredential.user;
+      let userCredential: UserCredential;
+      try {
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        authUser = userCredential.user;
+      } catch (authError) {
+        throw authError;
+      }
+
+      if (!authUser) {
+        throw new Error('Kullanıcı oluşturulamadı');
+      }
 
       // Firestore'a kullanıcı bilgilerini kaydet
-      const userRef = db.collection('users').doc(createdUser.uid);
-      transaction.set(userRef, {
+      const userRef = usersCollection.doc(authUser.uid) as DocumentReference<UserData>;
+      const userData: UserData = {
         username: username.trim().toLowerCase(),
         displayName: username.trim(),
         email: email.trim().toLowerCase(),
         emailVerified: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      });
+      };
+
+      transaction.set(userRef, userData);
 
       // Doğrulama e-postası gönder
       try {
-        await sendEmailVerification(createdUser, {
+        await sendEmailVerification(authUser, {
           url: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email` : 'http://localhost:3000/auth/verify-email',
           handleCodeInApp: true
         });
@@ -79,12 +108,12 @@ export async function POST(request: Request) {
       }
 
       return {
-        uid: createdUser.uid,
-        email: createdUser.email,
-        username: username.trim().toLowerCase(),
-        displayName: username.trim(),
-        emailVerified: false,
-        createdAt: new Date().toISOString()
+        uid: authUser.uid,
+        email: authUser.email,
+        username: userData.username,
+        displayName: userData.displayName,
+        emailVerified: userData.emailVerified,
+        createdAt: userData.createdAt
       };
     });
 
@@ -94,13 +123,14 @@ export async function POST(request: Request) {
     console.error('Register error:', error);
 
     // Hata durumunda cleanup
-    if (createdUser) {
+    if (authUser) {
       try {
         // Kullanıcıyı Authentication'dan sil
-        await deleteUser(createdUser);
+        await deleteUser(authUser);
         
         // Firestore dökümanını sil
-        await db.collection('users').doc(createdUser.uid).delete();
+        const usersCollection = db.collection('users') as CollectionReference<UserData>;
+        await usersCollection.doc(authUser.uid).delete();
       } catch (cleanupError) {
         console.error('Cleanup error:', cleanupError);
       }
