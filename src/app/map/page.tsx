@@ -30,10 +30,15 @@ interface RegionData {
     description: string;
     population?: string;
     coordinates: [number, number];
+    color?: string;
   }[];
   mapData: {
     bounds: [number, number][];
     center: [number, number];
+    color?: {
+      fill: string;
+      stroke: string;
+    };
   };
   resources: {
     name: string;
@@ -72,7 +77,6 @@ export default function MapPage() {
     resourceType: ''
   });
   const [activeTab, setActiveTab] = useState<'info' | 'resources' | 'threats' | 'locations' | 'travel'>('info');
-  const [regionData, setRegionData] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/regions')
@@ -80,29 +84,21 @@ export default function MapPage() {
       .then(data => setRegionsData(data));
   }, []);
 
-  const fetchRegionData = async (regionId: string) => {
-    try {
-      const response = await fetch(`/api/regions/${regionId}`);
-      if (!response.ok) throw new Error('Bölge bilgileri alınamadı');
-      const data = await response.json();
-      setRegionData(data);
-    } catch (error) {
-      console.error('Bölge bilgileri yükleme hatası:', error);
-    }
-  };
-
   const handleRegionClick = (regionId: string) => {
     setSelectedRegion(regionId);
     if (regionId) {
-      fetchRegionData(regionId);
+      setShowDetails(true);
+      setActiveTab('info');
     } else {
-      setRegionData(null);
+      setShowDetails(false);
     }
   };
 
   const handleLocationsUpdate = (regionId: string) => {
     if (regionId === selectedRegion) {
-      fetchRegionData(regionId);
+      fetch('/api/regions')
+        .then(res => res.json())
+        .then(data => setRegionsData(data));
     }
   };
 
