@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { db } from '@/lib/firebase-admin';
+import { adminDb as db } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
