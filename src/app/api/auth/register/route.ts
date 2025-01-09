@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { adminDb } from '@/lib/firebase-admin';
-import { CollectionReference, DocumentReference } from 'firebase-admin/firestore';
+import { CollectionReference } from 'firebase-admin/firestore';
 
 interface UserData {
   username: string;
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Transaction başlat
-    const result = await adminDb.runTransaction(async (transaction) => {
+    const result = await adminDb.runTransaction<RegisterResponse>(async (transaction) => {
       const usersCollection = adminDb.collection('users') as CollectionReference<UserData>;
 
       // Kullanıcı adının benzersiz olduğunu kontrol et
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         throw emailError;
       }
 
-      return {
+      const response: RegisterResponse = {
         uid: authUser.uid,
         email: authUser.email,
         username: userData.username,
@@ -124,6 +124,8 @@ export async function POST(request: Request) {
         emailVerified: userData.emailVerified,
         createdAt: userData.createdAt
       };
+
+      return response;
     });
 
     return NextResponse.json(result);
