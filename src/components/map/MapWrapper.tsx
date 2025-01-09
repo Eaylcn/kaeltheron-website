@@ -374,8 +374,33 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             return { id: typedRegion.id, path, color };
           });
 
+        // İkonları yükle
+        const allIcons: Icon[] = [];
+        Object.values(data.regions).forEach((region) => {
+          const typedRegion = region as Region;
+          if (typedRegion.locations && Array.isArray(typedRegion.locations)) {
+            typedRegion.locations.forEach((location) => {
+              if (location && Array.isArray(location.coordinates)) {
+                allIcons.push({
+                  id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
+                  type: location.type,
+                  position: { 
+                    x: location.coordinates[0], 
+                    y: location.coordinates[1] 
+                  },
+                  name: location.name,
+                  regionId: typedRegion.id,
+                  color: location.color || 'text-gray-400'
+                });
+              }
+            });
+          }
+        });
+
         console.log('Loaded paths:', paths);
+        console.log('Loaded icons:', allIcons);
         setRegionPaths(paths);
+        setIcons(allIcons);
         setIsLoading(false);
       } catch (error) {
         console.error('Veri yükleme hatası:', error);
@@ -486,6 +511,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
 
     try {
       let updatedPath: string | null = null;
+      let updateData: any = { regionId: selectedRegion };
       
       if (editMode === 'draw' && drawingPoints.length >= 3) {
         updatedPath = getPathFromPoints();
@@ -498,32 +524,40 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             : rp
         ));
 
-        // Yeni sınırları ve rengi kaydet
-        const updateData = {
-          regionId: selectedRegion,
-          bounds: drawingPoints.map(p => [p.x, p.y] as [number, number]),
-          color: newColor
-        };
-
-        console.log('Sending update data:', updateData);
-
-        const response = await fetch('/api/regions/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateData),
-        });
-
-        const result = await response.json();
-        console.log('Update response:', result);
-
-        if (!response.ok) {
-          throw new Error('Kaydetme başarısız: ' + (result.error || 'Bilinmeyen hata'));
-        }
-
-        console.log('Bölge başarıyla güncellendi:', updateData);
+        // Sınırları ve rengi ekle
+        updateData.bounds = drawingPoints.map(p => [p.x, p.y] as [number, number]).flat();
+        updateData.color = newColor;
       }
+
+      // İkonları ekle
+      const regionIcons = icons.filter(icon => icon.regionId === selectedRegion);
+      if (regionIcons.length > 0) {
+        updateData.icons = regionIcons.map(icon => ({
+          name: icon.name,
+          type: icon.type,
+          coordinates: [icon.position.x, icon.position.y],
+          color: icon.color
+        }));
+      }
+
+      console.log('Sending update data:', updateData);
+
+      const response = await fetch('/api/regions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      const result = await response.json();
+      console.log('Update response:', result);
+
+      if (!response.ok) {
+        throw new Error('Kaydetme başarısız: ' + (result.error || 'Bilinmeyen hata'));
+      }
+
+      console.log('Bölge başarıyla güncellendi:', updateData);
       
       setIsEditMode(false);
       setEditMode(null);
