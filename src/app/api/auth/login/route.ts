@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { adminDb } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Kullanıcı adına göre Firestore'dan email'i bul
-    const usersSnapshot = await adminDb
+    const usersSnapshot = await db
       .collection('users')
       .where('username', '==', username.trim().toLowerCase())
       .get();
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       const isEmailVerified = user.emailVerified;
 
       // Firestore'daki kullanıcı verisini güncelle
-      await adminDb.collection('users').doc(user.uid).update({
+      await db.collection('users').doc(user.uid).update({
         emailVerified: isEmailVerified,
         lastLoginAt: new Date().toISOString()
       });

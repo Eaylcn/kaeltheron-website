@@ -1,63 +1,75 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { adminDb } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
   try {
-    const { uid } = await request.json();
+    const { email, password } = await request.json();
 
-    if (!uid) {
+    // Validasyon kontrolleri
+    if (!email || typeof email !== 'string' || email.trim() === '') {
       return NextResponse.json(
-        { message: 'Kullanıcı ID gereklidir' },
+        { message: 'E-posta adresi gereklidir' },
         { status: 400 }
       );
     }
 
-    // Admin SDK ile kullanıcı bilgilerini al
-    const user = await auth.currentUser;
-    
-    if (!user) {
+    if (!password || typeof password !== 'string' || password.trim() === '') {
       return NextResponse.json(
-        { message: 'Kullanıcı bulunamadı' },
-        { status: 404 }
+        { message: 'Şifre gereklidir' },
+        { status: 400 }
       );
     }
 
-    // Kullanıcının token'ını yenile (email verification durumunu güncellemek için)
-    await user.reload();
+    // Firebase ile giriş yap
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    // Email verification durumunu kontrol et
-    const isEmailVerified = user.emailVerified;
-
-    if (isEmailVerified) {
-      // Firestore'daki kullanıcı verisini güncelle
-      await adminDb.collection('users').doc(uid).update({
-        emailVerified: true
-      });
-
-      return NextResponse.json({
-        emailVerified: true,
-        message: 'E-posta adresi doğrulandı'
-      });
+    // E-posta doğrulama durumunu kontrol et
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { message: 'E-posta adresi henüz doğrulanmamış' },
+        { status: 400 }
+      );
     }
 
+    // Firestore'daki kullanıcı verisini güncelle
+    await db.collection('users').doc(user.uid).update({
+      emailVerified: true,
+      updatedAt: new Date().toISOString()
+    });
+
     return NextResponse.json({
-      emailVerified: false,
-      message: 'E-posta adresi henüz doğrulanmadı'
+      message: 'E-posta adresi başarıyla doğrulandı'
     });
   } catch (error: unknown) {
-    console.error('Email verification check error:', error);
-    
+    console.error('Email verification error:', error);
+
     if (error instanceof FirebaseError) {
+      if (error.code === 'auth/wrong-password') {
+        return NextResponse.json(
+          { message: 'Geçersiz şifre' },
+          { status: 400 }
+        );
+      }
+
+      if (error.code === 'auth/user-not-found') {
+        return NextResponse.json(
+          { message: 'Kullanıcı bulunamadı' },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { message: `Firebase hatası: ${error.message}` },
-        { status: 500 }
+        { message: `Doğrulama hatası: ${error.message}` },
+        { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { message: 'E-posta doğrulama durumu kontrol edilirken bir hata oluştu' },
+      { message: 'E-posta doğrulanırken bir hata oluştu' },
       { status: 500 }
     );
   }

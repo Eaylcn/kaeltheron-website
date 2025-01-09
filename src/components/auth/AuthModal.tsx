@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -123,9 +123,6 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login', onLog
           <DialogTitle className="text-center text-xl font-medium text-amber-500">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            {activeTab === 'login' ? 'Hesabınıza giriş yapın' : 'Yeni bir hesap oluşturun'}
-          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => {
