@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { adminDb as db } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
+  let createdUser = null;
+
   try {
     const { username, email, password } = await request.json();
 
@@ -30,61 +32,79 @@ export async function POST(request: Request) {
       );
     }
 
-    // Kullanıcı adının benzersiz olduğunu kontrol et
-    const usernameSnapshot = await db
-      .collection('users')
-      .where('username', '==', username.trim().toLowerCase())
-      .get();
-
-    if (!usernameSnapshot.empty) {
-      return NextResponse.json(
-        { message: 'Bu kullanıcı adı zaten kullanılıyor' },
-        { status: 400 }
+    // Transaction başlat
+    const result = await db.runTransaction(async (transaction) => {
+      // Kullanıcı adının benzersiz olduğunu kontrol et
+      const usernameSnapshot = await transaction.get(
+        db.collection('users').where('username', '==', username.trim().toLowerCase())
       );
-    }
 
-    // E-posta adresinin benzersiz olduğunu kontrol et
-    const emailSnapshot = await db
-      .collection('users')
-      .where('email', '==', email.trim().toLowerCase())
-      .get();
+      if (!usernameSnapshot.empty) {
+        throw new Error('Bu kullanıcı adı zaten kullanılıyor');
+      }
 
-    if (!emailSnapshot.empty) {
-      return NextResponse.json(
-        { message: 'Bu e-posta adresi zaten kullanılıyor' },
-        { status: 400 }
+      // E-posta adresinin benzersiz olduğunu kontrol et
+      const emailSnapshot = await transaction.get(
+        db.collection('users').where('email', '==', email.trim().toLowerCase())
       );
-    }
 
-    // Firebase Auth ile kullanıcı oluştur
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+      if (!emailSnapshot.empty) {
+        throw new Error('Bu e-posta adresi zaten kullanılıyor');
+      }
 
-    // Firestore'a kullanıcı bilgilerini kaydet
-    await db.collection('users').doc(user.uid).set({
-      username: username.trim().toLowerCase(),
-      displayName: username.trim(),
-      email: email.trim().toLowerCase(),
-      emailVerified: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      // Firebase Auth ile kullanıcı oluştur
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      createdUser = userCredential.user;
+
+      // Firestore'a kullanıcı bilgilerini kaydet
+      const userRef = db.collection('users').doc(createdUser.uid);
+      transaction.set(userRef, {
+        username: username.trim().toLowerCase(),
+        displayName: username.trim(),
+        email: email.trim().toLowerCase(),
+        emailVerified: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
+      // Doğrulama e-postası gönder
+      try {
+        await sendEmailVerification(createdUser, {
+          url: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email` : 'http://localhost:3000/auth/verify-email',
+          handleCodeInApp: true
+        });
+      } catch (emailError) {
+        // Email gönderme hatası durumunda kullanıcıyı silme
+        throw emailError;
+      }
+
+      return {
+        uid: createdUser.uid,
+        email: createdUser.email,
+        username: username.trim().toLowerCase(),
+        displayName: username.trim(),
+        emailVerified: false,
+        createdAt: new Date().toISOString()
+      };
     });
 
-    // Doğrulama e-postası gönder
-    await sendEmailVerification(user, {
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email`
-    });
+    return NextResponse.json(result);
 
-    return NextResponse.json({
-      uid: user.uid,
-      email: user.email,
-      username: username.trim().toLowerCase(),
-      displayName: username.trim(),
-      emailVerified: false,
-      createdAt: new Date().toISOString()
-    });
   } catch (error: unknown) {
     console.error('Register error:', error);
+
+    // Hata durumunda cleanup
+    if (createdUser) {
+      try {
+        // Kullanıcıyı Authentication'dan sil
+        await deleteUser(createdUser);
+        
+        // Firestore dökümanını sil
+        await db.collection('users').doc(createdUser.uid).delete();
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+      }
+    }
 
     if (error instanceof FirebaseError) {
       if (error.code === 'auth/email-already-in-use') {
@@ -121,8 +141,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Diğer hatalar için
+    const errorMessage = error instanceof Error ? error.message : 'Kayıt olurken bir hata oluştu';
     return NextResponse.json(
-      { message: 'Kayıt olurken bir hata oluştu' },
+      { message: errorMessage },
       { status: 500 }
     );
   }
