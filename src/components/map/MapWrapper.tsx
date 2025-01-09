@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   FaCrown, FaCity, FaFortAwesome, FaTree, FaMountain, FaSkull, 
   FaSearchPlus, FaSearchMinus, FaCompass, FaPen, FaSave, FaUndo,
-  FaMapMarker, FaPalette, FaMousePointer, FaDotCircle
+  FaMapMarker, FaMousePointer, FaDotCircle
 } from 'react-icons/fa';
 import { GiCastle, GiMiner, GiWoodCabin, GiPortal, GiAncientColumns } from 'react-icons/gi';
 import Image from 'next/image';
@@ -43,6 +42,29 @@ interface IconType {
   id: string;
   name: string;
   color: string;
+}
+
+interface Region {
+  id: string;
+  name: string;
+  type: string;
+  mapData: {
+    bounds: number[][];
+    color?: {
+      fill: string;
+      stroke: string;
+    };
+  };
+  locations: Location[];
+}
+
+interface Location {
+  name: string;
+  type: string;
+  coordinates: [number, number];
+  color: string;
+  description?: string;
+  population?: string;
 }
 
 // Renk paleti
@@ -313,12 +335,13 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
         const data = await response.json();
         
         // Region paths'i oluştur
-        const paths: RegionPath[] = Object.values(data.regions).map((region: any) => {
-          const bounds = region.mapData?.bounds || [];
+        const paths: RegionPath[] = Object.values(data.regions).map((region) => {
+          const typedRegion = region as Region;
+          const bounds = typedRegion.mapData?.bounds || [];
           let path = '';
           
           if (bounds.length >= 3) {
-            path = `M ${bounds.map((p: number[]) => `${p[0]},${p[1]}`).join(' L ')} Z`;
+            path = `M ${bounds.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
           } else {
             const centerX = 50;
             const centerY = 50;
@@ -326,30 +349,31 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
             path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
           }
 
-          const color = region.mapData?.color || (
-            region.type === 'forest'
+          const color = typedRegion.mapData?.color || (
+            typedRegion.type === 'forest'
               ? { fill: 'rgba(34,197,94,0.15)', stroke: 'rgba(34,197,94,0.5)' }
               : { fill: 'rgba(156,163,175,0.15)', stroke: 'rgba(156,163,175,0.5)' }
           );
 
-          return { id: region.id, path, color };
+          return { id: typedRegion.id, path, color };
         });
 
         // İkonları oluştur
         const allIcons: Icon[] = [];
-        Object.values(data.regions).forEach((region: any) => {
-          region.locations?.forEach((location: any) => {
+        Object.values(data.regions).forEach((region) => {
+          const typedRegion = region as Region;
+          typedRegion.locations?.forEach((location) => {
             if (location.coordinates) {
               allIcons.push({
-                id: `${region.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
+                id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
                 type: location.type,
                 position: { 
                   x: location.coordinates[0], 
                   y: location.coordinates[1] 
                 },
                 name: location.name,
-                regionId: region.id,
-                color: location.color || 'text-gray-400' // Varsayılan renk
+                regionId: typedRegion.id,
+                color: location.color || 'text-gray-400'
               });
             }
           });
@@ -596,14 +620,10 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
           minScale={0.5}
           maxScale={4}
           centerOnInit
-          onZoomStart={() => setIsZooming(true)}
-          onZoom={() => setIsZooming(true)}
           wheel={{ step: 0.25 }}
-          onPanning={() => setIsZooming(false)}
-          doubleClick={{ mode: "reset" }}
           panning={{ velocityDisabled: true, disabled: isEditMode && editMode === 'draw' }}
         >
-          {(utils) => (
+          {() => (
             <>
               <Controls 
                 isEditMode={isEditMode}

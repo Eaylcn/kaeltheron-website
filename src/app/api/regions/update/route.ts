@@ -16,11 +16,6 @@ interface Location {
   population?: string;
 }
 
-interface RegionColor {
-  fill: string;
-  stroke: string;
-}
-
 export async function POST(request: Request) {
   try {
     const data = await request.json();

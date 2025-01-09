@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import MapWrapper from '@/components/map/MapWrapper';
-import { FaSearch, FaFilter, FaSkull, FaGem, FaUsers, FaThermometerHalf, FaMapMarkerAlt, FaTimesCircle, FaHorse, FaShip } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaSkull, FaGem, FaUsers, FaThermometerHalf, FaMapMarkerAlt, FaTimesCircle, FaHorse, FaShip, FaCrown, FaCity, FaFortAwesome } from 'react-icons/fa';
+import { GiCastle, GiMiner, GiWoodCabin, GiPortal, GiAncientColumns } from 'react-icons/gi';
 
 interface TravelTime {
   from: string;
@@ -47,6 +48,10 @@ interface RegionData {
     description: string;
   }[];
   travelTimes: TravelTime[];
+  temperature?: {
+    summer: string;
+    winter: string;
+  };
 }
 
 interface RegionsData {
@@ -353,11 +358,15 @@ export default function MapPage() {
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-gray-400">
                           <FaUsers className="inline mr-1" />
-                          {regionsData.regions[selectedRegion].dominantRace}
+                          {regionsData.regions[selectedRegion].dominantRace === 'human' && 'İnsan'}
+                          {regionsData.regions[selectedRegion].dominantRace === 'elf' && 'Elf'}
+                          {regionsData.regions[selectedRegion].dominantRace === 'dwarf' && 'Cüce'}
                         </span>
                         <span className="text-gray-400">
                           <FaThermometerHalf className="inline mr-1" />
-                          {regionsData.regions[selectedRegion].climate}
+                          {regionsData.regions[selectedRegion].climate === 'cold' && 'Soğuk'}
+                          {regionsData.regions[selectedRegion].climate === 'temperate' && 'Ilıman'}
+                          {regionsData.regions[selectedRegion].climate === 'hot' && 'Sıcak'}
                         </span>
                         <span className={getDangerLevelColor(regionsData.regions[selectedRegion].dangerLevel)}>
                           <FaSkull className="inline mr-1" />
@@ -449,7 +458,16 @@ export default function MapPage() {
                             <div key={index} className="bg-[#1C2B4B] rounded-lg p-4">
                               <div className="flex items-center justify-between mb-2">
                                 <h5 className="text-lg font-risque text-yellow-200">{location.name}</h5>
-                                <span className="text-sm text-amber-400/80 font-risque">{location.type}</span>
+                                <span className="text-amber-400/80">
+                                  {location.type === 'capital' && <FaCrown className="w-5 h-5" />}
+                                  {location.type === 'castle' && <GiCastle className="w-5 h-5" />}
+                                  {location.type === 'city' && <FaCity className="w-5 h-5" />}
+                                  {location.type === 'fortress' && <FaFortAwesome className="w-5 h-5" />}
+                                  {location.type === 'mine' && <GiMiner className="w-5 h-5" />}
+                                  {location.type === 'village' && <GiWoodCabin className="w-5 h-5" />}
+                                  {location.type === 'portal' && <GiPortal className="w-5 h-5" />}
+                                  {location.type === 'sacred_site' && <GiAncientColumns className="w-5 h-5" />}
+                                </span>
                               </div>
                               <p className="text-gray-300 font-risque text-sm mb-2">{location.description}</p>
                               {location.population && (
@@ -471,7 +489,11 @@ export default function MapPage() {
                                 <h5 className="text-lg font-risque text-yellow-200">{resource.name}</h5>
                                 <span className={`text-sm font-risque ${getRarityColor(resource.rarity)}`}>
                                   <FaGem className="inline mr-1" />
-                                  {resource.rarity}
+                                  {resource.rarity === 'common' && 'Yaygın'}
+                                  {resource.rarity === 'uncommon' && 'Sıradan'}
+                                  {resource.rarity === 'rare' && 'Nadir'}
+                                  {resource.rarity === 'very_rare' && 'Çok Nadir'}
+                                  {resource.rarity === 'legendary' && 'Efsanevi'}
                                 </span>
                               </div>
                               <p className="text-gray-300 font-risque text-sm">{resource.description}</p>

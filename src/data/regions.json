@@ -7,6 +7,10 @@
       "image": "/regions/eryndor.jpg",
       "type": "forest",
       "climate": "temperate",
+      "temperature": {
+        "summer": "20-25°C",
+        "winter": "5-10°C"
+      },
       "dominantRace": "elf",
       "dangerLevel": 3,
       "features": [
@@ -343,6 +347,406 @@
       "image": "/regions/anvilheim.jpg",
       "type": "mountain",
       "climate": "cold",
+      "temperature": {
+        "summer": "0-5°C",
+        "winter": "-25--15°C"
+      },
+      "dominantRace": "dwarf",
+      "dangerLevel": 4,
+      "features": [
+        "Derin Maden Ocakları",
+        "Devasa Cüce Kaleleri",
+        "Yeraltı Şehirleri",
+        "Ateş Tapınakları"
+      ],
+      "locations": [
+        {
+          "name": "Ironhold Kalesi",
+          "type": "capital",
+          "description": "Cüce krallığının merkezi ve en büyük kalesi",
+          "population": "15,000+",
+          "coordinates": [
+            150,
+            250
+          ],
+          "color": "text-gray-400"
+        },
+        {
+          "name": "Derinkovuk",
+          "type": "mine",
+          "description": "En büyük cüce yerleşimi ve ticaret merkezi",
+          "population": "25,000+",
+          "coordinates": [
+            160,
+            260
+          ],
+          "color": "text-gray-400"
+        },
+        {
+          "name": "Anvilheim Zirvesi",
+          "type": "capital",
+          "coordinates": [
+            86.20964128556645,
+            37.891015325273784
+          ],
+          "color": "text-white"
+        }
+      ],
+      "mapData": {
+        "bounds": [
+          [
+            71.04330032388349,
+            50.58119365147182
+          ],
+          [
+            77.21991498973017,
+            48.438336508614675
+          ],
+          [
+            81.62304623667039,
+            49.59905079432897
+          ],
+          [
+            84.31384866535609,
+            50.4026222229004
+          ],
+          [
+            89.20621671751188,
+            46.563336508614675
+          ],
+          [
+            92.4474105520651,
+            41.83119365147182
+          ],
+          [
+            92.38625595141315,
+            36.29547936575753
+          ],
+          [
+            90.55161793185472,
+            30.849050794328964
+          ],
+          [
+            89.26737131816382,
+            28.97405079432896
+          ],
+          [
+            86.33195048687034,
+            28.97405079432896
+          ],
+          [
+            83.51883885688076,
+            25.759765080043245
+          ],
+          [
+            80.2164904216756,
+            24.15262222290039
+          ],
+          [
+            74.34564875908865,
+            26.474050794328964
+          ],
+          [
+            74.89604016495618,
+            20.849050794328964
+          ],
+          [
+            73.91756655452501,
+            16.116907937186106
+          ],
+          [
+            72.93909294409386,
+            15.491907937186106
+          ],
+          [
+            70.00367211280037,
+            15.491907937186106
+          ],
+          [
+            67.0682512815069,
+            19.241907937186106
+          ],
+          [
+            68.3524978951978,
+            27.545479365757537
+          ],
+          [
+            72.02177393431465,
+            29.33119365147182
+          ],
+          [
+            73.73410275256917,
+            34.509765080043245
+          ],
+          [
+            72.0829285349666,
+            35.67047936575754
+          ],
+          [
+            70.24829051540816,
+            42.45619365147182
+          ]
+        ],
+        "center": [
+          150,
+          250
+        ],
+        "color": {
+          "name": "Lacivert",
+          "fill": "rgba(30,58,138,0.15)",
+          "stroke": "rgba(30,58,138,0.5)"
+        }
+      },
+      "resources": [
+        {
+          "name": "Mithril",
+          "type": "metal",
+          "rarity": "very_rare",
+          "description": "Efsanevi cüce silahlarının yapımında kullanılan değerli metal"
+        },
+        {
+          "name": "Ateş Kristali",
+          "type": "mineral",
+          "rarity": "rare",
+          "description": "Cüce fırınlarını besleyen enerji kaynağı"
+        }
+      ],
+      "threats": [
+        {
+          "name": "Derin Troller",
+          "type": "creature",
+          "dangerLevel": 4,
+          "description": "Maden galerilerinde yaşayan dev yaratıklar"
+        },
+        {
+          "name": "Elementaller",
+          "type": "creature",
+          "dangerLevel": 3,
+          "description": "Dağların derinliklerinde yaşayan ateş ve taş elementalleri"
+        }
+      ],
+      "travelTimes": [
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Eryndor Ormanları",
+          "byHorse": "3 gün"
+        },
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Auroras Buz Çölü",
+          "byHorse": "4 gün"
+        }
+      ]
+    },
+    "frostlands": {
+      "id": "frostlands",
+      "name": "Buzullar Diyarı",
+      "description": "Sürekli kar ve buz altında olan bu bölge, zorlu yaşam koşullarına rağmen zengin maden yataklarına ev sahipliği yapıyor.",
+      "image": "/regions/frostlands.jpg",
+      "type": "mountain",
+      "climate": "cold",
+      "temperature": {
+        "summer": "-5-0°C",
+        "winter": "-30--20°C"
+      },
+      "dominantRace": "dwarf",
+      "dangerLevel": 4,
+      "features": [
+        "Derin Maden Ocakları",
+        "Devasa Cüce Kaleleri",
+        "Yeraltı Şehirleri",
+        "Ateş Tapınakları"
+      ],
+      "locations": [
+        {
+          "name": "Ironhold Kalesi",
+          "type": "capital",
+          "description": "Cüce krallığının merkezi ve en büyük kalesi",
+          "population": "15,000+",
+          "coordinates": [
+            150,
+            250
+          ],
+          "color": "text-gray-400"
+        },
+        {
+          "name": "Derinkovuk",
+          "type": "mine",
+          "description": "En büyük cüce yerleşimi ve ticaret merkezi",
+          "population": "25,000+",
+          "coordinates": [
+            160,
+            260
+          ],
+          "color": "text-gray-400"
+        },
+        {
+          "name": "Anvilheim Zirvesi",
+          "type": "capital",
+          "coordinates": [
+            86.20964128556645,
+            37.891015325273784
+          ],
+          "color": "text-white"
+        }
+      ],
+      "mapData": {
+        "bounds": [
+          [
+            71.04330032388349,
+            50.58119365147182
+          ],
+          [
+            77.21991498973017,
+            48.438336508614675
+          ],
+          [
+            81.62304623667039,
+            49.59905079432897
+          ],
+          [
+            84.31384866535609,
+            50.4026222229004
+          ],
+          [
+            89.20621671751188,
+            46.563336508614675
+          ],
+          [
+            92.4474105520651,
+            41.83119365147182
+          ],
+          [
+            92.38625595141315,
+            36.29547936575753
+          ],
+          [
+            90.55161793185472,
+            30.849050794328964
+          ],
+          [
+            89.26737131816382,
+            28.97405079432896
+          ],
+          [
+            86.33195048687034,
+            28.97405079432896
+          ],
+          [
+            83.51883885688076,
+            25.759765080043245
+          ],
+          [
+            80.2164904216756,
+            24.15262222290039
+          ],
+          [
+            74.34564875908865,
+            26.474050794328964
+          ],
+          [
+            74.89604016495618,
+            20.849050794328964
+          ],
+          [
+            73.91756655452501,
+            16.116907937186106
+          ],
+          [
+            72.93909294409386,
+            15.491907937186106
+          ],
+          [
+            70.00367211280037,
+            15.491907937186106
+          ],
+          [
+            67.0682512815069,
+            19.241907937186106
+          ],
+          [
+            68.3524978951978,
+            27.545479365757537
+          ],
+          [
+            72.02177393431465,
+            29.33119365147182
+          ],
+          [
+            73.73410275256917,
+            34.509765080043245
+          ],
+          [
+            72.0829285349666,
+            35.67047936575754
+          ],
+          [
+            70.24829051540816,
+            42.45619365147182
+          ]
+        ],
+        "center": [
+          150,
+          250
+        ],
+        "color": {
+          "name": "Lacivert",
+          "fill": "rgba(30,58,138,0.15)",
+          "stroke": "rgba(30,58,138,0.5)"
+        }
+      },
+      "resources": [
+        {
+          "name": "Mithril",
+          "type": "metal",
+          "rarity": "very_rare",
+          "description": "Efsanevi cüce silahlarının yapımında kullanılan değerli metal"
+        },
+        {
+          "name": "Ateş Kristali",
+          "type": "mineral",
+          "rarity": "rare",
+          "description": "Cüce fırınlarını besleyen enerji kaynağı"
+        }
+      ],
+      "threats": [
+        {
+          "name": "Derin Troller",
+          "type": "creature",
+          "dangerLevel": 4,
+          "description": "Maden galerilerinde yaşayan dev yaratıklar"
+        },
+        {
+          "name": "Elementaller",
+          "type": "creature",
+          "dangerLevel": 3,
+          "description": "Dağların derinliklerinde yaşayan ateş ve taş elementalleri"
+        }
+      ],
+      "travelTimes": [
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Eryndor Ormanları",
+          "byHorse": "3 gün"
+        },
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Auroras Buz Çölü",
+          "byHorse": "4 gün"
+        }
+      ]
+    },
+    "sunlands": {
+      "id": "sunlands",
+      "name": "Güneş Toprakları",
+      "description": "Çöl ikliminin hakim olduğu bu bölge, antik medeniyetlerin kalıntılarını barındırıyor.",
+      "image": "/regions/sunlands.jpg",
+      "type": "desert",
+      "climate": "hot",
+      "temperature": {
+        "summer": "35-45°C",
+        "winter": "15-20°C"
+      },
       "dominantRace": "dwarf",
       "dangerLevel": 4,
       "features": [
