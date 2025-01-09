@@ -310,13 +310,11 @@ const Controls = ({
 
 export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapperProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [isZooming, setIsZooming] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -483,8 +481,19 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         ));
       }
 
-      // API'ye gönderilecek veriyi hazırla
-      const updateData: any = {
+      interface UpdateData {
+        regionId: string;
+        icons: {
+          name: string;
+          type: string;
+          coordinates: [number, number];
+          color: string;
+        }[];
+        bounds?: Point[];
+        color?: typeof colorPalette[number];
+      }
+
+      const updateData: UpdateData = {
         regionId: selectedRegion,
         icons: icons.filter(icon => icon.regionId === selectedRegion).map(icon => ({
           name: icon.name,
@@ -616,38 +625,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
     }
   };
 
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const delta = -e.deltaY;
-    const scaleFactor = delta > 0 ? 1.1 : 0.9;
-    const newScale = scale * scaleFactor;
-
-    if (newScale >= 0.5 && newScale <= 4) {
-      const rect = mapRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const viewBoxX = viewBox.x + (mouseX / rect.width) * viewBox.width;
-      const viewBoxY = viewBox.y + (mouseY / rect.height) * viewBox.height;
-
-      const newWidth = 1000 / newScale;
-      const newHeight = 1000 / newScale;
-
-      const newViewBoxX = viewBoxX - (newWidth / 2);
-      const newViewBoxY = viewBoxY - (newHeight / 2);
-
-      setScale(newScale);
-      setViewBox({
-        x: newViewBoxX,
-        y: newViewBoxY,
-        width: newWidth,
-        height: newHeight
-      });
-    }
-  }, [scale, viewBox]);
-
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -663,14 +640,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, handleMouseMove]);
-
-  const handleMouseDown = (e: React.MouseEvent<SVGElement>) => {
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY
-    });
-  };
 
   return (
     <div className="relative w-full h-[800px] bg-[#0B1120] rounded-lg overflow-hidden">

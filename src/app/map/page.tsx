@@ -89,7 +89,7 @@ export default function MapPage() {
   const filterRegions = () => {
     if (!regionsData) return [];
     
-    return Object.entries(regionsData.regions).filter(([id, region]) => {
+    return Object.entries(regionsData.regions).filter(([regionId, region]) => {
       const matchesSearch = searchTerm === '' || 
         region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         region.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
