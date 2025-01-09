@@ -345,7 +345,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             
             if (bounds && bounds.length >= 6) { // En az 3 nokta için 6 koordinat gerekli
               // Düz array'i koordinat çiftlerine dönüştür
-              const coordinates = [];
+              const coordinates: [number, number][] = [];
               for (let i = 0; i < bounds.length; i += 2) {
                 if (typeof bounds[i] === 'number' && typeof bounds[i + 1] === 'number') {
                   coordinates.push([bounds[i], bounds[i + 1]]);
@@ -353,7 +353,12 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
               }
 
               if (coordinates.length >= 3) {
-                path = `M ${coordinates.map((p) => `${p[0]},${p[1]}`).join(' L ')} Z`;
+                // SVG path string'i oluştur
+                path = coordinates.reduce((acc, curr, idx) => {
+                  if (idx === 0) return `M ${curr[0]},${curr[1]}`;
+                  return `${acc} L ${curr[0]},${curr[1]}`;
+                }, '');
+                path += ' Z'; // Path'i kapat
               }
             }
             
@@ -540,7 +545,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         ));
 
         // Sınırları ve rengi ekle
-        updateData.bounds = drawingPoints.map(p => p.x).concat(drawingPoints.map(p => p.y));
+        // Her noktanın x ve y koordinatlarını sırayla ekle
+        const flatBounds: number[] = [];
+        drawingPoints.forEach(point => {
+          flatBounds.push(point.x);
+          flatBounds.push(point.y);
+        });
+        updateData.bounds = flatBounds;
         updateData.color = newColor;
       }
 
