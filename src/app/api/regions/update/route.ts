@@ -27,7 +27,7 @@ interface UpdateRequest {
 type FirestoreData = {
   locations?: UpdateIcon[];
   mapData?: {
-    bounds?: [number, number][];
+    bounds?: number[];
     color?: {
       fill: string;
       stroke: string;
@@ -87,7 +87,8 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
         typeof point[1] === 'number'
       );
       if (validBounds.length >= 3) {
-        mapData.bounds = validBounds;
+        // Nested array'i düz array'e çevir
+        mapData.bounds = validBounds.flat();
       }
     }
 
