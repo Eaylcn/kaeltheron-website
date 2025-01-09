@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, DocumentData } from 'firebase/firestore';
 
 interface UpdateIcon {
   name: string;
@@ -15,6 +15,20 @@ interface Color {
   name?: string;
   fill: string;
   stroke: string;
+}
+
+interface MapData {
+  bounds?: number[];
+  color?: {
+    fill: string;
+    stroke: string;
+  };
+  center?: [number, number];
+}
+
+interface UpdateData {
+  locations?: UpdateIcon[];
+  mapData: MapData;
 }
 
 interface UpdateRequest {
@@ -42,7 +56,9 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
       return NextResponse.json({ error: 'Region not found' }, { status: 404 });
     }
 
-    const updateData: any = {};
+    const updateData: UpdateData = {
+      mapData: regionDoc.data()?.mapData || {}
+    };
 
     // İkonları güncelle
     if (icons !== undefined) {
@@ -55,26 +71,21 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
         population: icon.population || null
       }));
     }
-
-    // mapData'yı güncelle
-    const mapData = regionDoc.data()?.mapData || {};
     
     if (bounds !== undefined) {
-      mapData.bounds = bounds;
+      updateData.mapData.bounds = bounds;
     }
 
     if (color !== undefined) {
-      mapData.color = {
+      updateData.mapData.color = {
         fill: color.fill,
         stroke: color.stroke
       };
     }
 
-    updateData.mapData = mapData;
-
     console.log('Updating with data:', JSON.stringify(updateData, null, 2));
 
-    await updateDoc(regionRef, updateData);
+    await updateDoc(regionRef, updateData as DocumentData);
     console.log('Update successful');
     
     return NextResponse.json({ success: true });
