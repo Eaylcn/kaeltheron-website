@@ -1,7 +1,12 @@
 import { FaShieldAlt } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
+import { User } from 'firebase/auth';
 
-export default function ProfileHeader({ user }: { user: any }) {
+interface ProfileUser extends User {
+  displayName: string | null;
+}
+
+export default function ProfileHeader({ user }: { user: ProfileUser }) {
   const { user: currentUser } = useAuth();
 
   return (

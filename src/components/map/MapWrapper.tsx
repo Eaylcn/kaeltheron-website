@@ -205,7 +205,7 @@ const MapWrapper: React.FC<Props> = ({ onRegionClick, selectedRegion }) => {
         doubleClick={{ mode: "reset" }}
         panning={{ velocityDisabled: true, disabled: isDrawing }}
       >
-        {(utils) => (
+        {() => (
           <>
             {user?.isAdmin && (
               <Controls 

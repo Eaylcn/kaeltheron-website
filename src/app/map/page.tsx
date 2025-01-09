@@ -67,7 +67,6 @@ export default function MapPage() {
     resourceType: ''
   });
   const [activeTab, setActiveTab] = useState<'info' | 'resources' | 'threats' | 'locations' | 'travel'>('info');
-  const [showTravelTimes, setShowTravelTimes] = useState(false);
 
   useEffect(() => {
     fetch('/api/regions')
@@ -84,7 +83,7 @@ export default function MapPage() {
   const filterRegions = () => {
     if (!regionsData) return [];
     
-    return Object.entries(regionsData.regions).filter(([_, region]) => {
+    return Object.entries(regionsData.regions).filter(([, region]) => {
       const matchesSearch = searchTerm === '' || 
         region.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         region.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
