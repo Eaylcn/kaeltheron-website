@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   FaCrown, FaCity, FaFortAwesome, FaTree, FaMountain, FaSkull, 
   FaSearchPlus, FaSearchMinus, FaCompass, FaPen, FaSave, FaUndo,
