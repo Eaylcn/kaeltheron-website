@@ -1,0 +1,163 @@
+{
+  "regions": {
+    "eryndor": {
+      "id": "eryndor",
+      "name": "Eryndor Ormanları",
+      "description": "Elflerin yoğun olarak yaşadığı büyülü ve gizemli ormanlar. Derin vadilerle çevrili bu bölgede, kaotik büyü güçleri hissedilse de elfler için doğal bir koruma kalkanı oluşturuyor.",
+      "image": "/regions/eryndor.jpg",
+      "type": "forest",
+      "climate": "temperate",
+      "dominantRace": "elf",
+      "dangerLevel": 3,
+      "features": [
+        "Antik Elf Tapınakları",
+        "Büyülü Orman Geçitleri",
+        "Yaşam Ağacı Vadisi",
+        "Gümüş Yaprak Koruluğu"
+      ],
+      "locations": [
+        {
+          "name": "Silvermist Kalesi",
+          "type": "castle",
+          "description": "Elf krallığının merkezi ve en büyük yerleşimi",
+          "population": "10,000+",
+          "coordinates": [-150, -250]
+        },
+        {
+          "name": "Yaşam Ağacı",
+          "type": "sacred_site",
+          "description": "Elflerin en kutsal mekanı ve büyü gücünün kaynağı",
+          "coordinates": [-160, -240]
+        }
+      ],
+      "mapData": {
+        "bounds": [
+          [-200, -300],
+          [-100, -200]
+        ],
+        "center": [-150, -250]
+      },
+      "resources": [
+        {
+          "name": "Gümüş Yaprak",
+          "type": "magical",
+          "rarity": "rare",
+          "description": "Büyülü özelliklere sahip nadir bir bitki"
+        },
+        {
+          "name": "Ay Taşı",
+          "type": "mineral",
+          "rarity": "uncommon",
+          "description": "Elf büyülerinde kullanılan değerli bir mineral"
+        }
+      ],
+      "threats": [
+        {
+          "name": "Karanlık Elfler",
+          "type": "faction",
+          "dangerLevel": 4,
+          "description": "Yeraltından gelen ve bölgeyi tehdit eden karanlık elf grupları"
+        },
+        {
+          "name": "Yozlaşmış Treantlar",
+          "type": "creature",
+          "dangerLevel": 3,
+          "description": "Kaotik enerjilerden etkilenmiş ağaç varlıkları"
+        }
+      ],
+      "travelTimes": [
+        {
+          "from": "Eryndor Ormanları",
+          "to": "Anvilheim Zirvesi",
+          "byHorse": "3 gün",
+          "byShip": null
+        },
+        {
+          "from": "Eryndor Ormanları",
+          "to": "Güney Bataklıkları",
+          "byHorse": "5 gün",
+          "byShip": "2 gün"
+        }
+      ]
+    },
+    "anvilheim": {
+      "id": "anvilheim",
+      "name": "Anvilheim Zirvesi",
+      "description": "Cücelerin devasa kaleleri ve yeraltı şehirlerinin merkezi. Anvilheim, zengin maden yataklarıyla ve cüce mühendisliğinin göz kamaştırıcı eserleriyle ünlü.",
+      "image": "/regions/anvilheim.jpg",
+      "type": "mountain",
+      "climate": "cold",
+      "dominantRace": "dwarf",
+      "dangerLevel": 4,
+      "features": [
+        "Derin Maden Ocakları",
+        "Devasa Cüce Kaleleri",
+        "Yeraltı Şehirleri",
+        "Ateş Tapınakları"
+      ],
+      "locations": [
+        {
+          "name": "Ironhold Kalesi",
+          "type": "castle",
+          "description": "Cüce krallığının merkezi ve en büyük kalesi",
+          "population": "15,000+",
+          "coordinates": [150, 250]
+        },
+        {
+          "name": "Derinkovuk",
+          "type": "underground_city",
+          "description": "En büyük cüce yerleşimi ve ticaret merkezi",
+          "population": "25,000+",
+          "coordinates": [160, 260]
+        }
+      ],
+      "mapData": {
+        "bounds": [
+          [100, 200],
+          [200, 300]
+        ],
+        "center": [150, 250]
+      },
+      "resources": [
+        {
+          "name": "Mithril",
+          "type": "metal",
+          "rarity": "very_rare",
+          "description": "Efsanevi cüce silahlarının yapımında kullanılan değerli metal"
+        },
+        {
+          "name": "Ateş Kristali",
+          "type": "mineral",
+          "rarity": "rare",
+          "description": "Cüce fırınlarını besleyen enerji kaynağı"
+        }
+      ],
+      "threats": [
+        {
+          "name": "Derin Troller",
+          "type": "creature",
+          "dangerLevel": 4,
+          "description": "Maden galerilerinde yaşayan dev yaratıklar"
+        },
+        {
+          "name": "Elementaller",
+          "type": "creature",
+          "dangerLevel": 3,
+          "description": "Dağların derinliklerinde yaşayan ateş ve taş elementalleri"
+        }
+      ],
+      "travelTimes": [
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Eryndor Ormanları",
+          "byHorse": "3 gün"
+        },
+        {
+          "from": "Anvilheim Zirvesi",
+          "to": "Auroras Buz Çölü",
+          "byHorse": "4 gün"
+        }
+      ]
+    }
+  }
+} 
