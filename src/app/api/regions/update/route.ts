@@ -64,17 +64,22 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
 
     if (bounds !== undefined) {
       const validBounds = bounds.filter(point => 
-        typeof point.x === 'number' && 
-        typeof point.y === 'number'
+        Array.isArray(point) && 
+        point.length === 2 && 
+        !isNaN(point[0]) && 
+        !isNaN(point[1]) &&
+        typeof point[0] === 'number' && 
+        typeof point[1] === 'number'
       );
-      updateData['mapData.bounds'] = validBounds;
-    }
-
-    if (color !== undefined && color.fill && color.stroke) {
-      updateData['mapData.color'] = {
-        fill: color.fill,
-        stroke: color.stroke
-      };
+      
+      if (validBounds.length >= 3) {
+        updateData.mapData = {
+          bounds: validBounds,
+          ...(color && { color })
+        };
+      }
+    } else if (color) {
+      updateData.mapData = { color };
     }
 
     // Sadece geçerli veriler varsa güncelle

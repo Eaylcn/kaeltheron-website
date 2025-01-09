@@ -363,7 +363,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             // Geçerli bir path yoksa ve mapData.center varsa, merkez etrafında varsayılan oluştur
             if (!path && typedRegion.mapData.center) {
               const [centerX, centerY] = typedRegion.mapData.center;
-              const size = 5;
+              const size = 10; // Daha büyük varsayılan boyut
               path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
             }
             
@@ -371,8 +371,15 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
             if (!path) {
               const centerX = 50;
               const centerY = 50;
-              const size = 5;
-              path = `M ${centerX-size},${centerY-size} L ${centerX+size},${centerY-size} L ${centerX+size},${centerY+size} L ${centerX-size},${centerY+size} Z`;
+              const size = 10; // Daha büyük varsayılan boyut
+              const index = paths.length; // Bölgenin indeksini kullan
+              const offset = index * 5; // Her bölge için offset ekle
+              
+              // Bölgeleri merkez etrafında dağıt
+              const adjustedX = centerX + offset;
+              const adjustedY = centerY + offset;
+              
+              path = `M ${adjustedX-size},${adjustedY-size} L ${adjustedX+size},${adjustedY-size} L ${adjustedX+size},${adjustedY+size} L ${adjustedX-size},${adjustedY+size} Z`;
             }
 
             const color = typedRegion.mapData?.color || (
