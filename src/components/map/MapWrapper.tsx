@@ -310,13 +310,11 @@ const Controls = ({
 
 export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapperProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [drawingPoints, setDrawingPoints] = useState<Point[]>([]);
-  const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [regionPaths, setRegionPaths] = useState<RegionPath[]>([]);
   const [icons, setIcons] = useState<Icon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -426,16 +424,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
     e.stopPropagation();
     setSelectedIcon(icon);
     setIsDragging(true);
-    const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-    if (rect) {
-      setDragStart({
-        x: e.clientX,
-        y: e.clientY
-      });
-    }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !selectedIcon) return;
     e.stopPropagation();
     
@@ -448,7 +439,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         ? { ...icon, position: { x, y } }
         : icon
     ));
-  };
+  }, [isDragging, selectedIcon]);
 
   const handleMouseUp = async (e: React.MouseEvent) => {
     if (isDragging && selectedIcon) {
@@ -655,6 +646,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
+      setSelectedIcon(null);
+      setSelectedIcon(null);
     };
 
     if (isDragging) {
