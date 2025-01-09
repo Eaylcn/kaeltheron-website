@@ -24,6 +24,18 @@ interface UpdateRequest {
   color?: Color;
 }
 
+type FirestoreData = {
+  locations?: UpdateIcon[];
+  mapData?: {
+    bounds?: [number, number][];
+    color?: {
+      fill: string;
+      stroke: string;
+    };
+    center?: [number, number];
+  };
+}
+
 export async function POST(request: Request): Promise<NextResponse<{ success: boolean } | { error: string }>> {
   try {
     const data: UpdateRequest = await request.json();
@@ -44,7 +56,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     }
 
     const currentData = regionDoc.data();
-    let updateData: Record<string, any> = {};
+    const updateData: FirestoreData = {};
 
     if (icons !== undefined) {
       const validIcons = icons.filter(icon => 
@@ -65,7 +77,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     }
 
     // mapData nesnesini hazırla
-    let mapData = { ...currentData.mapData } || {};
+    const mapData = { ...currentData.mapData } || {};
 
     if (bounds !== undefined && Array.isArray(bounds)) {
       const validBounds = bounds.filter(point => 
@@ -95,7 +107,7 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
 
     // Sadece geçerli veriler varsa güncelle
     if (Object.keys(updateData).length > 0) {
-      await updateDoc(regionRef, updateData);
+      await updateDoc(regionRef, updateData as { [x: string]: any });
       console.log('Update successful');
       return NextResponse.json({ success: true });
     } else {
