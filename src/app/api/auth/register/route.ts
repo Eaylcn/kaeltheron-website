@@ -8,7 +8,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { adminDb as db } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
 import { CollectionReference, DocumentReference } from 'firebase-admin/firestore';
 
 interface UserData {
@@ -18,6 +18,15 @@ interface UserData {
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface RegisterResponse {
+  uid: string;
+  email: string | null;
+  username: string;
+  displayName: string;
+  emailVerified: boolean;
+  createdAt: string;
 }
 
 export async function POST(request: Request) {
@@ -49,8 +58,8 @@ export async function POST(request: Request) {
     }
 
     // Transaction başlat
-    const result = await db.runTransaction(async (transaction) => {
-      const usersCollection = db.collection('users') as CollectionReference<UserData>;
+    const result = await adminDb.runTransaction(async (transaction) => {
+      const usersCollection = adminDb.collection('users') as CollectionReference<UserData>;
 
       // Kullanıcı adının benzersiz olduğunu kontrol et
       const usernameSnapshot = await transaction.get(
@@ -84,7 +93,7 @@ export async function POST(request: Request) {
       }
 
       // Firestore'a kullanıcı bilgilerini kaydet
-      const userRef = usersCollection.doc(authUser.uid) as DocumentReference<UserData>;
+      const userRef = usersCollection.doc(authUser.uid);
       const userData: UserData = {
         username: username.trim().toLowerCase(),
         displayName: username.trim(),
@@ -129,8 +138,7 @@ export async function POST(request: Request) {
         await deleteUser(authUser);
         
         // Firestore dökümanını sil
-        const usersCollection = db.collection('users') as CollectionReference<UserData>;
-        await usersCollection.doc(authUser.uid).delete();
+        await adminDb.collection('users').doc(authUser.uid).delete();
       } catch (cleanupError) {
         console.error('Cleanup error:', cleanupError);
       }
