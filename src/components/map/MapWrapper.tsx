@@ -309,11 +309,8 @@ const Controls = ({
 };
 
 export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapperProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [viewBox, setViewBox] = useState({ x: 0, y: 0, width: 1000, height: 1000 });
-  const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
   const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | null>(null);
