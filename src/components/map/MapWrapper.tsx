@@ -848,6 +848,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
           )}
         </TransformWrapper>
       )}
-    </div>
+      </div>
   );
 } 

@@ -34,8 +34,8 @@
           "name": "Eryndor Ormanları",
           "type": "capital",
           "coordinates": [
-            25.642123287671232,
-            58.07617187500001
+            32.74828767123288,
+            66.201171875
           ],
           "color": "text-gray-400"
         }
@@ -352,15 +352,15 @@
       ],
       "locations": [
         {
-          "name": "Ironhold Kalesi",
+          "name": "Anvilheim Zirvesi",
           "type": "capital",
           "description": "Cüce krallığının merkezi ve en büyük kalesi",
           "population": "15,000+",
           "coordinates": [
-            150,
-            250
+            86.20964128556645,
+            37.891015325273784
           ],
-          "color": "text-gray-400"
+          "color": "text-white"
         },
         {
           "name": "Derinkovuk",
@@ -372,15 +372,6 @@
             260
           ],
           "color": "text-gray-400"
-        },
-        {
-          "name": "Anvilheim Zirvesi",
-          "type": "capital",
-          "coordinates": [
-            86.20964128556645,
-            37.891015325273784
-          ],
-          "color": "text-white"
         }
       ],
       "mapData": {
@@ -768,15 +759,6 @@
             260
           ],
           "color": "text-gray-400"
-        },
-        {
-          "name": "Anvilheim Zirvesi",
-          "type": "capital",
-          "coordinates": [
-            86.20964128556645,
-            37.891015325273784
-          ],
-          "color": "text-white"
         }
       ],
       "mapData": {

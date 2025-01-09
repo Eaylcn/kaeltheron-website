@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export async function GET() {
   try {
-    const regionsPath = path.join(process.cwd(), 'src/data/regions.json');
-    const regionsContent = await fs.readFile(regionsPath, 'utf-8');
-    const regionsData = JSON.parse(regionsContent);
+    const regionsCollection = collection(db, 'regions');
+    const regionsSnapshot = await getDocs(regionsCollection);
+    
+    const regions: { [key: string]: any } = {};
+    regionsSnapshot.forEach((doc) => {
+      regions[doc.id] = { id: doc.id, ...doc.data() };
+    });
 
-    return NextResponse.json(regionsData);
+    return NextResponse.json({ regions });
   } catch (error) {
-    console.error('Bölgeleri okuma hatası:', error);
+    console.error('Bölgeler yüklenirken hata:', error);
     return NextResponse.json(
-      { error: 'Bölgeler okunamadı' },
+      { error: 'Bölgeler yüklenirken bir hata oluştu' },
       { status: 500 }
     );
   }
