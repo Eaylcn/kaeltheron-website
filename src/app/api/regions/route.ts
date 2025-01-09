@@ -68,6 +68,15 @@ interface RegionsResponse {
   regions: Record<string, Region>;
 }
 
+interface RawLocation {
+  name?: string;
+  type?: string;
+  description?: string;
+  population?: string;
+  coordinates?: number[];
+  color?: string;
+}
+
 export async function GET(): Promise<NextResponse<RegionsResponse | { error: string }>> {
   try {
     const regionsCollection = collection(db, 'regions');
@@ -89,12 +98,12 @@ export async function GET(): Promise<NextResponse<RegionsResponse | { error: str
           dominantRace: data.dominantRace || '',
           dangerLevel: Number(data.dangerLevel) || 0,
           features: Array.isArray(data.features) ? data.features : [],
-          locations: Array.isArray(data.locations) ? data.locations.map((loc: any) => ({
+          locations: Array.isArray(data.locations) ? data.locations.map((loc: RawLocation) => ({
             name: loc.name || '',
             type: loc.type || '',
             description: loc.description,
             population: loc.population,
-            coordinates: Array.isArray(loc.coordinates) ? loc.coordinates : [0, 0],
+            coordinates: Array.isArray(loc.coordinates) ? loc.coordinates as [number, number] : [0, 0],
             color: loc.color || 'text-gray-400'
           })) : [],
           mapData: {
