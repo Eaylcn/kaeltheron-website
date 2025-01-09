@@ -34,19 +34,10 @@
           "name": "Eryndor Ormanları",
           "type": "capital",
           "coordinates": [
-            27.263483876699055,
-            57.88901329040528
+            25.642123287671232,
+            58.07617187500001
           ],
           "color": "text-gray-400"
-        },
-        {
-          "name": "345",
-          "type": "mine",
-          "coordinates": [
-            25.32534325006221,
-            72.33040187669837
-          ],
-          "color": "text-purple-500"
         }
       ],
       "mapData": {

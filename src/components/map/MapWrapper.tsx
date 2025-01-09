@@ -324,7 +324,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
   const [iconName, setIconName] = useState('');
   const [pendingIcon, setPendingIcon] = useState<{ x: number; y: number } | null>(null);
   const [selectedIconColor, setSelectedIconColor] = useState('');
-  const [showDeleteZone, setShowDeleteZone] = useState(false);
 
   // Başlangıç verilerini yükle
   useEffect(() => {
@@ -427,40 +426,71 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
     e.stopPropagation();
     setSelectedIcon(icon);
     setIsDragging(true);
-    setShowDeleteZone(true);
+    const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+    if (rect) {
+      setDragStart({
+        x: e.clientX,
+        y: e.clientY
+      });
+    }
   };
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging) return;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !selectedIcon) return;
+    e.stopPropagation();
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    const dx = e.clientX - dragStart.x;
-    const dy = e.clientY - dragStart.y;
+    setIcons(prev => prev.map(icon => 
+      icon.id === selectedIcon.id
+        ? { ...icon, position: { x, y } }
+        : icon
+    ));
+  };
 
-    setOffset({
-      x: offset.x + dx,
-      y: offset.y + dy
-    });
-
-    setDragStart({
-      x: e.clientX,
-      y: e.clientY
-    });
-  }, [isDragging, dragStart, offset]);
-
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUp = async (e: React.MouseEvent) => {
     if (isDragging && selectedIcon) {
       const rect = e.currentTarget.getBoundingClientRect();
-      const mouseY = e.clientY - rect.top;
-      
-      // Eğer mouse silme bölgesinin üzerindeyse
-      if (mouseY > rect.height - 100) {
-        handleIconDelete(selectedIcon.id);
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      const updatedIcons = icons.map(icon =>
+        icon.id === selectedIcon.id
+          ? { ...icon, position: { x, y } }
+          : icon
+      );
+
+      setIcons(updatedIcons);
+
+      try {
+        const response = await fetch('/api/regions/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            regionId: selectedRegion,
+            icons: updatedIcons
+              .filter(icon => icon.regionId === selectedRegion)
+              .map(icon => ({
+                name: icon.name,
+                type: icon.type,
+                coordinates: [icon.position.x, icon.position.y],
+                color: icon.color
+              }))
+          }),
+        });
+
+        if (!response.ok) throw new Error('İkon konumu güncellenemedi');
+      } catch (error) {
+        console.error('İkon güncelleme hatası:', error);
       }
     }
     
     setIsDragging(false);
     setSelectedIcon(null);
-    setShowDeleteZone(false);
   };
 
   const handleSave = async () => {
@@ -750,15 +780,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
                     ))}
                   </svg>
 
-                  {/* İkon Silme Bölgesi */}
-                  {showDeleteZone && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[100px] bg-red-500/20 border-t-2 border-red-500 flex items-center justify-center z-40 pointer-events-none">
-                      <div className="text-red-500 font-semibold">
-                        İkonu Silmek İçin Buraya Sürükleyin
-                      </div>
-                    </div>
-                  )}
-
                   {/* İkonlar */}
                   {icons.map(icon => {
                     // Edit modunda sadece seçili bölgenin ikonlarını göster
@@ -834,6 +855,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
           )}
         </TransformWrapper>
       )}
-      </div>
+    </div>
   );
 } 
