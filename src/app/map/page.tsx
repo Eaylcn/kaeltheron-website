@@ -72,6 +72,7 @@ export default function MapPage() {
     resourceType: ''
   });
   const [activeTab, setActiveTab] = useState<'info' | 'resources' | 'threats' | 'locations' | 'travel'>('info');
+  const [regionData, setRegionData] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/regions')
@@ -79,10 +80,30 @@ export default function MapPage() {
       .then(data => setRegionsData(data));
   }, []);
 
+  const fetchRegionData = async (regionId: string) => {
+    try {
+      const response = await fetch(`/api/regions/${regionId}`);
+      if (!response.ok) throw new Error('Bölge bilgileri alınamadı');
+      const data = await response.json();
+      setRegionData(data);
+    } catch (error) {
+      console.error('Bölge bilgileri yükleme hatası:', error);
+    }
+  };
+
   const handleRegionClick = (regionId: string) => {
     setSelectedRegion(regionId);
-    setShowDetails(true);
-    setActiveTab('info');
+    if (regionId) {
+      fetchRegionData(regionId);
+    } else {
+      setRegionData(null);
+    }
+  };
+
+  const handleLocationsUpdate = (regionId: string) => {
+    if (regionId === selectedRegion) {
+      fetchRegionData(regionId);
+    }
   };
 
   const filterRegions = () => {
@@ -314,7 +335,11 @@ export default function MapPage() {
 
           {/* Map Section */}
           <section className="relative z-10">
-            <MapWrapper onRegionClick={handleRegionClick} selectedRegion={selectedRegion} />
+            <MapWrapper 
+              onRegionClick={handleRegionClick} 
+              selectedRegion={selectedRegion}
+              onLocationsUpdate={handleLocationsUpdate}
+            />
             
             {/* Region Details Modal */}
             <AnimatePresence>
