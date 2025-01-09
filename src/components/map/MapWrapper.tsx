@@ -510,7 +510,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
     if (!selectedRegion) return;
 
     try {
-      let updatedPath: string | null = null;
       const updateData: {
         regionId: string;
         bounds?: number[];
@@ -524,22 +523,24 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
           type: string;
           coordinates: [number, number];
           color: string;
+          description?: string | null;
+          population?: string | null;
         }[];
       } = { regionId: selectedRegion };
       
       if (editMode === 'draw' && drawingPoints.length >= 3) {
-        updatedPath = getPathFromPoints();
         const newColor = colorPalette[selectedColor];
         
         // Önce state'i güncelle
+        const newPath = getPathFromPoints();
         setRegionPaths(prev => prev.map(rp => 
           rp.id === selectedRegion
-            ? { ...rp, path: updatedPath!, color: newColor }
+            ? { ...rp, path: newPath, color: newColor }
             : rp
         ));
 
         // Sınırları ve rengi ekle
-        updateData.bounds = drawingPoints.map(p => [p.x, p.y] as [number, number]).flat();
+        updateData.bounds = drawingPoints.map(p => p.x).concat(drawingPoints.map(p => p.y));
         updateData.color = newColor;
       }
 

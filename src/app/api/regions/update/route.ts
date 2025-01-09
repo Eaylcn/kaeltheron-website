@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, getDoc, DocumentData } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 interface UpdateIcon {
   name: string;
   type: string;
   coordinates: [number, number];
   color: string;
-  description: string | null;
-  population: string | null;
+  description?: string | null;
+  population?: string | null;
 }
 
 interface Color {
@@ -20,20 +20,8 @@ interface Color {
 interface UpdateRequest {
   regionId: string;
   icons?: UpdateIcon[];
-  bounds?: [number, number][];
+  bounds?: number[];
   color?: Color;
-}
-
-type FirestoreData = {
-  locations?: UpdateIcon[];
-  mapData?: {
-    bounds?: number[];
-    color?: {
-      fill: string;
-      stroke: string;
-    };
-    center?: [number, number];
-  };
 }
 
 export async function POST(request: Request): Promise<NextResponse<{ success: boolean } | { error: string }>> {
@@ -48,24 +36,17 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     }
 
     const regionRef = doc(db, 'regions', regionId);
-    
-    // Mevcut belgeyi al
     const regionDoc = await getDoc(regionRef);
+    
     if (!regionDoc.exists()) {
       return NextResponse.json({ error: 'Region not found' }, { status: 404 });
     }
 
-    const currentData = regionDoc.data();
-    const updateData: FirestoreData = {};
+    const updateData: any = {};
 
+    // İkonları güncelle
     if (icons !== undefined) {
-      const validIcons = icons.filter(icon => 
-        icon.name && 
-        icon.type && 
-        Array.isArray(icon.coordinates) && 
-        icon.coordinates.length === 2 &&
-        icon.color
-      ).map(icon => ({
+      updateData.locations = icons.map(icon => ({
         name: icon.name,
         type: icon.type,
         coordinates: icon.coordinates,
@@ -73,23 +54,13 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
         description: icon.description || null,
         population: icon.population || null
       }));
-      updateData.locations = validIcons;
     }
 
-    // mapData nesnesini hazırla
-    const mapData = currentData?.mapData ? { ...currentData.mapData } : {};
-
-    if (bounds !== undefined && Array.isArray(bounds)) {
-      const validBounds = bounds.filter(point => 
-        Array.isArray(point) && 
-        point.length === 2 && 
-        typeof point[0] === 'number' && 
-        typeof point[1] === 'number'
-      );
-      if (validBounds.length >= 3) {
-        // Nested array'i düz array'e çevir
-        mapData.bounds = validBounds.flat();
-      }
+    // mapData'yı güncelle
+    const mapData = regionDoc.data()?.mapData || {};
+    
+    if (bounds !== undefined) {
+      mapData.bounds = bounds;
     }
 
     if (color !== undefined) {
@@ -99,22 +70,14 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
       };
     }
 
-    // mapData'yı updateData'ya ekle
-    if (Object.keys(mapData).length > 0) {
-      updateData.mapData = mapData;
-    }
+    updateData.mapData = mapData;
 
     console.log('Updating with data:', JSON.stringify(updateData, null, 2));
 
-    // Sadece geçerli veriler varsa güncelle
-    if (Object.keys(updateData).length > 0) {
-      await updateDoc(regionRef, updateData as DocumentData);
-      console.log('Update successful');
-      return NextResponse.json({ success: true });
-    } else {
-      console.log('No valid data to update');
-      return NextResponse.json({ error: 'No valid data to update' }, { status: 400 });
-    }
+    await updateDoc(regionRef, updateData);
+    console.log('Update successful');
+    
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Bölge güncelleme hatası:', error);
     return NextResponse.json(
