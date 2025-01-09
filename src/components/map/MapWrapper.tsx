@@ -511,7 +511,21 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
 
     try {
       let updatedPath: string | null = null;
-      let updateData: any = { regionId: selectedRegion };
+      const updateData: {
+        regionId: string;
+        bounds?: number[];
+        color?: {
+          name?: string;
+          fill: string;
+          stroke: string;
+        };
+        icons?: {
+          name: string;
+          type: string;
+          coordinates: [number, number];
+          color: string;
+        }[];
+      } = { regionId: selectedRegion };
       
       if (editMode === 'draw' && drawingPoints.length >= 3) {
         updatedPath = getPathFromPoints();
@@ -535,7 +549,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion }: MapWrapper
         updateData.icons = regionIcons.map(icon => ({
           name: icon.name,
           type: icon.type,
-          coordinates: [icon.position.x, icon.position.y],
+          coordinates: [icon.position.x, icon.position.y] as [number, number],
           color: icon.color
         }));
       }
