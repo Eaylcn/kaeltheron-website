@@ -720,11 +720,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
         if (!response.ok) throw new Error('İkon güncelleme başarısız');
         
-        // İkon başarıyla güncellendiğinde bölge bilgilerini güncelle
         onLocationsUpdate?.(updatedIcon.regionId);
       } catch (error) {
         console.error('İkon güncelleme hatası:', error);
-        // Hata durumunda ikonu eski konumuna geri al
         setIcons(prev => prev.map(icon => 
           icon.id === selectedIcon.id
             ? selectedIcon
@@ -986,18 +984,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       } catch (error) {
         console.error('Silme hatası:', error);
       }
-    }
-  };
-
-  const handleIconClick = (e: React.MouseEvent, icon: Icon) => {
-    e.stopPropagation();
-    if (editMode === 'delete') {
-      handleIconDelete(icon.id);
-    } else if (editMode === 'edit_icon') {
-      setSelectedIconForEdit(icon);
-      setSelectedIconType(icon.type);
-      setIconName(icon.name);
-      setSelectedIconColor(icon.color);
     }
   };
 
