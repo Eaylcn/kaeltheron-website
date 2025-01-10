@@ -627,7 +627,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     };
 
     loadRegions();
-  }, []);
+  }, [colors]);
 
   const getLocationIcon = (type: string, color: string = 'rgb(156, 163, 175)') => {
     const style = { color: color };
@@ -944,7 +944,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const handleIconClick = (e: React.MouseEvent, icon: Icon) => {
     e.stopPropagation();
     if (editMode === 'delete') {
-      setIcons(prev => prev.filter(i => i.id !== icon.id));
+      handleIconDelete(icon.id);
     } else if (editMode === 'edit_icon') {
       setSelectedIconForEdit(icon);
       setSelectedIconType(icon.type);

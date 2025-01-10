@@ -1,0 +1,9 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "varsIgnorePattern": "^(colorPalette|iconTypes|iconColors|selectedIconForEdit|handleIconDelete)$"
+    }],
+    "react-hooks/exhaustive-deps": "warn"
+  }
+} 
