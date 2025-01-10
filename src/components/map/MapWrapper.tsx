@@ -750,9 +750,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           const x = ((e.clientX - rect.left) / rect.width) * 100;
           const y = ((e.clientY - rect.top) / rect.height) * 100;
 
+          // Add bounds checking for global mouse move
+          const boundedX = Math.max(0, Math.min(100, x));
+          const boundedY = Math.max(0, Math.min(100, y));
+
           setIcons(prev => prev.map(icon => 
             icon.id === selectedIcon.id
-              ? { ...icon, position: { x, y } }
+              ? { ...icon, position: { x: boundedX, y: boundedY } }
               : icon
           ));
         }
@@ -768,7 +772,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [isDragging, selectedIcon]);
+  }, [isDragging, selectedIcon, handleMouseUp]);
 
   const handleSave = async () => {
     if (!selectedRegion) return;
