@@ -537,22 +537,26 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
             // Ek sınırları işle
             const additionalPaths: { id: string; path: string; }[] = [];
-            if (typedRegion.mapData.additionalBounds) {
+            if (typedRegion.mapData.additionalBounds && Array.isArray(typedRegion.mapData.additionalBounds)) {
               typedRegion.mapData.additionalBounds.forEach(bound => {
-                const additionalPoints: Point[] = [];
-                for (let i = 0; i < bound.bounds.length; i += 2) {
-                  additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
+                if (bound && Array.isArray(bound.bounds)) {
+                  const additionalPoints: Point[] = [];
+                  for (let i = 0; i < bound.bounds.length; i += 2) {
+                    additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
+                  }
+                  const additionalPath = additionalPoints.reduce((acc, point, index) => {
+                    if (index === 0) return `M ${point.x} ${point.y}`;
+                    return `${acc} L ${point.x} ${point.y}`;
+                  }, '');
+                  additionalPaths.push({
+                    id: bound.id,
+                    path: `${additionalPath} Z`
+                  });
                 }
-                const additionalPath = additionalPoints.reduce((acc, point, index) => {
-                  if (index === 0) return `M ${point.x} ${point.y}`;
-                  return `${acc} L ${point.x} ${point.y}`;
-                }, '');
-                additionalPaths.push({
-                  id: bound.id,
-                  path: `${additionalPath} Z`
-                });
               });
             }
+
+            console.log('Region:', typedRegion.id, 'Additional Paths:', additionalPaths);
 
             return {
               id: typedRegion.id,
@@ -561,6 +565,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
               color: typedRegion.mapData.color || colors[0]
             };
           });
+
+        console.log('Loaded paths with additional bounds:', paths);
+        setRegionPaths(paths);
 
         // İkonları yükle
         const allIcons: Icon[] = [];
@@ -585,9 +592,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           }
         });
 
-        console.log('Loaded paths:', paths);
         console.log('Loaded icons:', allIcons);
-        setRegionPaths(paths);
         setIcons(allIcons);
         setIsLoading(false);
       } catch (error) {
@@ -657,21 +662,15 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     ));
   }, [isDragging, selectedIcon]);
 
-  const handleMouseUp = async (e: React.MouseEvent) => {
+  const handleMouseUp = async () => {
     if (isDragging && selectedIcon) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-      const updatedIcons = icons.map(icon =>
-        icon.id === selectedIcon.id
-          ? { ...icon, position: { x, y } }
-          : icon
-      );
-
-      setIcons(updatedIcons);
-
       try {
+        const updatedIcons = icons.map(icon =>
+          icon.id === selectedIcon.id
+            ? { ...icon }
+            : icon
+        );
+
         const response = await fetch('/api/regions/update', {
           method: 'POST',
           headers: {
@@ -699,6 +698,40 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     setIsDragging(false);
     setSelectedIcon(null);
   };
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        handleMouseUp();
+      }
+    };
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging && selectedIcon) {
+        const rect = document.querySelector('.map-container')?.getBoundingClientRect();
+        if (rect) {
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+          setIcons(prev => prev.map(icon => 
+            icon.id === selectedIcon.id
+              ? { ...icon, position: { x, y } }
+              : icon
+          ));
+        }
+      }
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, selectedIcon]);
 
   const handleSave = async () => {
     if (!selectedRegion) return;
@@ -996,24 +1029,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     setPendingIcon(null);
   }, [editMode]);
 
-  useEffect(() => {
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      setSelectedIcon(null);
-      setSelectedIcon(null);
-    };
-
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove as unknown as EventListener);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove as unknown as EventListener);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, handleMouseMove]);
-
   // Controls bileşeninde düzenleme butonuna tıklandığında
   const handleEditClick = () => {
     if (!selectedRegion) {
@@ -1084,7 +1099,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                 contentClass="!w-full !h-full"
               >
                 <div 
-                  className="relative w-full h-full"
+                  className="relative w-full h-full map-container"
                   onClick={handleMapClick}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -1123,15 +1138,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                             stroke={region.color.stroke}
                             strokeWidth={isSelected ? "0.6" : "0.4"}
                             className={`transition-all duration-200 ${
-                              !isEditMode ? 'cursor-pointer hover:stroke-amber-500' : ''
-                            } ${isSelected ? 'stroke-amber-500' : ''}`}
+                              !isEditMode ? 'cursor-pointer' : ''
+                            } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
                             onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
                             onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                             onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                             style={{ 
-                              pointerEvents: !isEditMode ? 'all' : 'none',
-                              filter: isSelected || isHovered ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none',
-                              opacity: isHovered ? 0.8 : 1
+                              pointerEvents: !isEditMode ? 'all' : 'none'
                             }}
                           />
                           {/* Ek sınırlar */}
@@ -1142,12 +1155,14 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               fill={region.color.fill}
                               stroke={region.color.stroke}
                               strokeWidth={isSelected ? "0.6" : "0.4"}
-                              className={`transition-all duration-200`}
+                              className={`transition-all duration-200 ${
+                                !isEditMode ? 'cursor-pointer' : ''
+                              } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
+                              onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
                               onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                               onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                filter: isSelected || isHovered ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none',
-                                opacity: isHovered ? 0.8 : 1
+                                pointerEvents: !isEditMode ? 'all' : 'none'
                               }}
                             />
                           ))}
@@ -1247,6 +1262,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           )}
         </TransformWrapper>
       )}
-    </div>
+      </div>
   );
 } 
