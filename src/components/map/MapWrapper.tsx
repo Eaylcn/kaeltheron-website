@@ -68,40 +68,6 @@ interface Location {
   population?: string;
 }
 
-// Renk paleti
-const colorPalette = [
-  { fill: 'rgba(245, 158, 11, 0.2)', stroke: 'rgb(245, 158, 11)' }, // Amber
-  { fill: 'rgba(239, 68, 68, 0.2)', stroke: 'rgb(239, 68, 68)' }, // Red
-  { fill: 'rgba(59, 130, 246, 0.2)', stroke: 'rgb(59, 130, 246)' }, // Blue
-  { fill: 'rgba(16, 185, 129, 0.2)', stroke: 'rgb(16, 185, 129)' }, // Green
-  { fill: 'rgba(139, 92, 246, 0.2)', stroke: 'rgb(139, 92, 246)' }, // Purple
-  { fill: 'rgba(236, 72, 153, 0.2)', stroke: 'rgb(236, 72, 153)' }, // Pink
-  { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
-  { fill: 'rgba(249, 115, 22, 0.2)', stroke: 'rgb(249, 115, 22)' }, // Orange
-];
-
-const iconTypes: IconType[] = [
-  { id: 'capital', name: 'Başkent', color: 'text-amber-500' },
-  { id: 'castle', name: 'Kale', color: 'text-amber-500' },
-  { id: 'city', name: 'Şehir', color: 'text-blue-500' },
-  { id: 'fortress', name: 'Kale', color: 'text-red-500' },
-  { id: 'mine', name: 'Maden', color: 'text-gray-300' },
-  { id: 'village', name: 'Köy', color: 'text-green-500' },
-  { id: 'portal', name: 'Portal', color: 'text-purple-500' },
-  { id: 'sacred_site', name: 'Kutsal Alan', color: 'text-yellow-500' },
-];
-
-const iconColors = [
-  { id: 'amber', name: 'Altın', class: 'text-amber-500' },
-  { id: 'blue', name: 'Mavi', class: 'text-blue-500' },
-  { id: 'red', name: 'Kırmızı', class: 'text-red-500' },
-  { id: 'green', name: 'Yeşil', class: 'text-green-500' },
-  { id: 'purple', name: 'Mor', class: 'text-purple-500' },
-  { id: 'yellow', name: 'Sarı', class: 'text-yellow-500' },
-  { id: 'gray', name: 'Gri', class: 'text-gray-300' },
-  { id: 'white', name: 'Beyaz', class: 'text-white' },
-];
-
 // Kontrol paneli bileşeni
 const Controls = ({ 
   isEditMode, 
@@ -126,7 +92,7 @@ const Controls = ({
   setIconColors,
   selectedRegion,
   setRegionPaths,
-  selectedIconForEdit,
+  _selectedIconForEdit,
   handleUpdateIcon,
   setIsEditMode,
   setDrawingPoints
@@ -153,7 +119,7 @@ const Controls = ({
   setIconColors: React.Dispatch<React.SetStateAction<string[]>>;
   selectedRegion: string | null;
   setRegionPaths: React.Dispatch<React.SetStateAction<RegionPath[]>>;
-  selectedIconForEdit: Icon | null;
+  _selectedIconForEdit: Icon | null;
   handleUpdateIcon: () => void;
   setIsEditMode: (isEdit: boolean) => void;
   setDrawingPoints: React.Dispatch<React.SetStateAction<Point[]>>;
@@ -1104,7 +1070,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                 setIconColors={setIconColors}
                 selectedRegion={selectedRegion}
                 setRegionPaths={setRegionPaths}
-                selectedIconForEdit={selectedIconForEdit}
+                _selectedIconForEdit={selectedIconForEdit}
                 handleUpdateIcon={handleUpdateIcon}
                 setIsEditMode={setIsEditMode}
                 setDrawingPoints={setDrawingPoints}
