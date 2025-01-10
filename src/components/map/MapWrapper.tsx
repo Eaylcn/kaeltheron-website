@@ -328,9 +328,9 @@ const Controls = ({
             )}
 
             {/* İkon İşlemleri */}
-            {(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete') && (
+            {(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') && (
               <div className="space-y-2">
-                <div className="grid grid-cols-3 gap-1">
+                <div className="grid grid-cols-4 gap-1">
                   <button
                     onClick={() => setEditMode('add')}
                     className={`px-4 py-2 rounded-lg transition-colors font-risque ${
@@ -346,6 +346,14 @@ const Controls = ({
                     }`}
                   >
                     Düzenle
+                  </button>
+                  <button
+                    onClick={() => setEditMode('move')}
+                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                      editMode === 'move' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                    }`}
+                  >
+                    Taşı
                   </button>
                   <button
                     onClick={() => setEditMode('delete')}
@@ -512,6 +520,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         if (!response.ok) throw new Error('Bölgeler yüklenemedi');
         
         const data = await response.json();
+        console.log('API Response:', data);
         
         // Region paths'i oluştur
         const paths: RegionPath[] = Object.values(data.regions)
@@ -538,16 +547,21 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
             // Ek sınırları işle
             const additionalPaths: { id: string; path: string; }[] = [];
             if (typedRegion.mapData.additionalBounds && Array.isArray(typedRegion.mapData.additionalBounds)) {
+              console.log('Processing additional bounds for region:', typedRegion.id, typedRegion.mapData.additionalBounds);
+              
               typedRegion.mapData.additionalBounds.forEach(bound => {
-                if (bound && Array.isArray(bound.bounds)) {
+                if (bound && bound.bounds && Array.isArray(bound.bounds)) {
                   const additionalPoints: Point[] = [];
                   for (let i = 0; i < bound.bounds.length; i += 2) {
                     additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
                   }
+                  
                   const additionalPath = additionalPoints.reduce((acc, point, index) => {
                     if (index === 0) return `M ${point.x} ${point.y}`;
                     return `${acc} L ${point.x} ${point.y}`;
                   }, '');
+                  
+                  console.log('Created additional path:', additionalPath);
                   additionalPaths.push({
                     id: bound.id,
                     path: `${additionalPath} Z`
@@ -566,7 +580,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
             };
           });
 
-        console.log('Loaded paths with additional bounds:', paths);
+        console.log('Final paths with additional bounds:', paths);
         setRegionPaths(paths);
 
         // İkonları yükle
@@ -663,7 +677,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   }, [isDragging, selectedIcon]);
 
   const handleMouseUp = async () => {
-    if (isDragging && selectedIcon) {
+    if (isDragging && selectedIcon && selectedRegion) {
       try {
         const updatedIcons = icons.map(icon =>
           icon.id === selectedIcon.id
@@ -690,6 +704,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         });
 
         if (!response.ok) throw new Error('İkon konumu güncellenemedi');
+        
+        // İkon başarıyla güncellendiğinde bölge bilgilerini güncelle
+        onLocationsUpdate?.(selectedRegion);
       } catch (error) {
         console.error('İkon güncelleme hatası:', error);
       }
@@ -1207,6 +1224,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               ? 'cursor-move' 
                               : editMode === 'delete'
                               ? 'cursor-pointer hover:scale-125 hover:text-red-500'
+                              : editMode === 'edit_icon'
+                              ? 'cursor-pointer'
                               : ''
                           ) : 'cursor-pointer'
                         } transition-all duration-200 ${
@@ -1219,7 +1238,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                           top: `${icon.position.y}%`,
                           transform: 'translate(-50%, -50%)'
                         }}
-                        onMouseDown={(e) => editMode === 'move' ? handleIconMouseDown(e, icon) : null}
+                        onMouseDown={(e) => handleIconMouseDown(e, icon)}
                         onClick={(e) => handleIconClick(e, icon)}
                       >
                         <div className="relative group">
