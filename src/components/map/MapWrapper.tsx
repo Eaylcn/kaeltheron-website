@@ -38,12 +38,6 @@ interface RegionPath {
   };
 }
 
-interface IconType {
-  id: string;
-  name: string;
-  color: string;
-}
-
 interface Region {
   id: string;
   name: string;
@@ -92,7 +86,6 @@ const Controls = ({
   setIconColors,
   selectedRegion,
   setRegionPaths,
-  _selectedIconForEdit,
   handleUpdateIcon,
   setIsEditMode,
   setDrawingPoints
@@ -119,7 +112,6 @@ const Controls = ({
   setIconColors: React.Dispatch<React.SetStateAction<string[]>>;
   selectedRegion: string | null;
   setRegionPaths: React.Dispatch<React.SetStateAction<RegionPath[]>>;
-  _selectedIconForEdit: Icon | null;
   handleUpdateIcon: () => void;
   setIsEditMode: (isEdit: boolean) => void;
   setDrawingPoints: React.Dispatch<React.SetStateAction<Point[]>>;
@@ -1070,7 +1062,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                 setIconColors={setIconColors}
                 selectedRegion={selectedRegion}
                 setRegionPaths={setRegionPaths}
-                _selectedIconForEdit={selectedIconForEdit}
                 handleUpdateIcon={handleUpdateIcon}
                 setIsEditMode={setIsEditMode}
                 setDrawingPoints={setDrawingPoints}
