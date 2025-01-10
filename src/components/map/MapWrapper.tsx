@@ -119,6 +119,16 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const [showIconColorPicker, setShowIconColorPicker] = useState(false);
   const [tempColor, setTempColor] = useState<{ fill: string; stroke: string } | null>(null);
   const [tempIconColor, setTempIconColor] = useState<string | null>(null);
+  const [customColor, setCustomColor] = useState(defaultColors[0].stroke);
+  const [customIconColor, setCustomIconColor] = useState(defaultIconColors[0]);
+
+  // Hex'ten RGB'ye dönüşüm fonksiyonu
+  const hexToRgb = useCallback((hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
+  }, []);
 
   // Hata mesajını göster ve 3 saniye sonra kaldır
   const showError = useCallback((message: string) => {
@@ -851,6 +861,70 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                                 Renk
                               </button>
                             </div>
+
+                            {(editMode === 'draw' || editMode === 'color') && (
+                              <div className="space-y-2">
+                                <label className="text-gray-400 text-sm font-risque">Bölge Rengi</label>
+                                <div className="grid grid-cols-8 gap-1">
+                                  {colors.map((color, index) => (
+                                    <button
+                                      key={index}
+                                      onClick={() => {
+                                        setSelectedColor(index);
+                                        setTempColor(null);
+                                        if (editMode === 'color' && selectedRegion) {
+                                          setRegionPaths(prev => prev.map(rp => 
+                                            rp.id === selectedRegion
+                                              ? { ...rp, color: colors[index] }
+                                              : rp
+                                          ));
+                                        }
+                                      }}
+                                      className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                                        (selectedColor === index && !tempColor) ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                                      }`}
+                                      style={{ backgroundColor: color.stroke }}
+                                    />
+                                  ))}
+                                  <div className="relative color-picker-container">
+                                    <button
+                                      onClick={() => setShowColorPicker(!showColorPicker)}
+                                      className={`w-8 h-8 rounded-lg border-2 border-dashed transition-all flex items-center justify-center ${
+                                        tempColor ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
+                                      }`}
+                                    >
+                                      <span className="text-gray-400 text-xl">+</span>
+                                    </button>
+                                    {showColorPicker && (
+                                      <div className="absolute top-full left-0 mt-1 z-50">
+                                        <input
+                                          type="color"
+                                          value={customColor}
+                                          onChange={(e) => {
+                                            const newColor = e.target.value;
+                                            const rgb = hexToRgb(newColor);
+                                            const newColorObj = {
+                                              fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`,
+                                              stroke: newColor
+                                            };
+                                            setCustomColor(newColor);
+                                            setTempColor(newColorObj);
+                                            if (editMode === 'color' && selectedRegion) {
+                                              setRegionPaths(prev => prev.map(rp => 
+                                                rp.id === selectedRegion
+                                                  ? { ...rp, color: newColorObj }
+                                                  : rp
+                                              ));
+                                            }
+                                          }}
+                                          className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -918,13 +992,43 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                                     {iconColors.map((color, index) => (
                                       <button
                                         key={index}
-                                        onClick={() => setSelectedIconColor(color)}
+                                        onClick={() => {
+                                          setSelectedIconColor(color);
+                                          setTempIconColor(null);
+                                        }}
                                         className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                                          selectedIconColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                                          (selectedIconColor === color && !tempIconColor) ? 'border-white scale-110' : 'border-transparent hover:scale-105'
                                         }`}
                                         style={{ backgroundColor: color }}
                                       />
                                     ))}
+                                    <div className="relative color-picker-container">
+                                      <button
+                                        onClick={() => setShowIconColorPicker(!showIconColorPicker)}
+                                        className={`w-8 h-8 rounded-lg border-2 border-dashed transition-all flex items-center justify-center ${
+                                          tempIconColor ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
+                                        }`}
+                                      >
+                                        <span className="text-gray-400 text-xl">+</span>
+                                      </button>
+                                      {showIconColorPicker && (
+                                        <div className="absolute top-full left-0 mt-1 z-50">
+                                          <input
+                                            type="color"
+                                            value={customIconColor}
+                                            onChange={(e) => {
+                                              const newColor = e.target.value;
+                                              const rgb = hexToRgb(newColor);
+                                              const rgbColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                                              setCustomIconColor(newColor);
+                                              setTempIconColor(rgbColor);
+                                              setSelectedIconColor(rgbColor);
+                                            }}
+                                            className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
 
@@ -1056,6 +1160,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
                   {/* İkonlar */}
                   {icons.map(icon => {
+                    if (isEditMode && icon.regionId !== selectedRegion) return null;
                     const IconComponent = getLocationIcon(icon.type, icon.color);
                     return IconComponent && (
                       <div
