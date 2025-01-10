@@ -70,74 +70,61 @@ interface Location {
   population?: string;
 }
 
-// Kontrol paneli bileşeni
-const Controls = ({ 
-  isEditMode, 
-  onEditClick, 
-  onSaveClick,
-  editMode,
-  setEditMode,
-  selectedColor,
-  setSelectedColor,
-  onUndoClick,
-  canUndo,
-  selectedIconType,
-  setSelectedIconType,
-  iconName,
-  setIconName,
-  onAddIcon,
-  selectedIconColor,
-  setSelectedIconColor,
-  colors,
-  setColors,
-  iconColors,
-  setIconColors,
-  selectedRegion,
-  setRegionPaths,
-  handleUpdateIcon,
-  setIsEditMode,
-  setDrawingPoints
-}: {
-  isEditMode: boolean;
-  onEditClick: () => void;
-  onSaveClick: () => void;
-  editMode: 'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null;
-  setEditMode: (mode: 'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null) => void;
-  selectedColor: number;
-  setSelectedColor: (index: number) => void;
-  onUndoClick: () => void;
-  canUndo: boolean;
-  selectedIconType: string;
-  setSelectedIconType: (type: string) => void;
-  iconName: string;
-  setIconName: (name: string) => void;
-  onAddIcon: () => void;
-  selectedIconColor: string;
-  setSelectedIconColor: (color: string) => void;
-  colors: { fill: string; stroke: string }[];
-  setColors: React.Dispatch<React.SetStateAction<{ fill: string; stroke: string }[]>>;
-  iconColors: string[];
-  setIconColors: React.Dispatch<React.SetStateAction<string[]>>;
-  selectedRegion: string | null;
-  setRegionPaths: React.Dispatch<React.SetStateAction<RegionPath[]>>;
-  handleUpdateIcon: () => void;
-  setIsEditMode: (isEdit: boolean) => void;
-  setDrawingPoints: React.Dispatch<React.SetStateAction<Point[]>>;
-}) => {
-  const [customColor, setCustomColor] = useState(colors[0].stroke);
-  const [customIconColor, setCustomIconColor] = useState(iconColors[0]);
+export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
+  // Sabit renk paleti
+  const defaultColors = [
+    { fill: 'rgba(245, 158, 11, 0.2)', stroke: 'rgb(245, 158, 11)' }, // Amber
+    { fill: 'rgba(239, 68, 68, 0.2)', stroke: 'rgb(239, 68, 68)' }, // Red
+    { fill: 'rgba(59, 130, 246, 0.2)', stroke: 'rgb(59, 130, 246)' }, // Blue
+    { fill: 'rgba(16, 185, 129, 0.2)', stroke: 'rgb(16, 185, 129)' }, // Green
+    { fill: 'rgba(139, 92, 246, 0.2)', stroke: 'rgb(139, 92, 246)' }, // Purple
+    { fill: 'rgba(236, 72, 153, 0.2)', stroke: 'rgb(236, 72, 153)' }, // Pink
+    { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
+    { fill: 'rgba(249, 115, 22, 0.2)', stroke: 'rgb(249, 115, 22)' }, // Orange
+  ];
+
+  const defaultIconColors = [
+    'rgb(245, 158, 11)', // Amber
+    'rgb(239, 68, 68)', // Red
+    'rgb(59, 130, 246)', // Blue
+    'rgb(16, 185, 129)', // Green
+    'rgb(139, 92, 246)', // Purple
+    'rgb(236, 72, 153)', // Pink
+    'rgb(99, 102, 241)', // Indigo
+    'rgb(249, 115, 22)', // Orange
+  ];
+
+  const [colors, setColors] = useState(defaultColors);
+  const [iconColors, setIconColors] = useState(defaultIconColors);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null>(null);
+  const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedIconType, setSelectedIconType] = useState('');
+  const [selectedIconColor, setSelectedIconColor] = useState('');
+  const [iconName, setIconName] = useState('');
+  const [pendingIcon, setPendingIcon] = useState<Point | null>(null);
+  const [drawingPoints, setDrawingPoints] = useState<Point[]>([]);
+  const [regionPaths, setRegionPaths] = useState<RegionPath[]>([]);
+  const [icons, setIcons] = useState<Icon[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
+  const [selectedIconForEdit, setSelectedIconForEdit] = useState<Icon | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
+  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showIconColorPicker, setShowIconColorPicker] = useState(false);
   const [tempColor, setTempColor] = useState<{ fill: string; stroke: string } | null>(null);
   const [tempIconColor, setTempIconColor] = useState<string | null>(null);
 
-  // Hex'ten RGB'ye dönüşüm fonksiyonu
-  const hexToRgb = (hex: string) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return { r, g, b };
-  };
+  // Hata mesajını göster ve 3 saniye sonra kaldır
+  const showError = useCallback((message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => setErrorMessage(null), 3000);
+  }, []);
 
   // Renk seçici dışında bir yere tıklandığında kapanması için
   useEffect(() => {
@@ -168,145 +155,6 @@ const Controls = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showColorPicker, showIconColorPicker, tempColor, tempIconColor, colors, iconColors, setColors, setIconColors, setSelectedColor, setSelectedIconColor]);
-
-  return (
-    <div className="absolute top-4 left-4 z-[1000] space-y-2">
-      {!isEditMode ? (
-        <button
-          onClick={onEditClick}
-          className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors font-risque"
-        >
-          Düzenle
-        </button>
-      ) : (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <button
-              onClick={onSaveClick}
-              className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors font-risque"
-            >
-              Kaydet
-            </button>
-            <button
-              onClick={() => {
-                setIsEditMode(false);
-                setEditMode(null);
-                setDrawingPoints([]);
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-risque"
-            >
-              İptal
-            </button>
-            <button
-              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-              className="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              {isMenuCollapsed ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                </svg>
-              )}
-            </button>
-            {canUndo && (
-              <button
-                onClick={onUndoClick}
-                className="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {!isMenuCollapsed && (
-            <div className="bg-[#162137] p-4 rounded-lg space-y-4">
-              {/* Menü Başlıkları */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                    (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                  }`}
-                >
-                  Sınır
-                </button>
-                <button
-                  onClick={() => setEditMode(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move' ? null : 'add')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                    (editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                  }`}
-                >
-                  İkon
-                </button>
-              </div>
-
-              {/* Alt menüler */}
-              {/* Mevcut alt menü içeriği */}
-              {/* ... */}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null>(null);
-  const [selectedColor, setSelectedColor] = useState(0);
-  const [selectedIconType, setSelectedIconType] = useState('');
-  const [selectedIconColor, setSelectedIconColor] = useState('');
-  const [iconName, setIconName] = useState('');
-  const [pendingIcon, setPendingIcon] = useState<Point | null>(null);
-  const [drawingPoints, setDrawingPoints] = useState<Point[]>([]);
-  const [regionPaths, setRegionPaths] = useState<RegionPath[]>([]);
-  const [icons, setIcons] = useState<Icon[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
-  const [selectedIconForEdit, setSelectedIconForEdit] = useState<Icon | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
-  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-
-  // Sabit renk paleti
-  const defaultColors = [
-    { fill: 'rgba(245, 158, 11, 0.2)', stroke: 'rgb(245, 158, 11)' }, // Amber
-    { fill: 'rgba(239, 68, 68, 0.2)', stroke: 'rgb(239, 68, 68)' }, // Red
-    { fill: 'rgba(59, 130, 246, 0.2)', stroke: 'rgb(59, 130, 246)' }, // Blue
-    { fill: 'rgba(16, 185, 129, 0.2)', stroke: 'rgb(16, 185, 129)' }, // Green
-    { fill: 'rgba(139, 92, 246, 0.2)', stroke: 'rgb(139, 92, 246)' }, // Purple
-    { fill: 'rgba(236, 72, 153, 0.2)', stroke: 'rgb(236, 72, 153)' }, // Pink
-    { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
-    { fill: 'rgba(249, 115, 22, 0.2)', stroke: 'rgb(249, 115, 22)' }, // Orange
-  ];
-
-  const defaultIconColors = [
-    'rgb(245, 158, 11)', // Amber
-    'rgb(239, 68, 68)', // Red
-    'rgb(59, 130, 246)', // Blue
-    'rgb(16, 185, 129)', // Green
-    'rgb(139, 92, 246)', // Purple
-    'rgb(236, 72, 153)', // Pink
-    'rgb(99, 102, 241)', // Indigo
-    'rgb(249, 115, 22)', // Orange
-  ];
-
-  const [colors, setColors] = useState(defaultColors);
-  const [iconColors, setIconColors] = useState(defaultIconColors);
-
-  // Hata mesajını göster ve 3 saniye sonra kaldır
-  const showError = (message: string) => {
-    setErrorMessage(message);
-    setTimeout(() => setErrorMessage(null), 3000);
-  };
 
   // Başlangıç verilerini yükle
   useEffect(() => {
