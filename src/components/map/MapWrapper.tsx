@@ -99,7 +99,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | 'delete_bounds' | null>(null);
+  type EditMode = 'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | 'delete_bounds' | null;
+  const [editMode, setEditMode] = useState<EditMode>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedIconType, setSelectedIconType] = useState('');
   const [selectedIconColor, setSelectedIconColor] = useState('');
@@ -121,6 +122,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const [tempIconColor, setTempIconColor] = useState<string | null>(null);
   const [customColor, setCustomColor] = useState(defaultColors[0].stroke);
   const [customIconColor, setCustomIconColor] = useState(defaultIconColors[0]);
+
+  // Constants for mode groups
+  const boundaryModes: EditMode[] = ['draw', 'add_bounds', 'color', 'delete_bounds'];
+  const iconModes: EditMode[] = ['add', 'edit_icon', 'delete', 'move'];
 
   // Hex'ten RGB'ye dönüşüm fonksiyonu
   const hexToRgb = useCallback((hex: string) => {
@@ -872,17 +877,17 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         {/* Menü Başlıkları */}
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds' ? null : 'draw')}
+                            onClick={() => setEditMode(boundaryModes.includes(editMode as EditMode) ? null : 'draw')}
                             className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                              boundaryModes.includes(editMode as EditMode) ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
                             }`}
                           >
                             Sınır
                           </button>
                           <button
-                            onClick={() => setEditMode(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move' ? null : 'add')}
+                            onClick={() => setEditMode(iconModes.includes(editMode as EditMode) ? null : 'add')}
                             className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                              (editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                              iconModes.includes(editMode as EditMode) ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
                             }`}
                           >
                             İkon
@@ -891,7 +896,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
                         {/* Alt menüler */}
                         {/* Mevcut alt menü içeriği */}
-                        {(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') && (
+                        {boundaryModes.includes(editMode as EditMode) && (
                           <div className="space-y-2">
                             <div className="grid grid-cols-4 gap-1">
                               <button
@@ -994,7 +999,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                           </div>
                         )}
 
-                        {(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') && (
+                        {iconModes.includes(editMode as EditMode) && (
                           <div className="space-y-2">
                             <div className="grid grid-cols-4 gap-1">
                               <button
@@ -1156,30 +1161,24 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   >
                     {/* Mevcut bölge sınırları */}
                     {regionPaths.map(region => {
-                      if (isEditMode && region.id !== selectedRegion) return null;
-                      
                       const isSelected = region.id === selectedRegion;
-                      const isHovered = hoveredRegionId === region.id;
-                      
+                      const isHovered = region.id === hoveredRegionId;
                       return (
                         <React.Fragment key={region.id}>
-                          {/* Ana sınır */}
                           <path
                             d={region.path}
                             fill={region.color.fill}
                             stroke={region.color.stroke}
                             strokeWidth={isSelected ? "0.6" : "0.4"}
-                            className={`transition-all duration-200 ${
-                              !isEditMode ? 'cursor-pointer' : ''
-                            } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
-                            onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
+                            className={`transition-all duration-200 cursor-pointer ${
+                              isSelected || isHovered ? 'stroke-amber-500' : ''
+                            }`}
+                            onClick={(e) => handleRegionClick(e, region.id)}
                             onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                             onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
-                            style={{ 
-                              pointerEvents: !isEditMode ? 'all' : 'none'
-                            }}
+                            style={{ pointerEvents: 'all' }}
                           />
-                          {/* Ek sınırlar */}
+
                           {region.additionalPaths?.map((additionalPath) => (
                             <path
                               key={additionalPath.id}
@@ -1201,7 +1200,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                               onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                pointerEvents: editMode === 'delete_bounds' ? 'all' : 'none'
+                                pointerEvents: 'all'
                               }}
                             />
                           ))}
