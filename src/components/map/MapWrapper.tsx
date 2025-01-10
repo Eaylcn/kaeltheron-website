@@ -1015,6 +1015,44 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     setSelectedIconColor('');
   };
 
+  const handleIconDelete = useCallback(async (iconId: string) => {
+    const iconToDelete = icons.find(icon => icon.id === iconId);
+    if (!iconToDelete) return;
+
+    const updatedIcons = icons.filter(icon => icon.id !== iconId);
+    setIcons(updatedIcons);
+
+    try {
+      const response = await fetch('/api/regions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          regionId: iconToDelete.regionId,
+          icons: updatedIcons
+            .filter(icon => icon.regionId === iconToDelete.regionId)
+            .map(icon => ({
+              name: icon.name,
+              type: icon.type,
+              coordinates: [icon.position.x, icon.position.y],
+              color: icon.color
+            }))
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('İkon silinemedi');
+      }
+
+      onLocationsUpdate?.(iconToDelete.regionId);
+    } catch (error) {
+      console.error('İkon silme hatası:', error);
+      // Hata durumunda ikonu geri ekle
+      setIcons(prev => [...prev, iconToDelete]);
+    }
+  }, [icons, onLocationsUpdate]);
+
   // editMode değiştiğinde form alanlarını temizle
   useEffect(() => {
     setSelectedIconForEdit(null);
@@ -1204,7 +1242,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         onMouseDown={(e) => handleIconMouseDown(e, icon)}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!isEditMode) {
+                          if (isEditMode && editMode === 'delete') {
+                            handleIconDelete(icon.id);
+                          } else if (!isEditMode) {
                             setSelectedIconForEdit(icon);
                           }
                         }}
