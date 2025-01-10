@@ -479,6 +479,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const [selectedIconForEdit, setSelectedIconForEdit] = useState<Icon | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
+  const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
 
   // Sabit renk paleti
   const defaultColors = [
@@ -665,46 +666,49 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     }
   }, [isEditMode, editMode, selectedIconType, iconName, onRegionClick]);
 
-  const handleIconMouseDown = (e: React.MouseEvent, icon: Icon) => {
-    if (!isEditMode || editMode !== 'move') return;
+  const handleIconMouseDown = useCallback((e: React.MouseEvent, icon: Icon) => {
     e.stopPropagation();
-    setSelectedIcon(icon);
-    setIsDragging(true);
-  };
+    if (isEditMode && editMode === 'move') {
+      setSelectedIcon(icon);
+      setIsDragging(true);
+    }
+  }, [isEditMode, editMode]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !selectedIcon) return;
-    e.stopPropagation();
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
+    // Add smooth transition and bounds checking
+    const boundedX = Math.max(0, Math.min(100, x));
+    const boundedY = Math.max(0, Math.min(100, y));
+
     setIcons(prev => prev.map(icon => 
       icon.id === selectedIcon.id
-        ? { ...icon, position: { x, y } }
+        ? { ...icon, position: { x: boundedX, y: boundedY } }
         : icon
     ));
   }, [isDragging, selectedIcon]);
 
-  const handleMouseUp = async () => {
-    if (isDragging && selectedIcon && selectedRegion) {
-      try {
-        const updatedIcons = icons.map(icon =>
-          icon.id === selectedIcon.id
-            ? { ...icon }
-            : icon
-        );
+  const handleMouseUp = useCallback(async () => {
+    if (!isDragging || !selectedIcon) return;
 
+    setIsDragging(false);
+    const updatedIcon = icons.find(icon => icon.id === selectedIcon.id);
+
+    if (updatedIcon) {
+      try {
         const response = await fetch('/api/regions/update', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            regionId: selectedRegion,
-            icons: updatedIcons
-              .filter(icon => icon.regionId === selectedRegion)
+            regionId: updatedIcon.regionId,
+            icons: icons
+              .filter(icon => icon.regionId === updatedIcon.regionId)
               .map(icon => ({
                 name: icon.name,
                 type: icon.type,
@@ -714,18 +718,23 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           }),
         });
 
-        if (!response.ok) throw new Error('İkon konumu güncellenemedi');
+        if (!response.ok) throw new Error('İkon güncelleme başarısız');
         
         // İkon başarıyla güncellendiğinde bölge bilgilerini güncelle
-        onLocationsUpdate?.(selectedRegion);
+        onLocationsUpdate?.(updatedIcon.regionId);
       } catch (error) {
         console.error('İkon güncelleme hatası:', error);
+        // Hata durumunda ikonu eski konumuna geri al
+        setIcons(prev => prev.map(icon => 
+          icon.id === selectedIcon.id
+            ? selectedIcon
+            : icon
+        ));
       }
     }
-    
-    setIsDragging(false);
+
     setSelectedIcon(null);
-  };
+  }, [isDragging, selectedIcon, icons, onLocationsUpdate]);
 
   useEffect(() => {
     const handleGlobalMouseUp = () => {
@@ -827,7 +836,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   ...rp, 
                   additionalPaths: [
                     ...(rp.additionalPaths || []),
-                    { id: newBoundId, path: newPath }
+                    { 
+                      id: newBoundId, 
+                      path: newPath,
+                    }
                   ]
                 }
               : rp
@@ -1222,44 +1234,34 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
                   {/* İkonlar */}
                   {icons.map(icon => {
-                    if (isEditMode && icon.regionId !== selectedRegion) return null;
-                    
-                    const isCapital = icon.type === 'capital';
-                    
-                    return (
+                    const IconComponent = getLocationIcon(icon.type, icon.color);
+                    return IconComponent && (
                       <div
                         key={icon.id}
-                        className={`absolute ${
-                          isEditMode ? (
-                            editMode === 'move' 
-                              ? 'cursor-move' 
-                              : editMode === 'delete'
-                              ? 'cursor-pointer hover:scale-125 hover:text-red-500'
-                              : editMode === 'edit_icon'
-                              ? 'cursor-pointer'
-                              : ''
-                          ) : 'cursor-pointer'
-                        } transition-all duration-200 ${
-                          isCapital 
-                            ? 'hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' 
-                            : 'hover:scale-110'
+                        className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-${isEditMode && editMode === 'move' ? 'move' : 'pointer'} transition-transform duration-150 hover:scale-110 ${
+                          isDragging && selectedIcon?.id === icon.id ? 'scale-125' : ''
                         }`}
-                        style={{ 
-                          left: `${icon.position.x}%`, 
+                        style={{
+                          left: `${icon.position.x}%`,
                           top: `${icon.position.y}%`,
-                          transform: 'translate(-50%, -50%)'
+                          zIndex: isDragging && selectedIcon?.id === icon.id ? 1000 : 1
                         }}
                         onMouseDown={(e) => handleIconMouseDown(e, icon)}
-                        onClick={(e) => handleIconClick(e, icon)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isEditMode) {
+                            setSelectedIconForEdit(icon);
+                          }
+                        }}
+                        onMouseEnter={() => setHoveredIcon(icon.id)}
+                        onMouseLeave={() => setHoveredIcon(null)}
                       >
-                        <div className="relative group">
-                          {getLocationIcon(icon.type, editMode === 'delete' ? 'text-red-500' : icon.color)}
-                          <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque ${
-                            isCapital ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                          } transition-opacity duration-200`}>
-                            {icon.name}
+                        {IconComponent}
+                        {(isEditMode && editMode === 'delete' && hoveredIcon === icon.id) && (
+                          <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">×</span>
                           </div>
-                        </div>
+                        )}
                       </div>
                     );
                   })}
