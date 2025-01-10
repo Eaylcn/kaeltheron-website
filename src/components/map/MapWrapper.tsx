@@ -99,7 +99,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null>(null);
+  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | 'delete_bounds' | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedIconType, setSelectedIconType] = useState('');
   const [selectedIconColor, setSelectedIconColor] = useState('');
@@ -448,8 +448,20 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           description?: string | null;
           population?: string | null;
         }[];
+        deletedBounds?: string[];
       } = { regionId: selectedRegion };
       
+      // Mevcut ikonları ekle
+      const currentIcons = icons.filter(icon => icon.regionId === selectedRegion);
+      if (currentIcons.length > 0) {
+        updateData.icons = currentIcons.map(icon => ({
+          name: icon.name,
+          type: icon.type,
+          coordinates: [icon.position.x, icon.position.y],
+          color: icon.color
+        }));
+      }
+
       if (editMode === 'draw' && drawingPoints.length >= 3) {
         console.log('Ana sınır çizimi kaydediliyor');
         const newColor = colors[selectedColor] || colors[0];
@@ -530,6 +542,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       setEditMode(null);
       setDrawingPoints([]);
       onRegionClick('');
+      onLocationsUpdate?.(selectedRegion);
     } catch (error) {
       console.error('Kaydetme hatası:', error);
       alert('Bölge kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
@@ -706,6 +719,51 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     }
   }, [icons, onLocationsUpdate]);
 
+  const handleDeleteAdditionalBound = useCallback(async (boundId: string) => {
+    if (!selectedRegion) return;
+
+    const currentRegion = regionPaths.find(rp => rp.id === selectedRegion);
+    if (!currentRegion || !currentRegion.additionalPaths) return;
+
+    // UI'dan sil
+    setRegionPaths(prev => prev.map(rp => 
+      rp.id === selectedRegion
+        ? {
+            ...rp,
+            additionalPaths: rp.additionalPaths?.filter(ap => ap.id !== boundId)
+          }
+        : rp
+    ));
+
+    try {
+      // API'ye gönder
+      const response = await fetch('/api/regions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          regionId: selectedRegion,
+          deleteAdditionalBound: boundId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ek sınır silinemedi');
+      }
+
+      onLocationsUpdate?.(selectedRegion);
+    } catch (error) {
+      console.error('Ek sınır silme hatası:', error);
+      // Hata durumunda geri al
+      setRegionPaths(prev => prev.map(rp => 
+        rp.id === selectedRegion
+          ? currentRegion
+          : rp
+      ));
+    }
+  }, [selectedRegion, regionPaths, onLocationsUpdate]);
+
   // editMode değiştiğinde form alanlarını temizle
   useEffect(() => {
     setSelectedIconForEdit(null);
@@ -751,7 +809,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           initialScale={1}
           minScale={0.5}
           maxScale={2}
-          wheel={{ disabled: true }}
+          wheel={{ disabled: false }}
           doubleClick={{ disabled: true }}
         >
           {() => (
@@ -859,6 +917,14 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                                 }`}
                               >
                                 Renk
+                              </button>
+                              <button
+                                onClick={() => setEditMode('delete_bounds')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'delete_bounds' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Sınır Sil
                               </button>
                             </div>
 
@@ -1122,13 +1188,20 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               stroke={region.color.stroke}
                               strokeWidth={isSelected ? "0.6" : "0.4"}
                               className={`transition-all duration-200 ${
-                                !isEditMode ? 'cursor-pointer' : ''
+                                editMode === 'delete_bounds' ? 'cursor-pointer hover:stroke-red-500' : 'cursor-pointer'
                               } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
-                              onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isEditMode && editMode === 'delete_bounds') {
+                                  handleDeleteAdditionalBound(additionalPath.id);
+                                } else {
+                                  handleRegionClick(e, region.id);
+                                }
+                              }}
                               onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                               onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                pointerEvents: !isEditMode ? 'all' : 'none'
+                                pointerEvents: editMode === 'delete_bounds' ? 'all' : 'none'
                               }}
                             />
                           ))}
@@ -1162,12 +1235,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   {icons.map(icon => {
                     if (isEditMode && icon.regionId !== selectedRegion) return null;
                     const IconComponent = getLocationIcon(icon.type, icon.color);
+                    const isCapital = icon.type === 'capital';
                     return IconComponent && (
                       <div
                         key={icon.id}
-                        className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-${isEditMode && editMode === 'move' ? 'move' : 'pointer'} transition-transform duration-150 hover:scale-110 ${
-                          isDragging && selectedIcon?.id === icon.id ? 'scale-125' : ''
-                        }`}
+                        className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-${isEditMode && editMode === 'move' ? 'move' : 'pointer'} transition-transform duration-150 group ${
+                          isDragging && selectedIcon?.id === icon.id ? 'scale-125' : 'hover:scale-110'
+                        } ${isCapital ? 'hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : ''}`}
                         style={{
                           left: `${icon.position.x}%`,
                           top: `${icon.position.y}%`,
@@ -1178,6 +1252,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                           e.stopPropagation();
                           if (isEditMode && editMode === 'delete') {
                             handleIconDelete(icon.id);
+                          } else if (isEditMode && editMode === 'edit_icon') {
+                            setSelectedIconForEdit(icon);
+                            setSelectedIconType(icon.type);
+                            setIconName(icon.name);
+                            setSelectedIconColor(icon.color);
                           } else if (!isEditMode) {
                             setSelectedIconForEdit(icon);
                           }
@@ -1186,6 +1265,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         onMouseLeave={() => setHoveredIcon(null)}
                       >
                         {IconComponent}
+                        <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque ${
+                          isCapital ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        } transition-opacity duration-200`}>
+                          {icon.name}
+                        </div>
                         {(isEditMode && editMode === 'delete' && hoveredIcon === icon.id) && (
                           <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">×</span>
