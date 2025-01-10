@@ -823,7 +823,133 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
                         {/* Alt menüler */}
                         {/* Mevcut alt menü içeriği */}
-                        {/* ... */}
+                        {(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') && (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-4 gap-1">
+                              <button
+                                onClick={() => setEditMode('draw')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'draw' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Sınır Çiz
+                              </button>
+                              <button
+                                onClick={() => setEditMode('add_bounds')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'add_bounds' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Ek Sınır
+                              </button>
+                              <button
+                                onClick={() => setEditMode('color')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'color' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Renk
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') && (
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-4 gap-1">
+                              <button
+                                onClick={() => setEditMode('add')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'add' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Ekle
+                              </button>
+                              <button
+                                onClick={() => setEditMode('edit_icon')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'edit_icon' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Düzenle
+                              </button>
+                              <button
+                                onClick={() => setEditMode('move')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'move' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Taşı
+                              </button>
+                              <button
+                                onClick={() => setEditMode('delete')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'delete' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Sil
+                              </button>
+                            </div>
+
+                            {(editMode === 'add' || editMode === 'edit_icon') && (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-gray-400 text-sm font-risque block mb-1">İkon Tipi</label>
+                                  <select
+                                    value={selectedIconType}
+                                    onChange={(e) => setSelectedIconType(e.target.value)}
+                                    className="w-full bg-[#1C2B4B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  >
+                                    <option value="">Seçiniz...</option>
+                                    <option value="capital">Başkent</option>
+                                    <option value="city">Şehir</option>
+                                    <option value="castle">Kale</option>
+                                    <option value="fortress">Kale (Küçük)</option>
+                                    <option value="village">Köy</option>
+                                    <option value="mine">Maden</option>
+                                    <option value="portal">Portal</option>
+                                    <option value="sacred_site">Kutsal Alan</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="text-gray-400 text-sm font-risque block mb-1">İkon Rengi</label>
+                                  <div className="grid grid-cols-8 gap-1">
+                                    {iconColors.map((color, index) => (
+                                      <button
+                                        key={index}
+                                        onClick={() => setSelectedIconColor(color)}
+                                        className={`w-8 h-8 rounded-lg border-2 transition-all ${
+                                          selectedIconColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                                        }`}
+                                        style={{ backgroundColor: color }}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="text-gray-400 text-sm font-risque block mb-1">İsim</label>
+                                  <input
+                                    type="text"
+                                    value={iconName}
+                                    onChange={(e) => setIconName(e.target.value)}
+                                    className="w-full bg-[#1C2B4B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                    placeholder="Yerleşim ismi..."
+                                  />
+                                </div>
+
+                                <button
+                                  onClick={editMode === 'add' ? handleAddIcon : handleUpdateIcon}
+                                  disabled={!selectedIconType || !iconName || !selectedIconColor}
+                                  className="w-full bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors font-risque disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {editMode === 'add' ? 'Ekle' : 'Güncelle'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
