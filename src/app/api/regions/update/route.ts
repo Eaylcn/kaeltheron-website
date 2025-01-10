@@ -30,7 +30,7 @@ type FirestoreData = {
       stroke: string;
     };
     center: [number, number];
-    additionalBounds: number[][];
+    additionalBounds: number[];
   };
   locations?: UpdateIcon[];
 };
@@ -85,19 +85,14 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
       
       console.log('Mevcut additional bounds:', JSON.stringify(existingBounds, null, 2));
       
-      // Yeni bounds'ları ekle
-      const newAdditionalBounds = [...existingBounds];
-      
-      additionalBounds.forEach((bound, index) => {
-        if (Array.isArray(bound) && bound.every(num => typeof num === 'number')) {
-          console.log(`Eklenen sınır ${index}:`, JSON.stringify(bound, null, 2));
-          newAdditionalBounds.push([...bound]);
-        } else {
-          throw new Error('Geçersiz sınır verisi formatı');
-        }
-      });
-
-      updateData.mapData.additionalBounds = newAdditionalBounds;
+      // Yeni bounds'ları ekle - flat array olarak
+      const newBounds = additionalBounds[0]; // İlk ek sınırı al
+      if (Array.isArray(newBounds) && newBounds.every(num => typeof num === 'number')) {
+        console.log('Eklenen yeni sınır:', JSON.stringify(newBounds, null, 2));
+        updateData.mapData.additionalBounds = [...existingBounds, ...newBounds];
+      } else {
+        throw new Error('Geçersiz sınır verisi formatı');
+      }
     }
 
     // İkonları güncelle
