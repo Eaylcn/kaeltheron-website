@@ -872,9 +872,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         {/* Menü Başlıkları */}
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
+                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds' ? null : 'draw')}
                             className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
                             }`}
                           >
                             Sınır
