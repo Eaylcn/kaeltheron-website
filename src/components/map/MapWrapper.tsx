@@ -952,41 +952,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     setSelectedIconColor('');
   };
 
-  const handleIconDelete = async (iconId: string) => {
-    const updatedIcons = icons.filter(icon => icon.id !== iconId);
-    setIcons(updatedIcons);
-    
-    const deletedIcon = icons.find(icon => icon.id === iconId);
-    if (deletedIcon && selectedRegion) {
-      try {
-        const response = await fetch('/api/regions/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            regionId: selectedRegion,
-            icons: updatedIcons
-              .filter(icon => icon.regionId === selectedRegion)
-              .map(icon => ({
-                name: icon.name,
-                type: icon.type,
-                coordinates: [icon.position.x, icon.position.y],
-                color: icon.color
-              }))
-          }),
-        });
-
-        if (!response.ok) throw new Error('Silme işlemi kaydedilemedi');
-        
-        // İkon başarıyla silindiğinde bölge bilgilerini güncelle
-        onLocationsUpdate?.(selectedRegion);
-      } catch (error) {
-        console.error('Silme hatası:', error);
-      }
-    }
-  };
-
   const handleUpdateIcon = async () => {
     if (!selectedIconForEdit) return;
     
