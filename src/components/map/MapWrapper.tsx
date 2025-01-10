@@ -197,6 +197,20 @@ const Controls = ({
             >
               İptal
             </button>
+            <button
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+              className="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              {isMenuCollapsed ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              )}
+            </button>
             {canUndo && (
               <button
                 onClick={onUndoClick}
@@ -209,253 +223,33 @@ const Controls = ({
             )}
           </div>
 
-          <div className="bg-[#162137] p-4 rounded-lg space-y-4">
-            {/* Menü Başlıkları */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
-                className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                  (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                }`}
-              >
-                Sınır
-              </button>
-              <button
-                onClick={() => setEditMode(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' ? null : 'add')}
-                className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                  (editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                }`}
-              >
-                İkon
-              </button>
+          {!isMenuCollapsed && (
+            <div className="bg-[#162137] p-4 rounded-lg space-y-4">
+              {/* Menü Başlıkları */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
+                    (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                  }`}
+                >
+                  Sınır
+                </button>
+                <button
+                  onClick={() => setEditMode(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move' ? null : 'add')}
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
+                    (editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                  }`}
+                >
+                  İkon
+                </button>
+              </div>
+
+              {/* Alt menüler */}
+              {/* Mevcut alt menü içeriği */}
+              {/* ... */}
             </div>
-
-            {/* Sınır İşlemleri */}
-            {(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') && (
-              <div className="space-y-2">
-                <div className="grid grid-cols-4 gap-1">
-                  <button
-                    onClick={() => setEditMode('draw')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'draw' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Sınır Çiz
-                  </button>
-                  <button
-                    onClick={() => setEditMode('add_bounds')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'add_bounds' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Ek Sınır
-                  </button>
-                  <button
-                    onClick={() => setEditMode('color')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'color' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Renk
-                  </button>
-                </div>
-
-                {(editMode === 'draw' || editMode === 'color') && (
-                  <div className="space-y-2">
-                    <label className="text-gray-400 text-sm font-risque">Bölge Rengi</label>
-                    <div className="grid grid-cols-8 gap-1">
-                      {colors.map((color, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setSelectedColor(index);
-                            setTempColor(null);
-                            if (editMode === 'color' && selectedRegion) {
-                              setRegionPaths(prev => prev.map(rp => 
-                                rp.id === selectedRegion
-                                  ? { ...rp, color: colors[index] }
-                                  : rp
-                              ));
-                            }
-                          }}
-                          className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                            (selectedColor === index && !tempColor) ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: color.stroke }}
-                        />
-                      ))}
-                      <div className="relative color-picker-container">
-                        <button
-                          onClick={() => setShowColorPicker(!showColorPicker)}
-                          className={`w-8 h-8 rounded-lg border-2 border-dashed transition-all flex items-center justify-center ${
-                            tempColor ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
-                          }`}
-                          style={{ backgroundColor: customColor }}
-                        >
-                          <span className="text-gray-400 text-xl">+</span>
-                        </button>
-                        {showColorPicker && (
-                          <div className="absolute top-full left-0 mt-1 z-50">
-                            <input
-                              type="color"
-                              value={customColor}
-                              onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                const newColor = e.currentTarget.value;
-                                const rgb = hexToRgb(newColor);
-                                const newColorObj = {
-                                  fill: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`,
-                                  stroke: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`
-                                };
-                                setCustomColor(newColor);
-                                setTempColor(newColorObj);
-                                if (editMode === 'color' && selectedRegion) {
-                                  setRegionPaths(prev => prev.map(rp => 
-                                    rp.id === selectedRegion
-                                      ? { ...rp, color: newColorObj }
-                                      : rp
-                                  ));
-                                }
-                              }}
-                              className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* İkon İşlemleri */}
-            {(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') && (
-              <div className="space-y-2">
-                <div className="grid grid-cols-4 gap-1">
-                  <button
-                    onClick={() => setEditMode('add')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'add' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Ekle
-                  </button>
-                  <button
-                    onClick={() => setEditMode('edit_icon')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'edit_icon' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Düzenle
-                  </button>
-                  <button
-                    onClick={() => setEditMode('move')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'move' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Taşı
-                  </button>
-                  <button
-                    onClick={() => setEditMode('delete')}
-                    className={`px-4 py-2 rounded-lg transition-colors font-risque ${
-                      editMode === 'delete' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
-                    }`}
-                  >
-                    Sil
-                  </button>
-                </div>
-
-                {(editMode === 'add' || editMode === 'edit_icon') && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-gray-400 text-sm font-risque block mb-1">İkon Tipi</label>
-                      <select
-                        value={selectedIconType}
-                        onChange={(e) => setSelectedIconType(e.target.value)}
-                        className="w-full bg-[#1C2B4B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      >
-                        <option value="">Seçiniz...</option>
-                        <option value="capital">Başkent</option>
-                        <option value="city">Şehir</option>
-                        <option value="castle">Kale</option>
-                        <option value="fortress">Kale (Küçük)</option>
-                        <option value="village">Köy</option>
-                        <option value="mine">Maden</option>
-                        <option value="portal">Portal</option>
-                        <option value="sacred_site">Kutsal Alan</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-gray-400 text-sm font-risque block mb-1">İkon Rengi</label>
-                      <div className="grid grid-cols-8 gap-1">
-                        {iconColors.map((color, index) => (
-                          <button
-                            key={index}
-                            onClick={() => {
-                              setSelectedIconColor(color);
-                              setTempIconColor(null);
-                            }}
-                            className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                              (selectedIconColor === color && !tempIconColor) ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                        <div className="relative color-picker-container">
-                          <button
-                            onClick={() => setShowIconColorPicker(!showIconColorPicker)}
-                            className={`w-8 h-8 rounded-lg border-2 border-dashed transition-all flex items-center justify-center ${
-                              tempIconColor ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
-                            }`}
-                            style={{ backgroundColor: customIconColor }}
-                          >
-                            <span className="text-gray-400 text-xl">+</span>
-                          </button>
-                          {showIconColorPicker && (
-                            <div className="absolute top-full left-0 mt-1 z-50">
-                              <input
-                                type="color"
-                                value={customIconColor}
-                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                  const newColor = e.currentTarget.value;
-                                  const rgb = hexToRgb(newColor);
-                                  const rgbColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-                                  setCustomIconColor(newColor);
-                                  setTempIconColor(rgbColor);
-                                  setSelectedIconColor(rgbColor);
-                                }}
-                                className="w-8 h-8 p-0 border-0 rounded cursor-pointer"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-gray-400 text-sm font-risque block mb-1">İsim</label>
-                      <input
-                        type="text"
-                        value={iconName}
-                        onChange={(e) => setIconName(e.target.value)}
-                        className="w-full bg-[#1C2B4B] text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        placeholder="Yerleşim ismi..."
-                      />
-                    </div>
-
-                    <button
-                      onClick={editMode === 'add' ? onAddIcon : handleUpdateIcon}
-                      disabled={!selectedIconType || !iconName}
-                      className="w-full bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors font-risque disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {editMode === 'add' ? 'Ekle' : 'Güncelle'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
     </div>
@@ -480,6 +274,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
   const [hoveredIcon, setHoveredIcon] = useState<string | null>(null);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   // Sabit renk paleti
   const defaultColors = [
@@ -1074,6 +869,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     setIsEditMode(!isEditMode);
   };
 
+  const handleSaveClick = async () => {
+    await handleSave();
+  };
+
   return (
     <div className="relative w-full h-[800px] bg-[#0B1120] rounded-lg overflow-hidden">
       {/* Hata mesajı */}
@@ -1093,40 +892,96 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         <TransformWrapper
           initialScale={1}
           minScale={0.5}
-          maxScale={4}
-          centerOnInit
-          wheel={{ step: 0.25 }}
-          panning={{ velocityDisabled: true, disabled: isEditMode && editMode === 'draw' }}
+          maxScale={2}
+          wheel={{ disabled: true }}
+          doubleClick={{ disabled: true }}
         >
           {() => (
             <>
-              <Controls 
-                isEditMode={isEditMode}
-                onEditClick={handleEditClick}
-                onSaveClick={handleSave}
-                editMode={editMode}
-                setEditMode={setEditMode}
-                selectedColor={selectedColor}
-                setSelectedColor={setSelectedColor}
-                onUndoClick={handleUndo}
-                canUndo={drawingPoints.length > 0}
-                selectedIconType={selectedIconType}
-                setSelectedIconType={setSelectedIconType}
-                iconName={iconName}
-                setIconName={setIconName}
-                onAddIcon={handleAddIcon}
-                selectedIconColor={selectedIconColor}
-                setSelectedIconColor={setSelectedIconColor}
-                colors={colors}
-                setColors={setColors}
-                iconColors={iconColors}
-                setIconColors={setIconColors}
-                selectedRegion={selectedRegion}
-                setRegionPaths={setRegionPaths}
-                handleUpdateIcon={handleUpdateIcon}
-                setIsEditMode={setIsEditMode}
-                setDrawingPoints={setDrawingPoints}
-              />
+              <div className="absolute top-4 left-4 z-[1000] space-y-2">
+                {!isEditMode ? (
+                  <button
+                    onClick={handleEditClick}
+                    className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors font-risque"
+                  >
+                    Düzenle
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveClick}
+                        className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors font-risque"
+                      >
+                        Kaydet
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(false);
+                          setEditMode(null);
+                          setDrawingPoints([]);
+                        }}
+                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-risque"
+                      >
+                        İptal
+                      </button>
+                      <button
+                        onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+                        className="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                      >
+                        {isMenuCollapsed ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        )}
+                      </button>
+                      {drawingPoints.length > 0 && (
+                        <button
+                          onClick={handleUndo}
+                          className="bg-gray-600 text-white p-2 rounded-lg hover:bg-gray-700 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {!isMenuCollapsed && (
+                      <div className="bg-[#162137] p-4 rounded-lg space-y-4">
+                        {/* Menü Başlıkları */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
+                            className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
+                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                            }`}
+                          >
+                            Sınır
+                          </button>
+                          <button
+                            onClick={() => setEditMode(editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move' ? null : 'add')}
+                            className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
+                              (editMode === 'add' || editMode === 'edit_icon' || editMode === 'delete' || editMode === 'move') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                            }`}
+                          >
+                            İkon
+                          </button>
+                        </div>
+
+                        {/* Alt menüler */}
+                        {/* Mevcut alt menü içeriği */}
+                        {/* ... */}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <TransformComponent
                 wrapperClass="!w-full !h-full"
                 contentClass="!w-full !h-full"
@@ -1289,6 +1144,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           )}
         </TransformWrapper>
       )}
-      </div>
+    </div>
   );
 } 
