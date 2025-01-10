@@ -96,9 +96,12 @@ export default function MapPage() {
 
   const handleLocationsUpdate = (regionId: string) => {
     if (regionId === selectedRegion) {
+      setShowDetails(false);
       fetch('/api/regions')
         .then(res => res.json())
-        .then(data => setRegionsData(data));
+        .then(data => {
+          setRegionsData(data);
+        });
     }
   };
 
@@ -156,7 +159,7 @@ export default function MapPage() {
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#0B1120]/90 via-[#162137]/80 to-[#1C2B4B]/90 z-10" />
           <Image
-            src="/map-bg.png"
+            src="/map-bg.jpg"
             alt={`Kael'Theron Haritası`}
             fill
             className="object-cover object-center"
@@ -164,7 +167,7 @@ export default function MapPage() {
           />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
         </div>
-        <div className="relative z-20 text-center">
+        <div className="relative z-20 text-center max-w-4xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -173,11 +176,17 @@ export default function MapPage() {
             <h1 className="text-7xl font-hennyPenny text-white mb-6 drop-shadow-[0_0_8px_rgba(234,179,8,0.3)]">
               {`Kael'Theron Haritası`}
             </h1>
-            <p className="text-2xl font-risque text-gray-200">
+            <p className="text-2xl font-risque text-gray-200 mb-8">
               Efsanevi toprakları keşfedin
             </p>
+            <div className="flex items-center justify-center gap-2 text-amber-400/80 font-risque">
+              <span className="w-12 h-[1px] bg-amber-400/40" />
+              <span>Bölgeler ve Yerleşimler</span>
+              <span className="w-12 h-[1px] bg-amber-400/40" />
+            </div>
           </motion.div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0B1120] to-transparent" />
       </section>
 
       {/* Map Container */}
