@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, getDoc, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 
 interface UpdateIcon {
   name: string;
@@ -9,22 +9,6 @@ interface UpdateIcon {
   color: string;
   description?: string | null;
   population?: string | null;
-}
-
-interface Color {
-  name?: string;
-  fill: string;
-  stroke: string;
-}
-
-interface MapData {
-  bounds?: number[];
-  color?: {
-    fill: string;
-    stroke: string;
-  };
-  center?: [number, number];
-  additionalBounds?: number[][];
 }
 
 interface UpdateData {
@@ -37,6 +21,19 @@ interface UpdateData {
   };
   icons?: UpdateIcon[];
 }
+
+type FirestoreData = {
+  mapData: {
+    bounds: number[];
+    color: {
+      fill: string;
+      stroke: string;
+    };
+    center: [number, number];
+    additionalBounds: number[][];
+  };
+  locations?: UpdateIcon[];
+};
 
 export async function POST(request: Request): Promise<NextResponse<{ success: boolean } | { error: string }>> {
   try {
@@ -59,11 +56,6 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     const currentData = regionDoc.data();
     console.log('Mevcut döküman verisi:', JSON.stringify(currentData, null, 2));
 
-    // Temel güncelleme objesi
-    const updateObj: Record<string, any> = {
-      mapData: {}
-    };
-
     // Mevcut mapData'yı al
     const currentMapData = currentData.mapData || {
       bounds: [],
@@ -72,22 +64,15 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
       additionalBounds: []
     };
 
-    // Bounds güncellemesi
-    if (bounds) {
-      updateObj.mapData.bounds = bounds;
-    } else {
-      updateObj.mapData.bounds = currentMapData.bounds;
-    }
-
-    // Color güncellemesi
-    if (color) {
-      updateObj.mapData.color = color;
-    } else {
-      updateObj.mapData.color = currentMapData.color;
-    }
-
-    // Center güncellemesi
-    updateObj.mapData.center = currentMapData.center || [150, 250];
+    // Güncelleme objesini oluştur
+    const updateData: FirestoreData = {
+      mapData: {
+        bounds: bounds || currentMapData.bounds,
+        color: color || currentMapData.color,
+        center: currentMapData.center || [150, 250],
+        additionalBounds: currentMapData.additionalBounds || []
+      }
+    };
 
     // Additional bounds güncellemesi
     if (additionalBounds && additionalBounds.length > 0) {
@@ -101,28 +86,28 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
       console.log('Mevcut additional bounds:', JSON.stringify(existingBounds, null, 2));
       
       // Yeni bounds'ları ekle
-      updateObj.mapData.additionalBounds = [...existingBounds];
+      const newAdditionalBounds = [...existingBounds];
       
       additionalBounds.forEach((bound, index) => {
         if (Array.isArray(bound) && bound.every(num => typeof num === 'number')) {
           console.log(`Eklenen sınır ${index}:`, JSON.stringify(bound, null, 2));
-          updateObj.mapData.additionalBounds.push([...bound]);
+          newAdditionalBounds.push([...bound]);
         } else {
           throw new Error('Geçersiz sınır verisi formatı');
         }
       });
-    } else {
-      updateObj.mapData.additionalBounds = currentMapData.additionalBounds || [];
+
+      updateData.mapData.additionalBounds = newAdditionalBounds;
     }
 
     // İkonları güncelle
     if (icons) {
-      updateObj.locations = icons;
+      updateData.locations = icons;
     }
 
-    console.log('Firestore\'a gönderilecek güncellenmiş veri:', JSON.stringify(updateObj, null, 2));
+    console.log('Firestore\'a gönderilecek güncellenmiş veri:', JSON.stringify(updateData, null, 2));
 
-    await updateDoc(regionRef, updateObj);
+    await updateDoc(regionRef, updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {

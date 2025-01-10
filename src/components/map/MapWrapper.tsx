@@ -2,13 +2,11 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
-  FaCrown, FaCity, FaFortAwesome, FaTree, FaMountain, FaSkull, 
-  FaSearchPlus, FaSearchMinus, FaCompass, FaPen, FaSave, FaUndo,
-  FaMapMarker, FaMousePointer, FaDotCircle
+  FaCrown, FaCity, FaFortAwesome, FaTree, FaMountain
 } from 'react-icons/fa';
 import { GiCastle, GiMiner, GiWoodCabin, GiPortal, GiAncientColumns } from 'react-icons/gi';
 import Image from 'next/image';
-import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 interface MapWrapperProps {
   onRegionClick: (regionId: string) => void;
@@ -203,7 +201,7 @@ const Controls = ({
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showColorPicker, showIconColorPicker, tempColor, tempIconColor, colors, iconColors]);
+  }, [showColorPicker, showIconColorPicker, tempColor, tempIconColor, colors, iconColors, setColors, setIconColors, setSelectedColor, setSelectedIconColor]);
 
   return (
     <div className="absolute top-4 left-4 z-[1000] space-y-2">
