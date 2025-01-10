@@ -28,10 +28,18 @@ interface Icon {
   color: string;
 }
 
+interface AdditionalBound {
+  id: string;
+  bounds: number[];
+}
+
 interface RegionPath {
   id: string;
   path: string;
-  additionalPaths?: string[];
+  additionalPaths?: {
+    id: string;
+    path: string;
+  }[];
   color: {
     fill: string;
     stroke: string;
@@ -44,7 +52,7 @@ interface Region {
   type: string;
   mapData: {
     bounds: number[];
-    additionalBounds?: number[][];
+    additionalBounds?: AdditionalBound[];
     color?: {
       fill: string;
       stroke: string;
@@ -462,6 +470,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   const [selectedIcon, setSelectedIcon] = useState<Icon | null>(null);
   const [selectedIconForEdit, setSelectedIconForEdit] = useState<Icon | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null);
 
   // Sabit renk paleti
   const defaultColors = [
@@ -527,18 +536,21 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
             }, '');
 
             // Ek sınırları işle
-            const additionalPaths: string[] = [];
+            const additionalPaths: { id: string; path: string; }[] = [];
             if (typedRegion.mapData.additionalBounds) {
-              typedRegion.mapData.additionalBounds.forEach(additionalBound => {
+              typedRegion.mapData.additionalBounds.forEach(bound => {
                 const additionalPoints: Point[] = [];
-                for (let i = 0; i < additionalBound.length; i += 2) {
-                  additionalPoints.push({ x: additionalBound[i], y: additionalBound[i + 1] });
+                for (let i = 0; i < bound.bounds.length; i += 2) {
+                  additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
                 }
                 const additionalPath = additionalPoints.reduce((acc, point, index) => {
                   if (index === 0) return `M ${point.x} ${point.y}`;
                   return `${acc} L ${point.x} ${point.y}`;
                 }, '');
-                additionalPaths.push(`${additionalPath} Z`);
+                additionalPaths.push({
+                  id: bound.id,
+                  path: `${additionalPath} Z`
+                });
               });
             }
 
@@ -746,18 +758,19 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           const newPath = getPathFromPoints();
           console.log('Yeni ek sınır path:', newPath);
           
-          setRegionPaths(prev => {
-            const updated = prev.map(rp => 
-              rp.id === selectedRegion
-                ? { 
-                    ...rp, 
-                    additionalPaths: [...(rp.additionalPaths || []), newPath]
-                  }
-                : rp
-            );
-            console.log('Güncellenmiş paths:', updated);
-            return updated;
-          });
+          const newBoundId = `${selectedRegion}-bound-${Date.now()}`;
+          
+          setRegionPaths(prev => prev.map(rp => 
+            rp.id === selectedRegion
+              ? { 
+                  ...rp, 
+                  additionalPaths: [
+                    ...(rp.additionalPaths || []),
+                    { id: newBoundId, path: newPath }
+                  ]
+                }
+              : rp
+          ));
 
           // Firestore'a gönderilecek veriyi hazırla
           console.log('Hazırlanan flatBounds:', flatBounds);
@@ -1099,6 +1112,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                       if (isEditMode && region.id !== selectedRegion) return null;
                       
                       const isSelected = region.id === selectedRegion;
+                      const isHovered = hoveredRegionId === region.id;
                       
                       return (
                         <React.Fragment key={region.id}>
@@ -1112,22 +1126,28 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               !isEditMode ? 'cursor-pointer hover:stroke-amber-500' : ''
                             } ${isSelected ? 'stroke-amber-500' : ''}`}
                             onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
+                            onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
+                            onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                             style={{ 
                               pointerEvents: !isEditMode ? 'all' : 'none',
-                              filter: isSelected ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none'
+                              filter: isSelected || isHovered ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none',
+                              opacity: isHovered ? 0.8 : 1
                             }}
                           />
                           {/* Ek sınırlar */}
-                          {region.additionalPaths?.map((additionalPath, index) => (
+                          {region.additionalPaths?.map((additionalPath) => (
                             <path
-                              key={`${region.id}-additional-${index}`}
-                              d={additionalPath}
+                              key={additionalPath.id}
+                              d={additionalPath.path}
                               fill={region.color.fill}
                               stroke={region.color.stroke}
                               strokeWidth={isSelected ? "0.6" : "0.4"}
                               className={`transition-all duration-200`}
+                              onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
+                              onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                filter: isSelected ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none'
+                                filter: isSelected || isHovered ? 'drop-shadow(0 0 2px rgba(245, 158, 11, 0.5))' : 'none',
+                                opacity: isHovered ? 0.8 : 1
                               }}
                             />
                           ))}

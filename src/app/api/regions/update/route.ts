@@ -11,6 +11,11 @@ interface UpdateIcon {
   population?: string | null;
 }
 
+interface AdditionalBound {
+  id: string;
+  bounds: number[];
+}
+
 interface UpdateData {
   regionId: string;
   bounds?: number[];
@@ -30,7 +35,7 @@ type FirestoreData = {
       stroke: string;
     };
     center: [number, number];
-    additionalBounds: number[];
+    additionalBounds: AdditionalBound[];
   };
   locations?: UpdateIcon[];
 };
@@ -70,7 +75,9 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
         bounds: bounds || currentMapData.bounds,
         color: color || currentMapData.color,
         center: currentMapData.center || [150, 250],
-        additionalBounds: currentMapData.additionalBounds || []
+        additionalBounds: Array.isArray(currentMapData.additionalBounds) 
+          ? currentMapData.additionalBounds 
+          : []
       }
     };
 
@@ -78,18 +85,29 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
     if (additionalBounds && additionalBounds.length > 0) {
       console.log('Eklenecek yeni sınırlar:', JSON.stringify(additionalBounds, null, 2));
       
-      // Mevcut additional bounds'ı al veya boş array oluştur
+      // Mevcut additional bounds'ı al
       const existingBounds = Array.isArray(currentMapData.additionalBounds) 
         ? currentMapData.additionalBounds 
         : [];
       
       console.log('Mevcut additional bounds:', JSON.stringify(existingBounds, null, 2));
       
-      // Yeni bounds'ları ekle - flat array olarak
+      // Yeni bounds'ları ekle
       const newBounds = additionalBounds[0]; // İlk ek sınırı al
       if (Array.isArray(newBounds) && newBounds.every(num => typeof num === 'number')) {
         console.log('Eklenen yeni sınır:', JSON.stringify(newBounds, null, 2));
-        updateData.mapData.additionalBounds = [...existingBounds, ...newBounds];
+        
+        // Yeni ID oluştur
+        const newBoundId = `${regionId}-bound-${Date.now()}`;
+        
+        // Yeni bound'u ekle
+        updateData.mapData.additionalBounds = [
+          ...existingBounds,
+          {
+            id: newBoundId,
+            bounds: newBounds
+          }
+        ];
       } else {
         throw new Error('Geçersiz sınır verisi formatı');
       }
