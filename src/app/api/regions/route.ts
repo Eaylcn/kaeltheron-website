@@ -36,6 +36,7 @@ interface MapData {
     fill: string;
     stroke: string;
   };
+  additionalBounds: [number, number][];
 }
 
 interface Resource {
@@ -87,6 +88,9 @@ export async function GET(): Promise<NextResponse<RegionsResponse | { error: str
     regionsSnapshot.forEach((doc) => {
       try {
         const data = doc.data();
+        console.log('Raw Firestore data for region:', doc.id, data);
+        console.log('mapData from Firestore:', data.mapData);
+
         // Veri dönüşümlerini ve validasyonunu yap
         const region: Region = {
           id: doc.id,
@@ -109,7 +113,8 @@ export async function GET(): Promise<NextResponse<RegionsResponse | { error: str
           mapData: {
             bounds: Array.isArray(data.mapData?.bounds) ? data.mapData.bounds : [],
             center: Array.isArray(data.mapData?.center) ? data.mapData.center : [0, 0],
-            color: data.mapData?.color || undefined
+            color: data.mapData?.color || undefined,
+            additionalBounds: Array.isArray(data.mapData?.additionalBounds) ? data.mapData.additionalBounds : []
           },
           resources: Array.isArray(data.resources) ? data.resources : [],
           threats: Array.isArray(data.threats) ? data.threats : [],
@@ -117,12 +122,21 @@ export async function GET(): Promise<NextResponse<RegionsResponse | { error: str
           temperature: data.temperature || undefined
         };
         
+        console.log('Processed region data:', doc.id, {
+          ...region,
+          mapData: {
+            ...region.mapData,
+            additionalBounds: region.mapData.additionalBounds
+          }
+        });
+        
         regions[doc.id] = region;
       } catch (error) {
         console.error(`Bölge dönüşüm hatası (${doc.id}):`, error);
       }
     });
 
+    console.log('Final API response:', { regions });
     return NextResponse.json({ regions });
   } catch (error) {
     console.error('Bölgeler yüklenirken hata:', error);

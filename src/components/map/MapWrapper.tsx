@@ -526,6 +526,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         const paths: RegionPath[] = Object.values(data.regions)
           .filter((region) => {
             const typedRegion = region as Region;
+            console.log('Region being processed:', typedRegion.id, typedRegion);
             return typedRegion && typedRegion.mapData && Array.isArray(typedRegion.mapData.bounds);
           })
           .map((region) => {
@@ -546,11 +547,17 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
             // Ek sınırları işle
             const additionalPaths: { id: string; path: string; }[] = [];
+            console.log('Processing region:', typedRegion.id);
+            console.log('mapData:', typedRegion.mapData);
+            console.log('additionalBounds:', typedRegion.mapData.additionalBounds);
+            
             if (typedRegion.mapData.additionalBounds && Array.isArray(typedRegion.mapData.additionalBounds)) {
-              console.log('Processing additional bounds for region:', typedRegion.id, typedRegion.mapData.additionalBounds);
+              console.log('Additional bounds found for region:', typedRegion.id);
+              console.log('Additional bounds data:', typedRegion.mapData.additionalBounds);
               
               typedRegion.mapData.additionalBounds.forEach(bound => {
                 if (bound && bound.bounds && Array.isArray(bound.bounds)) {
+                  console.log('Processing bound:', bound);
                   const additionalPoints: Point[] = [];
                   for (let i = 0; i < bound.bounds.length; i += 2) {
                     additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
@@ -566,11 +573,15 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                     id: bound.id,
                     path: `${additionalPath} Z`
                   });
+                } else {
+                  console.log('Invalid bound data:', bound);
                 }
               });
+            } else {
+              console.log('No additional bounds found for region:', typedRegion.id);
             }
 
-            console.log('Region:', typedRegion.id, 'Additional Paths:', additionalPaths);
+            console.log('Final additional paths for region:', typedRegion.id, additionalPaths);
 
             return {
               id: typedRegion.id,
