@@ -469,7 +469,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
       if (editMode === 'draw' && drawingPoints.length >= 3) {
         console.log('Ana sınır çizimi kaydediliyor');
-        const newColor = colors[selectedColor] || colors[0];
+        const newColor = tempColor || colors[selectedColor] || colors[0];
         
         const newPath = getPathFromPoints();
         setRegionPaths(prev => prev.map(rp => 
@@ -741,6 +741,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     ));
 
     try {
+      // Mevcut bölgenin tüm verilerini al
+      const currentRegionData = regionPaths.find(rp => rp.id === selectedRegion);
+      if (!currentRegionData) return;
+
       // API'ye gönder
       const response = await fetch('/api/regions/update', {
         method: 'POST',
@@ -749,7 +753,18 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         },
         body: JSON.stringify({
           regionId: selectedRegion,
-          deletedBounds: [boundId]
+          deletedBounds: [boundId],
+          // Mevcut ikonları da gönder
+          icons: icons
+            .filter(icon => icon.regionId === selectedRegion)
+            .map(icon => ({
+              name: icon.name,
+              type: icon.type,
+              coordinates: [icon.position.x, icon.position.y],
+              color: icon.color
+            })),
+          // Mevcut rengi de gönder
+          color: currentRegionData.color
         }),
       });
 
@@ -767,7 +782,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           : rp
       ));
     }
-  }, [selectedRegion, regionPaths, onLocationsUpdate]);
+  }, [selectedRegion, regionPaths, onLocationsUpdate, icons]);
 
   // editMode değiştiğinde form alanlarını temizle
   useEffect(() => {
