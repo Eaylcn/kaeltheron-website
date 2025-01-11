@@ -523,7 +523,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       return `${acc} L ${point.x} ${point.y}`;
     }, '');
 
-    console.log('Oluşturulan path:', path + ' Z');
     return path + ' Z';
   };
 
@@ -572,75 +571,79 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       onLocationsUpdate?.(selectedRegion);
     } catch (error) {
       console.error('İkon kaydetme hatası:', error);
+      // Hata durumunda ikonu geri al
+      setIcons(prev => prev.filter(icon => icon.id !== newIcon.id));
     }
 
     setPendingIcon(null);
     setSelectedIconType('');
     setIconName('');
     setSelectedIconColor('');
+    setEditMode(null);
   };
 
+  // İkon düzenleme moduna geçildiğinde form alanlarını doldur
+  useEffect(() => {
+    if (selectedIconForEdit && editMode === 'edit_icon') {
+      setSelectedIconType(selectedIconForEdit.type);
+      setIconName(selectedIconForEdit.name);
+      setSelectedIconColor(selectedIconForEdit.color);
+    }
+  }, [selectedIconForEdit, editMode]);
+
   const handleUpdateIcon = async () => {
-    if (!selectedIconForEdit) return;
+    if (!selectedIconForEdit || !selectedIconType || !iconName || !selectedIconColor) return;
     
+    const updatedIcon = {
+      ...selectedIconForEdit,
+      type: selectedIconType,
+      name: iconName,
+      color: selectedIconColor
+    };
+
     // İkonu güncelle
     setIcons(prev => prev.map(icon => 
-      icon.id === selectedIconForEdit.id
-        ? {
-            ...icon,
-            type: selectedIconType,
-            name: iconName,
-            color: selectedIconColor
-          }
-        : icon
+      icon.id === selectedIconForEdit.id ? updatedIcon : icon
     ));
     
     // Sunucuya güncellemeyi gönder
-    if (selectedRegion) {
-      try {
-        const updatedIcons = icons.map(icon => 
-          icon.id === selectedIconForEdit.id
-            ? {
-                ...icon,
-                type: selectedIconType,
-                name: iconName,
-                color: selectedIconColor
-              }
-            : icon
-        );
+    try {
+      const response = await fetch('/api/regions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          regionId: selectedIconForEdit.regionId,
+          icons: icons
+            .map(icon => icon.id === selectedIconForEdit.id ? updatedIcon : icon)
+            .filter(icon => icon.regionId === selectedIconForEdit.regionId)
+            .map(icon => ({
+              name: icon.name,
+              type: icon.type,
+              coordinates: [icon.position.x, icon.position.y],
+              color: icon.color
+            }))
+        }),
+      });
 
-        const response = await fetch('/api/regions/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            regionId: selectedRegion,
-            icons: updatedIcons
-              .filter(icon => icon.regionId === selectedRegion)
-              .map(icon => ({
-                name: icon.name,
-                type: icon.type,
-                coordinates: [icon.position.x, icon.position.y],
-                color: icon.color
-              }))
-          }),
-        });
-
-        if (!response.ok) throw new Error('Güncelleme kaydedilemedi');
-        
-        // İkon başarıyla güncellendiğinde bölge bilgilerini güncelle
-        onLocationsUpdate?.(selectedRegion);
-      } catch (error) {
-        console.error('Güncelleme hatası:', error);
-        alert('İkon güncellenirken bir hata oluştu. Lütfen tekrar deneyin.');
-      }
+      if (!response.ok) throw new Error('Güncelleme kaydedilemedi');
+      
+      // İkon başarıyla güncellendiğinde bölge bilgilerini güncelle
+      onLocationsUpdate?.(selectedIconForEdit.regionId);
+    } catch (error) {
+      console.error('Güncelleme hatası:', error);
+      // Hata durumunda eski haline geri döndür
+      setIcons(prev => prev.map(icon => 
+        icon.id === selectedIconForEdit.id ? selectedIconForEdit : icon
+      ));
     }
     
     setSelectedIconForEdit(null);
     setSelectedIconType('');
     setIconName('');
     setSelectedIconColor('');
+    setEditMode(null);
   };
 
   const handleIconDelete = useCallback(async (iconId: string) => {
@@ -1154,7 +1157,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                           e.stopPropagation();
                           if (isEditMode && editMode === 'delete') {
                             handleIconDelete(icon.id);
-                          } else if (!isEditMode) {
+                          } else if (isEditMode && editMode === 'edit_icon') {
                             setSelectedIconForEdit(icon);
                           }
                         }}
