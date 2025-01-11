@@ -732,6 +732,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       const regionsData = await regionsResponse.json();
       const regionData = regionsData.regions[regionId];
       console.log('Mevcut bölge verileri:', regionData);
+      console.log('Mevcut additionalBounds:', regionData.mapData.additionalBounds);
 
       if (!regionData) {
         throw new Error('Bölge bulunamadı');
@@ -743,18 +744,16 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       ) || [];
       console.log('Güncellenmiş additionalBounds:', updatedAdditionalBounds);
 
-      // Tüm mapData'yı güncelle
-      const updatedMapData = {
-        bounds: regionData.mapData.bounds,
-        center: regionData.mapData.center,
-        color: regionData.mapData.color,
-        additionalBounds: updatedAdditionalBounds
+      // Tüm bölge verilerini güncelle
+      const updatedRegionData = {
+        ...regionData,
+        mapData: {
+          ...regionData.mapData,
+          additionalBounds: updatedAdditionalBounds
+        }
       };
 
-      console.log('Gönderilecek veri:', {
-        regionId,
-        mapData: updatedMapData
-      });
+      console.log('Gönderilecek veri:', updatedRegionData);
 
       // Sunucuya gönder
       const updateResponse = await fetch('/api/regions/update', {
@@ -762,10 +761,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          regionId: regionId,
-          mapData: updatedMapData
-        }),
+        body: JSON.stringify(updatedRegionData),
       });
 
       const responseData = await updateResponse.clone().json();
