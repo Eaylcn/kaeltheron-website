@@ -749,7 +749,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         },
         body: JSON.stringify({
           regionId: selectedRegion,
-          deleteAdditionalBound: boundId
+          deletedBounds: [boundId]
         }),
       });
 
@@ -1170,13 +1170,15 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                             fill={region.color.fill}
                             stroke={region.color.stroke}
                             strokeWidth={isSelected ? "0.6" : "0.4"}
-                            className={`transition-all duration-200 cursor-pointer ${
-                              isSelected || isHovered ? 'stroke-amber-500' : ''
-                            }`}
-                            onClick={(e) => handleRegionClick(e, region.id)}
+                            className={`transition-all duration-200 ${
+                              !isEditMode ? 'cursor-pointer' : ''
+                            } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
+                            onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
                             onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                             onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
-                            style={{ pointerEvents: 'all' }}
+                            style={{ 
+                              pointerEvents: !isEditMode ? 'all' : 'none'
+                            }}
                           />
 
                           {region.additionalPaths?.map((additionalPath) => (
@@ -1187,20 +1189,20 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               stroke={region.color.stroke}
                               strokeWidth={isSelected ? "0.6" : "0.4"}
                               className={`transition-all duration-200 ${
-                                editMode === 'delete_bounds' ? 'cursor-pointer hover:stroke-red-500' : 'cursor-pointer'
+                                editMode === 'delete_bounds' ? 'cursor-pointer hover:stroke-red-500' : ''
                               } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (isEditMode && editMode === 'delete_bounds') {
                                   handleDeleteAdditionalBound(additionalPath.id);
-                                } else {
+                                } else if (!isEditMode) {
                                   handleRegionClick(e, region.id);
                                 }
                               }}
                               onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                               onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                pointerEvents: 'all'
+                                pointerEvents: editMode === 'delete_bounds' || !isEditMode ? 'all' : 'none'
                               }}
                             />
                           ))}
