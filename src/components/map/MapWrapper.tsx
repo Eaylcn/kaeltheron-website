@@ -174,13 +174,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         if (!response.ok) throw new Error('Bölgeler yüklenemedi');
         
         const data = await response.json();
-        console.log('API Response:', data);
         
         // Region paths'i oluştur
         const paths: RegionPath[] = Object.values(data.regions)
           .filter((region) => {
             const typedRegion = region as Region;
-            console.log('Region being processed:', typedRegion.id, typedRegion);
             return typedRegion && typedRegion.mapData && Array.isArray(typedRegion.mapData.bounds);
           })
           .map((region) => {
@@ -201,17 +199,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
             // Ek sınırları işle
             const additionalPaths: { id: string; path: string; }[] = [];
-            console.log('Processing region:', typedRegion.id);
-            console.log('mapData:', typedRegion.mapData);
-            console.log('additionalBounds:', typedRegion.mapData.additionalBounds);
             
             if (typedRegion.mapData.additionalBounds && Array.isArray(typedRegion.mapData.additionalBounds)) {
-              console.log('Additional bounds found for region:', typedRegion.id);
-              console.log('Additional bounds data:', typedRegion.mapData.additionalBounds);
-              
               typedRegion.mapData.additionalBounds.forEach(bound => {
                 if (bound && bound.bounds && Array.isArray(bound.bounds)) {
-                  console.log('Processing bound:', bound);
                   const additionalPoints: Point[] = [];
                   for (let i = 0; i < bound.bounds.length; i += 2) {
                     additionalPoints.push({ x: bound.bounds[i], y: bound.bounds[i + 1] });
@@ -222,20 +213,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                     return `${acc} L ${point.x} ${point.y}`;
                   }, '');
                   
-                  console.log('Created additional path:', additionalPath);
                   additionalPaths.push({
                     id: bound.id,
                     path: `${additionalPath} Z`
                   });
-                } else {
-                  console.log('Invalid bound data:', bound);
                 }
               });
-            } else {
-              console.log('No additional bounds found for region:', typedRegion.id);
             }
-
-            console.log('Final additional paths for region:', typedRegion.id, additionalPaths);
 
             return {
               id: typedRegion.id,
@@ -245,37 +229,34 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
             };
           });
 
-        console.log('Final paths with additional bounds:', paths);
         setRegionPaths(paths);
 
         // İkonları yükle
         const allIcons: Icon[] = [];
-        Object.values(data.regions).forEach((region) => {
-          const typedRegion = region as Region;
-          if (typedRegion.locations && Array.isArray(typedRegion.locations)) {
-            typedRegion.locations.forEach((location) => {
-              if (location && Array.isArray(location.coordinates)) {
+        Object.values(data.regions).forEach((region: any) => {
+          if (region.locations && Array.isArray(region.locations)) {
+            region.locations.forEach((location: any) => {
+              if (location.coordinates && Array.isArray(location.coordinates)) {
                 allIcons.push({
-                  id: `${typedRegion.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
+                  id: `${region.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
                   type: location.type,
-                  position: { 
-                    x: location.coordinates[0], 
-                    y: location.coordinates[1] 
+                  position: {
+                    x: location.coordinates[0],
+                    y: location.coordinates[1]
                   },
                   name: location.name,
-                  regionId: typedRegion.id,
-                  color: location.color || 'text-gray-400'
+                  regionId: region.id,
+                  color: location.color || 'rgb(156, 163, 175)'
                 });
               }
             });
           }
         });
 
-        console.log('Loaded icons:', allIcons);
         setIcons(allIcons);
         setIsLoading(false);
       } catch (error) {
-        console.error('Veri yükleme hatası:', error);
+        console.error('Bölgeler yüklenirken hata:', error);
         setIsLoading(false);
       }
     };
@@ -429,9 +410,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     if (!selectedRegion) return;
 
     try {
-      console.log('Kaydetme başladı - Mode:', editMode);
-      console.log('Çizim noktaları:', drawingPoints);
-
       const updateData: {
         regionId: string;
         bounds?: number[];
@@ -451,7 +429,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       } = { regionId: selectedRegion };
       
       if (editMode === 'draw' && drawingPoints.length >= 3) {
-        console.log('Ana sınır çizimi kaydediliyor');
         const newColor = colors[selectedColor] || colors[0];
         
         const newPath = getPathFromPoints();
@@ -469,7 +446,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         updateData.bounds = flatBounds;
         updateData.color = newColor;
       } else if (editMode === 'add_bounds' && drawingPoints.length >= 3) {
-        console.log('Ek sınır çizimi kaydediliyor');
         const flatBounds: number[] = [];
         drawingPoints.forEach(point => {
           flatBounds.push(point.x);
@@ -477,12 +453,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         });
 
         const currentRegion = regionPaths.find(rp => rp.id === selectedRegion);
-        console.log('Mevcut bölge:', currentRegion);
         
         if (currentRegion) {
           const newPath = getPathFromPoints();
-          console.log('Yeni ek sınır path:', newPath);
-          
           const newBoundId = `${selectedRegion}-bound-${Date.now()}`;
           
           setRegionPaths(prev => prev.map(rp => 
@@ -500,14 +473,18 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
               : rp
           ));
 
-          // Firestore'a gönderilecek veriyi hazırla
-          console.log('Hazırlanan flatBounds:', flatBounds);
           updateData.additionalBounds = [flatBounds];
-          console.log('API\'ye gönderilecek veri:', updateData);
         }
+      } else if (editMode === 'color' && selectedRegion) {
+        const newColor = colors[selectedColor] || colors[0];
+        updateData.color = newColor;
+        
+        setRegionPaths(prev => prev.map(rp => 
+          rp.id === selectedRegion
+            ? { ...rp, color: newColor }
+            : rp
+        ));
       }
-
-      console.log('API\'ye gönderilen veri:', updateData);
 
       const response = await fetch('/api/regions/update', {
         method: 'POST',
@@ -517,19 +494,17 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         body: JSON.stringify(updateData),
       });
 
-      const result = await response.json();
-      console.log('API yanıtı:', result);
-
       if (!response.ok) {
-        throw new Error('Kaydetme başarısız: ' + (result.error || 'Bilinmeyen hata'));
+        throw new Error('Kaydetme başarısız');
       }
-
-      console.log('Bölge başarıyla güncellendi');
       
       setIsEditMode(false);
       setEditMode(null);
       setDrawingPoints([]);
       onRegionClick('');
+      
+      // Renk değişikliğini kalıcı yapmak için bölge bilgilerini güncelle
+      onLocationsUpdate?.(selectedRegion);
     } catch (error) {
       console.error('Kaydetme hatası:', error);
       alert('Bölge kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
@@ -1162,12 +1137,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   {icons.map(icon => {
                     if (isEditMode && icon.regionId !== selectedRegion) return null;
                     const IconComponent = getLocationIcon(icon.type, icon.color);
+                    const isCapital = icon.type === 'capital';
                     return IconComponent && (
                       <div
                         key={icon.id}
                         className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-${isEditMode && editMode === 'move' ? 'move' : 'pointer'} transition-transform duration-150 hover:scale-110 ${
                           isDragging && selectedIcon?.id === icon.id ? 'scale-125' : ''
-                        }`}
+                        } group`}
                         style={{
                           left: `${icon.position.x}%`,
                           top: `${icon.position.y}%`,
@@ -1186,6 +1162,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         onMouseLeave={() => setHoveredIcon(null)}
                       >
                         {IconComponent}
+                        <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque ${
+                          isCapital ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        } transition-opacity duration-200`}>
+                          {icon.name}
+                        </div>
                         {(isEditMode && editMode === 'delete' && hoveredIcon === icon.id) && (
                           <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                             <span className="text-white text-xs">×</span>
@@ -1196,7 +1177,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   })}
 
                   {/* Bekleyen İkon */}
-                  {editMode === 'add' && pendingIcon && (
+                  {editMode === 'add' && pendingIcon && selectedIconType && (
                     <div
                       className={`absolute pointer-events-none ${
                         selectedIconType === 'capital' 
@@ -1211,7 +1192,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                     >
                       <div className="relative">
                         {getLocationIcon(selectedIconType, selectedIconColor)}
-                        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque">
+                        <div className={`absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm text-white font-risque ${
+                          selectedIconType === 'capital' ? 'opacity-100' : ''
+                        }`}>
                           {iconName}
                         </div>
                       </div>
