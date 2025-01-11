@@ -5,8 +5,27 @@ import { StoryHeroSection } from '@/components/story/StoryHeroSection';
 import Timeline from '@/components/story/Timeline';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
+interface TimelineEvent {
+  id: string;
+  title: string;
+  description: string;
+  detailedDescription: string;
+  relatedCharacters: string[];
+}
+
+interface TimelineEra {
+  id: string;
+  era: string;
+  year: string;
+  title: string;
+  description: string;
+  detailedDescription: string;
+  image: string;
+  events: TimelineEvent[];
+}
+
 interface TimelineData {
-  timeline: any[]; // Replace 'any' with proper type when available
+  timeline: TimelineEra[];
 }
 
 export default function StoryPage() {
