@@ -25,6 +25,15 @@ interface UpdateData {
     stroke: string;
   };
   icons?: UpdateIcon[];
+  mapData?: {
+    bounds?: number[];
+    center?: [number, number];
+    color?: {
+      fill: string;
+      stroke: string;
+    };
+    additionalBounds?: AdditionalBound[];
+  };
 }
 
 type FirestoreData = {
@@ -75,9 +84,11 @@ export async function POST(request: Request): Promise<NextResponse<{ success: bo
         bounds: bounds || currentMapData.bounds,
         color: color || currentMapData.color,
         center: currentMapData.center || [150, 250],
-        additionalBounds: Array.isArray(currentMapData.additionalBounds) 
-          ? currentMapData.additionalBounds 
-          : []
+        additionalBounds: data.mapData?.additionalBounds !== undefined 
+          ? data.mapData.additionalBounds 
+          : Array.isArray(currentMapData.additionalBounds) 
+            ? currentMapData.additionalBounds 
+            : []
       }
     };
 
