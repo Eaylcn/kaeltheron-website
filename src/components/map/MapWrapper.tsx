@@ -709,6 +709,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
   const handleDeleteAdditionalBound = async (regionId: string, boundId: string) => {
     try {
+      console.log('Silme işlemi başlatıldı:', { regionId, boundId });
+
       // UI'dan sil
       setRegionPaths(prev => prev.map(rp => 
         rp.id === regionId
@@ -719,22 +721,47 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           : rp
       ));
 
+      // Önce mevcut bölge verilerini al
+      const regionResponse = await fetch(`/api/regions/${regionId}`);
+      console.log('Bölge verileri alındı:', await regionResponse.clone().json());
+
+      if (!regionResponse.ok) {
+        throw new Error('Bölge verileri alınamadı');
+      }
+
+      const regionData = await regionResponse.json();
+      console.log('Mevcut additionalBounds:', regionData.mapData.additionalBounds);
+
+      // additionalBounds'dan ilgili sınırı kaldır
+      const updatedAdditionalBounds = regionData.mapData.additionalBounds.filter(
+        (bound: AdditionalBound) => bound.id !== boundId
+      );
+      console.log('Güncellenmiş additionalBounds:', updatedAdditionalBounds);
+
       // Sunucuya gönder
-      const response = await fetch('/api/regions/update', {
+      const updateResponse = await fetch('/api/regions/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           regionId: regionId,
-          deleteAdditionalBound: boundId
+          mapData: {
+            ...regionData.mapData,
+            additionalBounds: updatedAdditionalBounds
+          }
         }),
       });
 
-      if (!response.ok) throw new Error('Ek sınır silinemedi');
+      console.log('Sunucu yanıtı:', await updateResponse.clone().json());
+
+      if (!updateResponse.ok) {
+        throw new Error('Ek sınır silinemedi');
+      }
       
       // Bölge bilgilerini güncelle
       onLocationsUpdate?.(regionId);
+      console.log('Silme işlemi başarılı');
     } catch (error) {
       console.error('Ek sınır silme hatası:', error);
       // Hata durumunda UI'ı geri al
