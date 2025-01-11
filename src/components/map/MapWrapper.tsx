@@ -721,21 +721,26 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
           : rp
       ));
 
-      // Önce mevcut bölge verilerini al
-      const regionResponse = await fetch(`/api/regions/${regionId}`);
-      console.log('Bölge verileri alındı:', await regionResponse.clone().json());
+      // Tüm bölge verilerini al
+      const regionsResponse = await fetch('/api/regions');
+      console.log('Bölge verileri alınıyor...');
 
-      if (!regionResponse.ok) {
+      if (!regionsResponse.ok) {
         throw new Error('Bölge verileri alınamadı');
       }
 
-      const regionData = await regionResponse.json();
-      console.log('Mevcut additionalBounds:', regionData.mapData.additionalBounds);
+      const regionsData = await regionsResponse.json();
+      const regionData = regionsData.regions[regionId];
+      console.log('Mevcut bölge verileri:', regionData);
+
+      if (!regionData) {
+        throw new Error('Bölge bulunamadı');
+      }
 
       // additionalBounds'dan ilgili sınırı kaldır
-      const updatedAdditionalBounds = regionData.mapData.additionalBounds.filter(
+      const updatedAdditionalBounds = regionData.mapData.additionalBounds?.filter(
         (bound: AdditionalBound) => bound.id !== boundId
-      );
+      ) || [];
       console.log('Güncellenmiş additionalBounds:', updatedAdditionalBounds);
 
       // Sunucuya gönder
