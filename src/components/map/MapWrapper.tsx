@@ -233,9 +233,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
         // İkonları yükle
         const allIcons: Icon[] = [];
-        Object.values(data.regions).forEach((region: any) => {
+        (Object.values(data.regions) as Region[]).forEach((region) => {
           if (region.locations && Array.isArray(region.locations)) {
-            region.locations.forEach((location: any) => {
+            region.locations.forEach((location) => {
               if (location.coordinates && Array.isArray(location.coordinates)) {
                 allIcons.push({
                   id: `${region.id}-${location.name.toLowerCase().replace(/\s+/g, '-')}`,
