@@ -1161,10 +1161,14 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                   >
                     {/* Mevcut bölge sınırları */}
                     {regionPaths.map(region => {
+                      if (isEditMode && region.id !== selectedRegion) return null;
+                      
                       const isSelected = region.id === selectedRegion;
-                      const isHovered = region.id === hoveredRegionId;
+                      const isHovered = hoveredRegionId === region.id;
+                      
                       return (
                         <React.Fragment key={region.id}>
+                          {/* Ana sınır */}
                           <path
                             d={region.path}
                             fill={region.color.fill}
@@ -1180,7 +1184,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                               pointerEvents: !isEditMode ? 'all' : 'none'
                             }}
                           />
-
+                          {/* Ek sınırlar */}
                           {region.additionalPaths?.map((additionalPath) => (
                             <path
                               key={additionalPath.id}
