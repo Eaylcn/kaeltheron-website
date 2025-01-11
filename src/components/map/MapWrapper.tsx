@@ -740,7 +740,6 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       // Hata durumunda UI'ı geri al
       const response = await fetch('/api/regions');
       if (response.ok) {
-        const data = await response.json();
         // Bölge verilerini yeniden yükle
         onLocationsUpdate?.(regionId);
       }
