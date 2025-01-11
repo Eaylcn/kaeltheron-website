@@ -743,6 +743,19 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       ) || [];
       console.log('Güncellenmiş additionalBounds:', updatedAdditionalBounds);
 
+      // Tüm mapData'yı güncelle
+      const updatedMapData = {
+        bounds: regionData.mapData.bounds,
+        center: regionData.mapData.center,
+        color: regionData.mapData.color,
+        additionalBounds: updatedAdditionalBounds
+      };
+
+      console.log('Gönderilecek veri:', {
+        regionId,
+        mapData: updatedMapData
+      });
+
       // Sunucuya gönder
       const updateResponse = await fetch('/api/regions/update', {
         method: 'POST',
@@ -751,14 +764,12 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         },
         body: JSON.stringify({
           regionId: regionId,
-          mapData: {
-            ...regionData.mapData,
-            additionalBounds: updatedAdditionalBounds
-          }
+          mapData: updatedMapData
         }),
       });
 
-      console.log('Sunucu yanıtı:', await updateResponse.clone().json());
+      const responseData = await updateResponse.clone().json();
+      console.log('Sunucu yanıtı:', responseData);
 
       if (!updateResponse.ok) {
         throw new Error('Ek sınır silinemedi');
