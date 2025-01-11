@@ -579,7 +579,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     if (!pendingIcon || !selectedRegion || !selectedIconColor) return;
 
     const newIcon: Icon = {
-      id: `${selectedRegion}-${iconName.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `${selectedRegion}-${iconName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
       type: selectedIconType,
       position: pendingIcon,
       name: iconName,
@@ -587,10 +587,15 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       color: selectedIconColor
     };
 
+    // Önce state'i güncelle
     const updatedIcons = [...icons, newIcon];
     setIcons(updatedIcons);
 
     try {
+      // Mevcut bölgenin tüm verilerini al
+      const currentRegion = regionPaths.find(rp => rp.id === selectedRegion);
+      if (!currentRegion) return;
+
       const response = await fetch('/api/regions/update', {
         method: 'POST',
         headers: {
@@ -605,16 +610,23 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
               type: icon.type,
               coordinates: [icon.position.x, icon.position.y],
               color: icon.color
-            }))
+            })),
+          // Mevcut rengi ve sınırları koru
+          color: currentRegion.color,
+          bounds: currentRegion.path ? currentRegion.path.split(/[ML]/).filter(Boolean).map(coord => parseFloat(coord.trim())) : undefined,
+          additionalBounds: currentRegion.additionalPaths?.map(ap => 
+            ap.path.split(/[ML]/).filter(Boolean).map(coord => parseFloat(coord.trim()))
+          ) || []
         }),
       });
 
       if (!response.ok) throw new Error('İkon kaydetme başarısız');
       
-      // İkon başarıyla eklendiğinde bölge bilgilerini güncelle
       onLocationsUpdate?.(selectedRegion);
     } catch (error) {
       console.error('İkon kaydetme hatası:', error);
+      // Hata durumunda ikonu geri al
+      setIcons(prev => prev.filter(icon => icon.id !== newIcon.id));
     }
 
     setPendingIcon(null);
@@ -741,9 +753,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     ));
 
     try {
-      // Mevcut bölgenin tüm verilerini al
-      const currentRegionData = regionPaths.find(rp => rp.id === selectedRegion);
-      if (!currentRegionData) return;
+      // Güncellenmiş bölge verilerini al
+      const updatedRegion = regionPaths.find(rp => rp.id === selectedRegion);
+      if (!updatedRegion) return;
 
       // API'ye gönder
       const response = await fetch('/api/regions/update', {
@@ -753,8 +765,13 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         },
         body: JSON.stringify({
           regionId: selectedRegion,
-          deletedBounds: [boundId],
-          // Mevcut ikonları da gönder
+          // Ana sınırları gönder
+          bounds: updatedRegion.path.split(/[ML]/).filter(Boolean).map(coord => parseFloat(coord.trim())),
+          // Güncellenmiş ek sınırları gönder
+          additionalBounds: updatedRegion.additionalPaths?.map(ap => 
+            ap.path.split(/[ML]/).filter(Boolean).map(coord => parseFloat(coord.trim()))
+          ) || [],
+          // Mevcut ikonları gönder
           icons: icons
             .filter(icon => icon.regionId === selectedRegion)
             .map(icon => ({
@@ -763,8 +780,8 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
               coordinates: [icon.position.x, icon.position.y],
               color: icon.color
             })),
-          // Mevcut rengi de gönder
-          color: currentRegionData.color
+          // Mevcut rengi gönder
+          color: updatedRegion.color
         }),
       });
 
