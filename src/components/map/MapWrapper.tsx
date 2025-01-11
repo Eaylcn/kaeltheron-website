@@ -73,25 +73,23 @@ interface Location {
 export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
   // Sabit renk paleti
   const defaultColors = [
+    { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
+    { fill: 'rgba(236, 72, 153, 0.2)', stroke: 'rgb(236, 72, 153)' }, // Pink
+    { fill: 'rgba(16, 185, 129, 0.2)', stroke: 'rgb(16, 185, 129)' }, // Green
     { fill: 'rgba(245, 158, 11, 0.2)', stroke: 'rgb(245, 158, 11)' }, // Amber
     { fill: 'rgba(239, 68, 68, 0.2)', stroke: 'rgb(239, 68, 68)' }, // Red
-    { fill: 'rgba(59, 130, 246, 0.2)', stroke: 'rgb(59, 130, 246)' }, // Blue
-    { fill: 'rgba(16, 185, 129, 0.2)', stroke: 'rgb(16, 185, 129)' }, // Green
     { fill: 'rgba(139, 92, 246, 0.2)', stroke: 'rgb(139, 92, 246)' }, // Purple
-    { fill: 'rgba(236, 72, 153, 0.2)', stroke: 'rgb(236, 72, 153)' }, // Pink
-    { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
-    { fill: 'rgba(249, 115, 22, 0.2)', stroke: 'rgb(249, 115, 22)' }, // Orange
+    { fill: 'rgba(59, 130, 246, 0.2)', stroke: 'rgb(59, 130, 246)' }, // Blue
   ];
 
   const defaultIconColors = [
+    'rgb(99, 102, 241)', // Indigo
+    'rgb(236, 72, 153)', // Pink
+    'rgb(16, 185, 129)', // Green
     'rgb(245, 158, 11)', // Amber
     'rgb(239, 68, 68)', // Red
-    'rgb(59, 130, 246)', // Blue
-    'rgb(16, 185, 129)', // Green
     'rgb(139, 92, 246)', // Purple
-    'rgb(236, 72, 153)', // Pink
-    'rgb(99, 102, 241)', // Indigo
-    'rgb(249, 115, 22)', // Orange
+    'rgb(59, 130, 246)', // Blue
   ];
 
   const [colors, setColors] = useState(defaultColors);
@@ -99,7 +97,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | null>(null);
+  const [editMode, setEditMode] = useState<'draw' | 'move' | 'add' | 'delete' | 'color' | 'edit_icon' | 'add_bounds' | 'delete_bounds' | null>(null);
   const [selectedColor, setSelectedColor] = useState(0);
   const [selectedIconType, setSelectedIconType] = useState('');
   const [selectedIconColor, setSelectedIconColor] = useState('');
@@ -709,6 +707,46 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     await handleSave();
   };
 
+  const handleDeleteAdditionalBound = async (regionId: string, boundId: string) => {
+    try {
+      // UI'dan sil
+      setRegionPaths(prev => prev.map(rp => 
+        rp.id === regionId
+          ? {
+              ...rp,
+              additionalPaths: rp.additionalPaths?.filter(ap => ap.id !== boundId) || []
+            }
+          : rp
+      ));
+
+      // Sunucuya gönder
+      const response = await fetch('/api/regions/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          regionId: regionId,
+          deleteAdditionalBound: boundId
+        }),
+      });
+
+      if (!response.ok) throw new Error('Ek sınır silinemedi');
+      
+      // Bölge bilgilerini güncelle
+      onLocationsUpdate?.(regionId);
+    } catch (error) {
+      console.error('Ek sınır silme hatası:', error);
+      // Hata durumunda UI'ı geri al
+      const response = await fetch('/api/regions');
+      if (response.ok) {
+        const data = await response.json();
+        // Bölge verilerini yeniden yükle
+        onLocationsUpdate?.(regionId);
+      }
+    }
+  };
+
   return (
     <div className="relative w-full h-[800px] bg-[#0B1120] rounded-lg overflow-hidden">
       {/* Hata mesajı */}
@@ -792,9 +830,9 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         {/* Menü Başlıkları */}
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' ? null : 'draw')}
+                            onClick={() => setEditMode(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds' ? null : 'draw')}
                             className={`flex-1 px-4 py-2 rounded-lg transition-colors font-risque ${
-                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                              (editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds') ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
                             }`}
                           >
                             Sınır
@@ -810,8 +848,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                         </div>
 
                         {/* Alt menüler */}
-                        {/* Mevcut alt menü içeriği */}
-                        {(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color') && (
+                        {(editMode === 'draw' || editMode === 'add_bounds' || editMode === 'color' || editMode === 'delete_bounds') && (
                           <div className="space-y-2">
                             <div className="grid grid-cols-4 gap-1">
                               <button
@@ -829,6 +866,14 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                                 }`}
                               >
                                 Ek Sınır
+                              </button>
+                              <button
+                                onClick={() => setEditMode('delete_bounds')}
+                                className={`px-4 py-2 rounded-lg transition-colors font-risque ${
+                                  editMode === 'delete_bounds' ? 'bg-amber-500 text-white' : 'bg-[#1C2B4B] text-gray-400 hover:text-amber-500'
+                                }`}
+                              >
+                                Sınır Sil
                               </button>
                               <button
                                 onClick={() => setEditMode('color')}
@@ -1067,52 +1112,82 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
                     preserveAspectRatio="none"
                   >
                     {/* Mevcut bölge sınırları */}
-                    {regionPaths.map(region => {
-                      if (isEditMode && region.id !== selectedRegion) return null;
-                      
-                      const isSelected = region.id === selectedRegion;
-                      const isHovered = hoveredRegionId === region.id;
-                      
-                      return (
-                        <React.Fragment key={region.id}>
-                          {/* Ana sınır */}
-                          <path
-                            d={region.path}
-                            fill={region.color.fill}
-                            stroke={region.color.stroke}
-                            strokeWidth={isSelected ? "0.6" : "0.4"}
-                            className={`transition-all duration-200 ${
-                              !isEditMode ? 'cursor-pointer' : ''
-                            } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
-                            onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
-                            onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
-                            onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
-                            style={{ 
-                              pointerEvents: !isEditMode ? 'all' : 'none'
-                            }}
-                          />
-                          {/* Ek sınırlar */}
-                          {region.additionalPaths?.map((additionalPath) => (
+                    {regionPaths.map(region => (
+                      <g key={region.id}>
+                        <path
+                          d={region.path}
+                          fill={region.color.fill}
+                          stroke={selectedRegion === region.id || hoveredRegionId === region.id ? 'rgb(245, 158, 11)' : region.color.stroke}
+                          strokeWidth={selectedRegion === region.id ? "0.6" : hoveredRegionId === region.id ? "0.5" : "0.4"}
+                          className={`transition-all duration-200 ${
+                            !isEditMode ? 'cursor-pointer' : ''
+                          }`}
+                          onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
+                          onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
+                          onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
+                          style={{ 
+                            pointerEvents: !isEditMode ? 'all' : 'none',
+                            fillOpacity: hoveredRegionId === region.id ? 0.8 : selectedRegion === region.id ? 1 : 0.6,
+                            strokeOpacity: 1
+                          }}
+                        />
+                        {region.additionalPaths?.map(additionalPath => (
+                          <g key={additionalPath.id}>
                             <path
-                              key={additionalPath.id}
                               d={additionalPath.path}
                               fill={region.color.fill}
-                              stroke={region.color.stroke}
-                              strokeWidth={isSelected ? "0.6" : "0.4"}
+                              stroke={selectedRegion === region.id || hoveredRegionId === region.id ? 'rgb(245, 158, 11)' : region.color.stroke}
+                              strokeWidth={selectedRegion === region.id ? "0.6" : hoveredRegionId === region.id ? "0.5" : "0.4"}
                               className={`transition-all duration-200 ${
                                 !isEditMode ? 'cursor-pointer' : ''
-                              } ${isSelected || isHovered ? 'stroke-amber-500' : ''}`}
-                              onClick={(e) => !isEditMode && handleRegionClick(e, region.id)}
+                              } ${
+                                editMode === 'delete_bounds' ? 'cursor-pointer hover:opacity-40' : ''
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (editMode === 'delete_bounds' && selectedRegion === region.id) {
+                                  handleDeleteAdditionalBound(region.id, additionalPath.id);
+                                } else if (!isEditMode) {
+                                  handleRegionClick(e, region.id);
+                                }
+                              }}
                               onMouseEnter={() => !isEditMode && setHoveredRegionId(region.id)}
                               onMouseLeave={() => !isEditMode && setHoveredRegionId(null)}
                               style={{ 
-                                pointerEvents: !isEditMode ? 'all' : 'none'
+                                pointerEvents: !isEditMode || (editMode === 'delete_bounds' && selectedRegion === region.id) ? 'all' : 'none',
+                                fillOpacity: hoveredRegionId === region.id ? 0.8 : selectedRegion === region.id ? 1 : 0.6,
+                                strokeOpacity: 1
                               }}
                             />
-                          ))}
-                        </React.Fragment>
-                      );
-                    })}
+                            {editMode === 'delete_bounds' && selectedRegion === region.id && (
+                              <g>
+                                <circle
+                                  cx={parseFloat(additionalPath.path.split(' ')[1])}
+                                  cy={parseFloat(additionalPath.path.split(' ')[2])}
+                                  r="0.8"
+                                  fill="red"
+                                  className="cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteAdditionalBound(region.id, additionalPath.id);
+                                  }}
+                                />
+                                <text
+                                  x={parseFloat(additionalPath.path.split(' ')[1])}
+                                  y={parseFloat(additionalPath.path.split(' ')[2]) - 1}
+                                  fontSize="2"
+                                  fill="white"
+                                  textAnchor="middle"
+                                  className="pointer-events-none select-none"
+                                >
+                                  ×
+                                </text>
+                              </g>
+                            )}
+                          </g>
+                        ))}
+                      </g>
+                    ))}
 
                     {/* Çizim modu aktif sınır */}
                     {isEditMode && (editMode === 'draw' || editMode === 'add_bounds') && drawingPoints.length > 0 && (
