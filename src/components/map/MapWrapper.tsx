@@ -744,10 +744,11 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       ) || [];
       console.log('Güncellenmiş additionalBounds:', updatedAdditionalBounds);
 
-      // API'ye gönderilecek veriyi hazırla
-      const updateData = {
-        regionId: regionId,
+      // Tüm bölge verilerini güncelle
+      const updatedRegionData = {
+        ...regionData,
         mapData: {
+          ...regionData.mapData,
           bounds: regionData.mapData.bounds,
           center: regionData.mapData.center,
           color: regionData.mapData.color,
@@ -755,7 +756,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         }
       };
 
-      console.log('Gönderilecek veri:', updateData);
+      console.log('Gönderilecek veri:', updatedRegionData);
 
       // Sunucuya gönder
       const updateResponse = await fetch('/api/regions/update', {
@@ -763,7 +764,10 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          id: regionId,
+          ...updatedRegionData
+        }),
       });
 
       const responseData = await updateResponse.clone().json();
