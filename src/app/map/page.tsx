@@ -341,7 +341,7 @@ export default function MapPage() {
           {/* Map Section */}
           <section className="relative z-10">
             <MapWrapper 
-              onRegionClick={handleRegionClick} 
+              onRegionClickAction={handleRegionClick} 
               selectedRegion={selectedRegion}
               onLocationsUpdate={handleLocationsUpdate}
             />

@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 interface MapWrapperProps {
-  onRegionClick: (regionId: string) => void;
+  onRegionClickAction: (regionId: string) => void;
   selectedRegion: string | null;
   onLocationsUpdate?: (regionId: string) => void;
 }
@@ -70,7 +70,7 @@ interface Location {
   population?: string;
 }
 
-export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
+export default function MapWrapper({ onRegionClickAction, selectedRegion, onLocationsUpdate }: MapWrapperProps) {
   // Sabit renk paleti
   const defaultColors = [
     { fill: 'rgba(99, 102, 241, 0.2)', stroke: 'rgb(99, 102, 241)' }, // Indigo
@@ -282,7 +282,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
 
   const handleMapClick = useCallback((e: React.MouseEvent) => {
     if (!isEditMode) {
-      onRegionClick('');
+      onRegionClickAction('');
       return;
     }
 
@@ -296,7 +296,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
     } else if (editMode === 'add' && selectedIconType && iconName) {
       setPendingIcon({ x, y });
     }
-  }, [isEditMode, editMode, selectedIconType, iconName, onRegionClick]);
+  }, [isEditMode, editMode, selectedIconType, iconName, onRegionClickAction]);
 
   const handleIconMouseDown = useCallback((e: React.MouseEvent, icon: Icon) => {
     e.stopPropagation();
@@ -499,7 +499,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
       setIsEditMode(false);
       setEditMode(null);
       setDrawingPoints([]);
-      onRegionClick('');
+      onRegionClickAction('');
       
       // Renk değişikliğini kalıcı yapmak için bölge bilgilerini güncelle
       onLocationsUpdate?.(selectedRegion);
@@ -525,8 +525,7 @@ export default function MapWrapper({ onRegionClick, selectedRegion, onLocationsU
   };
 
   const handleRegionClick = (event: React.MouseEvent<SVGPathElement>, regionId: string) => {
-    event.stopPropagation();
-    onRegionClick(regionId);
+    onRegionClickAction(regionId);
   };
 
   const handleAddIcon = async () => {
